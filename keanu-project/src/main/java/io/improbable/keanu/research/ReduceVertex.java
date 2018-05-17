@@ -7,13 +7,13 @@ import io.improbable.keanu.vertices.generic.nonprobabilistic.NonProbabilistic;
 import java.util.*;
 import java.util.function.Function;
 
-public class ReduceVertex<INPUT, T> extends NonProbabilistic<T> {
+public class ReduceVertex<INPUT, OUTPUT> extends NonProbabilistic<OUTPUT> {
 
     protected final List<? extends Vertex<INPUT>> inputs;
-    protected final Function<ArrayList<INPUT>, T> f;
+    protected final Function<ArrayList<INPUT>, OUTPUT> f;
 
     public ReduceVertex(Collection<? extends Vertex<INPUT>> inputs,
-                        Function<ArrayList<INPUT>, T> f) {
+                        Function<ArrayList<INPUT>, OUTPUT> f) {
         this.inputs = new ArrayList<>(inputs);
         this.f = f;
         setParents(inputs);
@@ -23,34 +23,34 @@ public class ReduceVertex<INPUT, T> extends NonProbabilistic<T> {
         }
     }
 
-    public ReduceVertex(Function<ArrayList<INPUT>, T> f,
+    public ReduceVertex(Function<ArrayList<INPUT>, OUTPUT> f,
                         Vertex<INPUT>... input) {
         this(Arrays.asList(input), f);
     }
 
     @Override
-    public T sample() {
+    public OUTPUT sample() {
         return applyReduce(Vertex::sample);
     }
 
     @Override
-    public T lazyEval() {
+    public OUTPUT lazyEval() {
         setValue(applyReduce(Vertex::lazyEval));
         return getValue();
     }
 
     @Override
-    public T getDerivedValue() {
+    public OUTPUT getDerivedValue() {
         return applyReduce(Vertex::getValue);
     }
 
-    private T applyReduce(Function<Vertex<T>, T> mapper) {
+    private OUTPUT applyReduce(Function<Vertex<OUTPUT>, OUTPUT> mapper) {
         Iterator<? extends Vertex<INPUT>> samples = inputs.iterator();
-        ArrayList<INPUT> functionInpute = new ArrayList<>(inputs.size());
+        ArrayList<INPUT> functionInputs = new ArrayList<>(inputs.size());
         while (samples.hasNext()) {
-            functionInpute.add(samples.next().getValue());
+            functionInputs.add(samples.next().getValue());
         }
-        return f.apply(functionInpute);
+        return f.apply(functionInputs);
     }
 
 //    @Override
@@ -63,7 +63,7 @@ public class ReduceVertex<INPUT, T> extends NonProbabilistic<T> {
 //    }
 
     @Override
-    public void observe(T value) {
+    public void observe(OUTPUT value) {
         throw new NonProbabilisticObservationException();
     }
 
@@ -78,7 +78,7 @@ public class ReduceVertex<INPUT, T> extends NonProbabilistic<T> {
 //    }
 
     @Override
-    public T updateValue() {
+    public OUTPUT updateValue() {
         setValue(getDerivedValue());
         return getValue();
     }

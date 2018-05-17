@@ -4,28 +4,29 @@ import io.improbable.keanu.randomfactory.RandomFactory;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.UniformVertex;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 public class VertexBackedRandomFactory implements RandomFactory<Double> {
 
-    public GaussianVertex[] listOfGaussians;
-    public UniformVertex[] listOfUniforms;
+    public ArrayList<GaussianVertex> listOfGaussians;
+    public ArrayList<UniformVertex> listOfUniforms;
     private int counterForGaussians = 0;
     private int counterForUniform = 0;
 
-    public VertexBackedRandomFactory(GaussianVertex[] listOfGaussains, UniformVertex[] listOfUniforms) {
-        this.listOfGaussians = listOfGaussains;
+    public VertexBackedRandomFactory(ArrayList<GaussianVertex> listOfGaussians, ArrayList<UniformVertex> listOfUniforms) {
+        this.listOfGaussians = listOfGaussians;
         this.listOfUniforms = listOfUniforms;
     }
 
     public VertexBackedRandomFactory(int numberOfGaussians, int numberOfUniforms) {
-        listOfGaussians = new GaussianVertex[numberOfGaussians];
-        listOfUniforms = new UniformVertex[numberOfUniforms];
+        listOfGaussians = new ArrayList<>(numberOfGaussians);
+        listOfUniforms = new ArrayList<>(numberOfUniforms);
         for (int i=0; i<numberOfGaussians; i++) {
-            listOfGaussians[i] = new GaussianVertex(0.0, 1.0);
+            listOfGaussians.add(new GaussianVertex(0.0, 1.0));
         }
         for (int i=0; i<numberOfUniforms; i++) {
-            listOfUniforms[i] = new UniformVertex(0.0, 1.0);
+            listOfUniforms.add(new UniformVertex(0.0, 1.0));
         }
     }
 
@@ -34,7 +35,7 @@ public class VertexBackedRandomFactory implements RandomFactory<Double> {
 
     @Override
     public Double nextDouble(double min, double max) {
-        return min + (max - min) * listOfUniforms[counterForUniform++].getValue();
+        return min + (max - min) * listOfUniforms.get(counterForUniform++%listOfUniforms.size()).getValue();
     }
 
     @Override
@@ -59,6 +60,10 @@ public class VertexBackedRandomFactory implements RandomFactory<Double> {
 
     @Override
     public Double nextGaussian(double mu, double sigma) {
-        return listOfGaussians[counterForGaussians++].getValue() * sigma + mu;
+        return listOfGaussians.get(counterForGaussians++%listOfGaussians.size()).getValue() * sigma + mu;
+    }
+
+    public VertexBackedRandomFactory nextRandomFactory() {
+        return new VertexBackedRandomFactory(listOfGaussians, listOfUniforms);
     }
 }

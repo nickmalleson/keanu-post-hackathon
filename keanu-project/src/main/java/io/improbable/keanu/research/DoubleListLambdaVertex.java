@@ -8,11 +8,9 @@ import java.util.function.BiFunction;
 
 public class DoubleListLambdaVertex extends UnaryOpLambda<Double[], Double[]> {
 
-    public DoubleListLambdaVertex(int numberOfGaussians, int numberOfUniforms,
-                                  Vertex<Double[]> arrayOfInputs,
-                                  BiFunction<Double[], RandomFactory<Double>, Double[]> lambda) {
-        super(arrayOfInputs, (Double[] in) -> {
-            return lambda.apply(in, new VertexBackedRandomFactory(numberOfGaussians, numberOfUniforms));
-        });
+    public DoubleListLambdaVertex(Vertex<Double[]> arrayOfInputs,
+                                  BiFunction<Double[], RandomFactory<Double>, Double[]> lambda,
+                                  VertexBackedRandomFactory random) {
+        super(arrayOfInputs, (Double[] in) -> lambda.apply(in, random));
     }
 }
