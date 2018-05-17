@@ -1,52 +1,79 @@
 package io.improbable.keanu.ABM;
 
-import sim.engine.SimState;
-import sim.engine.Steppable;
-import sim.engine.Stoppable;
-import sim.util.Double2D;
-import sim.util.MutableDouble2D;
+import io.improbable.keanu.research.VertexBackedRandomFactory;
 
-/**
- * Created by daniel on 10/04/17.
- */
-public class Agent implements Steppable {
-    static final double moveSpeed = 1.0;
+import java.util.ArrayList;
 
-    public Stoppable swoff;
-    MutableDouble2D myPos;
+public class Agent {
 
+    Simulation sim;
+    int xLocation;
+    int yLocation;
+    VertexBackedRandomFactory random;
+    ArrayList<Agent> proximateAgents;
 
-    public Agent()
-    {
-        swoff=Simulation.state.schedule.scheduleRepeating(this, 2, 1.0);
-        myPos = new MutableDouble2D();
+    public Agent(Simulation sim, int startX, int startY) {
+        this.sim = sim;
+        this.xLocation = startX;
+        this.yLocation = startY;
+        random = sim.random.nextRandomFactory();
+
+    }
+
+    public void step() {
+
+        Integer direction = random.nextDouble(0, 4).intValue();
+
+        int testYLocation = yLocation;
+        int testXLocation = xLocation;
+
+        switch (direction) {
+            case 0:
+                testYLocation += 1;
+                if (testYLocation > sim.grid[0].length - 1) { testYLocation = 0; }
+                break;
+            case 1:
+                testXLocation += 1;
+                if (testXLocation > sim.grid.length - 1) { testXLocation = 0; }
+                break;
+            case 2:
+                testYLocation -= 1;
+                if (testYLocation < 0) { testYLocation = sim.grid[0].length - 1; }
+                break;
+            case 3:
+                testXLocation -= 1;
+                if (testXLocation < 0) { testXLocation = sim.grid.length - 1; }
+                break;
+        }
+
+        if (sim.grid[testXLocation][testYLocation] == null) {
+            sim.grid[xLocation][yLocation] = null;
+            xLocation = testXLocation;
+            yLocation = testYLocation;
+            sim.grid[xLocation][yLocation] = this;
+        }
+
+        proximateAgents();
+    }
+
+    public void proximateAgents() {
+        ArrayList<Agent> proximateAgents = new ArrayList<>();
+        for (int i=xLocation-1; i<=xLocation+1; i++) {
+            for (int j=yLocation-1; j<=yLocation+1; j++) {
+                proximateAgents.add(sim.getXY(i, j));
+            }
+        }
+        proximateAgents.remove(this);
+        this.proximateAgents = proximateAgents;
+    }
+
+    public long numberOfNearbyPrey() {
+        return proximateAgents.stream().filter((Agent i) -> i instanceof Prey).count();
+    }
+
+    public long numberOfNearbyPredators() {
+        return proximateAgents.stream().filter((Agent i) -> i instanceof Predator).count();
     }
 
 
-    public void step(SimState state)
-    {
-        //Movement
-        double yardSize = Simulation.state.yardSize;
-        setPos(new Double2D(
-                ((myPos.x + state.random.nextGaussian()*moveSpeed) + yardSize)%yardSize,
-                ((myPos.y + state.random.nextGaussian()*moveSpeed) + yardSize)%yardSize)
-        );
-    }
-
-
-    public void setPos(Double2D pos) {
-        myPos.setTo(pos);
-        Simulation.state.yard.setObjectLocation(this, pos);
-    }
-
-
-    public void remove() {
-        swoff.stop();
-        Simulation.state.yard.remove(this);
-    }
-
-
-    void setPos(MutableDouble2D pos) {
-        setPos(new Double2D(pos));
-    }
 }
