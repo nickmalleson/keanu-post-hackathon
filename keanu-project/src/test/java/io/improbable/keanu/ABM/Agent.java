@@ -3,16 +3,17 @@ package io.improbable.keanu.ABM;
 import io.improbable.keanu.research.VertexBackedRandomFactory;
 
 import java.util.ArrayList;
+import java.util.function.BiConsumer;
 
 public class Agent {
 
     Simulation sim;
-    int xLocation;
-    int yLocation;
+    private int xLocation;
+    private int yLocation;
     VertexBackedRandomFactory random;
     ArrayList<Agent> proximateAgents;
 
-    public Agent(Simulation sim, int startX, int startY) {
+    Agent(Simulation sim, int startX, int startY) {
         this.sim = sim;
         this.xLocation = startX;
         this.yLocation = startY;
@@ -56,7 +57,7 @@ public class Agent {
         proximateAgents();
     }
 
-    public void proximateAgents() {
+    private void proximateAgents() {
         ArrayList<Agent> proximateAgents = new ArrayList<>();
         for (int i=xLocation-1; i<=xLocation+1; i++) {
             for (int j=yLocation-1; j<=yLocation+1; j++) {
@@ -67,12 +68,32 @@ public class Agent {
         this.proximateAgents = proximateAgents;
     }
 
-    public long numberOfNearbyPrey() {
+    long getNumberOfProximatePrey() {
         return proximateAgents.stream().filter((Agent i) -> i instanceof Prey).count();
     }
 
-    public long numberOfNearbyPredators() {
+    long getNumberOfProximatePredators() {
         return proximateAgents.stream().filter((Agent i) -> i instanceof Predator).count();
+    }
+
+    public void removeAgent() {
+        // TODO does this work?
+        sim.grid[xLocation][yLocation] = null;
+    }
+
+    void giveBirth(BiConsumer<Integer, Integer> function) {
+        boolean pregnant = true;
+        while (pregnant) {
+            for (int i = xLocation - 1; i <= xLocation + 1; i++) {
+                for (int j = yLocation - 1; j <= yLocation + 1; j++) {
+                    if (sim.getXY(i, j) == null) {
+                        function.accept(i, j);
+                        pregnant = false;
+                    }
+                }
+            }
+            pregnant = false;
+        }
     }
 
 
