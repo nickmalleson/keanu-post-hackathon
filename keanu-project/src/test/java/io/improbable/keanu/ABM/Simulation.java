@@ -26,7 +26,6 @@ public class Simulation {
 
     public Double[] model(Double[] inputs, RandomFactory<Double> random) {
 
-
         // TODO... fill in here
         run(timesteps);
         Double[] outputs = new Double[10];

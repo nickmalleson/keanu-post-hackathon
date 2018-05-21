@@ -4,7 +4,6 @@ import io.improbable.keanu.randomfactory.RandomFactory;
 import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
-import io.improbable.keanu.vertices.intgr.IntegerVertex;
 
 import java.util.ArrayList;
 import java.util.Set;
@@ -15,12 +14,9 @@ public class BlackBox {
     protected final BiFunction<Double[], RandomFactory<Double>, Double[]> model;
     protected final ArrayList<DoubleVertex> doubleInputs;
     protected final ArrayList<DoubleVertex> doubleOutputs;
-//    protected final ArrayList<IntegerVertex> integerInputs;
-//    protected final ArrayList<IntegerVertex> integerOutputs;
     protected final VertexBackedRandomFactory random;
 
     public BlackBox(ArrayList<DoubleVertex> doubleInputs,
-//                    ArrayList<IntegerVertex> integerInputs,
                     BiFunction<Double[], RandomFactory<Double>, Double[]> model,
                     Integer expectedNumberOfOutputs) {
         this.model = model;
@@ -46,7 +42,7 @@ public class BlackBox {
             doubleOutputs.add(new DoubleArrayIndexingVertex(lambdaVertex, i));
         }
     }
-    
+
     public GaussianVertex fuzzyObserve(Integer outputIndex, Double observation, Double error) {
         GaussianVertex vertex = new GaussianVertex(doubleOutputs.get(outputIndex), error);
         vertex.observe(observation);
