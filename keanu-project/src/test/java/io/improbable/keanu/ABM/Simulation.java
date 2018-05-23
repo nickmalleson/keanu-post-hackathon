@@ -1,41 +1,40 @@
 package io.improbable.keanu.ABM;
 
-import io.improbable.keanu.algorithms.NetworkSamples;
-import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
-import io.improbable.keanu.network.BayesNet;
-import io.improbable.keanu.randomfactory.RandomFactory;
-import io.improbable.keanu.research.BlackBox;
 import io.improbable.keanu.research.VertexBackedRandomFactory;
-import io.improbable.keanu.vertices.dbl.DoubleVertex;
-import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 
 import java.util.ArrayList;
+import java.util.function.BiConsumer;
 
 public class Simulation {
 
     Agent[][] grid;
     VertexBackedRandomFactory random;
-    int timesteps = 100;
-    int numberOfPredators = 2;
-    int numberOfPrey = 30;
 
-    public Simulation(int XSIZE, int YSIZE, VertexBackedRandomFactory random) {
+    private Integer timesteps;
+    Integer numberOfPredators;
+    Integer numberOfPrey;
+    private Double preyReproductionGradient;
+    private Double preyReproductionConstant;
+    private Double predReproductionGradient;
+
+    public Simulation(int XSIZE, int YSIZE, VertexBackedRandomFactory random, Integer timesteps,
+                      Integer initialNumberOfPrey, Integer initialNumberOfPredators,
+                      Double preyReproductionGradient, Double preyReproductionConstant,
+                      Double predReproductionGradient) {
+        this.timesteps = timesteps;
+        this.numberOfPrey = initialNumberOfPrey;
+        this.numberOfPredators = initialNumberOfPredators;
+        this.preyReproductionGradient = preyReproductionGradient;
+        this.preyReproductionConstant = preyReproductionConstant;
+        this.predReproductionGradient = predReproductionGradient;
+
         grid = new Agent[XSIZE][YSIZE];
         this.random = random;
     }
 
-    public Double[] model(Double[] inputs, RandomFactory<Double> random) {
-
-        // TODO... fill in here
-        run(timesteps);
-        Double[] outputs = new Double[10];
-        return outputs;
-    }
-
     public void initialiseSimulation() {
-        for (int i=0; i<numberOfPredators; i++) {
-
-        }
+        randomSpawnPopulation(numberOfPredators, this::spawnPreditor);
+        randomSpawnPopulation(numberOfPrey, this::spawnPrey);
     }
 
     private void step() {
@@ -50,9 +49,21 @@ public class Simulation {
         }
     }
 
-    private void run(int noSteps) {
-        for (int i=0; i<noSteps; i++) {
+    public void run() {
+        for (int i=0; i<timesteps; i++) {
             step();
+        }
+    }
+
+    private void randomSpawnPopulation(Integer numberToSpawn, BiConsumer<Integer, Integer> function) {
+        int i = 0;
+        while (i < numberToSpawn) {
+            int proposedX = random.nextDouble(0, grid.length).intValue();
+            int proposedY = random.nextDouble(0, grid[0].length).intValue();
+            if (getXY(proposedX, proposedY) == null) {
+                function.accept(proposedX, proposedY);
+                i++;
+            }
         }
     }
 
@@ -61,27 +72,10 @@ public class Simulation {
     }
 
     public void spawnPrey(int startX, int startY) {
-        grid[startX][startY] = new Prey(this, startX, startY);
+        grid[startX][startY] = new Prey(this, startX, startY, preyReproductionGradient, preyReproductionConstant);
     }
 
     public void spawnPreditor(int startX, int startY) {
-        grid[startX][startY] = new Predator(this, startX, startY);
-    }
-
-    public static void main (String[] args) {
-
-        Simulation simulation = new Simulation(10, 10, new VertexBackedRandomFactory(10, 10));
-
-        ArrayList<DoubleVertex> inputs = new ArrayList<>(2);
-        inputs.add(new GaussianVertex(5.5, 3.0));
-        inputs.add(new GaussianVertex(6.1, 2.0));
-
-        BlackBox box = new BlackBox(inputs, simulation::model, 2);
-
-        box.fuzzyObserve(1, 14.0, 0.5);
-
-        BayesNet simulationNet = new BayesNet(box.getConnectedGraph());
-
-        NetworkSamples samples = MetropolisHastings.getPosteriorSamples(simulationNet, inputs, 1000);
+        grid[startX][startY] = new Predator(this, startX, startY, predReproductionGradient);
     }
 }

@@ -19,7 +19,7 @@ public class ReduceVertex<INPUT, OUTPUT> extends NonProbabilistic<OUTPUT> {
         setParents(inputs);
 
         if (inputs.size() < 2) {
-            throw new IllegalArgumentException("DoubleReduceVertex should have at least two input vertices, called with " + inputs.size());
+            throw new IllegalArgumentException("ReduceVertex should have at least two input vertices, called with " + inputs.size());
         }
     }
 

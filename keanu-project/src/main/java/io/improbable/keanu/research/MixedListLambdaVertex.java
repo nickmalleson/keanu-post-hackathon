@@ -1,16 +1,17 @@
 package io.improbable.keanu.research;
 
 import io.improbable.keanu.randomfactory.RandomFactory;
+import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.binary.BinaryOpLambda;
+import org.apache.commons.math3.util.Pair;
 
-import java.util.ArrayList;
+public class MixedListLambdaVertex extends BinaryOpLambda<Integer[], Double[], Pair<Integer [], Double []>> {
 
-public class MixedListLambdaVertex extends BinaryOpLambda<ArrayList<Integer>, ArrayList<Double>, MixedModelIO> {
-
-    public MixedListLambdaVertex(MixedModelIO inputOutput,
-                                 TriFunction<ArrayList<Integer>, ArrayList<Double>, RandomFactory<Double>, MixedModelIO> lambda,
+    public MixedListLambdaVertex(Vertex<Integer[]> integerInputs,
+                                 Vertex<Double[]> doubleInputs,
+                                 TriFunction<Integer [], Double [], RandomFactory<Double>, Pair<Integer [], Double []>> lambda,
                                  VertexBackedRandomFactory random) {
-        super(inputOutput.integersIn, inputOutput.doublesIn, (ArrayList<Integer> integersIn, ArrayList<Double> doublesIn)
+        super(integerInputs, doubleInputs, (Integer[] integersIn, Double[] doublesIn)
             -> lambda.apply(integersIn, doublesIn, random));
     }
 }
