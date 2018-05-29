@@ -35,13 +35,16 @@ public class Simulation {
     public void initialiseSimulation() {
         randomSpawnPopulation(numberOfPredators, this::spawnPreditor);
         randomSpawnPopulation(numberOfPrey, this::spawnPrey);
+        System.out.println("Simulation initialised");
     }
 
     private void step() {
         ArrayList<Agent> tempAgentCollection = new ArrayList<>();
         for (Agent[] subset: grid) {
             for (Agent agent: subset) {
-                tempAgentCollection.add(agent);
+                if (agent != null) {
+                    tempAgentCollection.add(agent);
+                }
             }
         }
         for (Agent agent: tempAgentCollection) {

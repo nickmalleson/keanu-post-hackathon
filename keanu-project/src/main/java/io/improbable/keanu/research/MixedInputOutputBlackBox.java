@@ -3,6 +3,7 @@ package io.improbable.keanu.research;
 import io.improbable.keanu.randomfactory.RandomFactory;
 import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
+import io.improbable.keanu.vertices.dbl.nonprobabilistic.CastDoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.intgr.IntegerVertex;
 import org.apache.commons.math3.util.Pair;
@@ -58,17 +59,31 @@ public class MixedInputOutputBlackBox {
         }
     }
 
-    public GaussianVertex fuzzyObserveInput(Integer inputIndex, Double observation, Double error) {
-        GaussianVertex vertex = new GaussianVertex(doubleOutputs.get(inputIndex), error);
+    public GaussianVertex fuzzyObserveDoubleInput(Integer inputIndex, Double observation, Double error) {
+        GaussianVertex vertex = new GaussianVertex(doubleInputs.get(inputIndex), error);
         vertex.observe(observation);
         return vertex;
     }
 
-    public GaussianVertex fuzzyObserveOutput(Integer outputIndex, Double observation, Double error) {
+    public GaussianVertex fuzzyObserveDoubleOutput(Integer outputIndex, Double observation, Double error) {
         GaussianVertex vertex = new GaussianVertex(doubleOutputs.get(outputIndex), error);
         vertex.observe(observation);
         return vertex;
     }
+
+    public GaussianVertex fuzzyObserveIntegerInput(Integer inputIndex, Double observation, Double error) {
+        GaussianVertex vertex = new GaussianVertex(new CastDoubleVertex(integerInputs.get(inputIndex)), error);
+        vertex.observe(observation);
+        return vertex;
+    }
+
+    public GaussianVertex fuzzyObserveIntegerOutput(Integer outputIndex, Double observation, Double error) {
+        GaussianVertex vertex = new GaussianVertex(new CastDoubleVertex(integerOutputs.get(outputIndex)), error);
+        vertex.observe(observation);
+        return vertex;
+    }
+
+
 
     public Set<? extends Vertex> getConnectedGraph() {
         Set<Vertex> vertices = integerOutputs.get(0).getConnectedGraph();

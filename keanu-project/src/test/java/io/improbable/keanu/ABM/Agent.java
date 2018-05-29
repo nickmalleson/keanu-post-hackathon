@@ -86,7 +86,7 @@ public class Agent {
         while (pregnant) {
             for (int i = xLocation - 1; i <= xLocation + 1; i++) {
                 for (int j = yLocation - 1; j <= yLocation + 1; j++) {
-                    if (sim.getXY(i, j) == null) {
+                    if (sim.getXY(i, j) == null && i < sim.grid.length && i >= 0 && j < sim.grid.length && j >= 0) {
                         function.accept(i, j);
                         pregnant = false;
                     }
