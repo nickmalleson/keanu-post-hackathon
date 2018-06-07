@@ -2,6 +2,7 @@ package io.improbable.keanu.research;
 
 import io.improbable.keanu.algorithms.NetworkSamples;
 import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
+import io.improbable.keanu.algorithms.variational.GradientOptimizer;
 import io.improbable.keanu.network.BayesNet;
 import io.improbable.keanu.randomfactory.RandomFactory;
 import io.improbable.keanu.vertices.Vertex;
@@ -79,7 +80,16 @@ public class MixedBlackBoxTest {
         fromVertices.addAll(doubleInputs);
         fromVertices.addAll(integerInputs);
 
+        GradientOptimizer optimizer = new GradientOptimizer(testNet);
+        optimizer.maxAPosteriori(100000);
+        System.out.println(doubleInputs.get(0));
+
         NetworkSamples testMet = MetropolisHastings.getPosteriorSamples(testNet, fromVertices, 1000000).drop(10000);
+
+        Double answer_doubleOne = testMet.probability( sample -> sample.get(doubleInputs.get(0)) > 5.0 && sample.get(doubleInputs.get(0)) < 7.0 );
+
+        System.out.println(answer_doubleOne);
+
 
 //        List<Integer> integerOne = testMet.get(integerInputs.get(0)).asList();
 //        List<Integer> integerTwo = testMet.get(integerInputs.get(1)).asList();
