@@ -1,11 +1,11 @@
 package io.improbable.keanu.research;
 
 import io.improbable.keanu.randomfactory.RandomFactory;
+import io.improbable.keanu.vertices.dbl.KeanuRandom;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.UniformVertex;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 public class VertexBackedRandomFactory implements RandomFactory<Double> {
 
@@ -31,11 +31,11 @@ public class VertexBackedRandomFactory implements RandomFactory<Double> {
     }
 
     @Override
-    public void setRandom(Random random) {}
+    public void setRandom(KeanuRandom random) {}
 
     @Override
     public Double nextDouble(double min, double max) {
-        return min + (max - min) * listOfUniforms.get(counterForUniform++%listOfUniforms.size()).getValue();
+        return min + (max - min) * listOfUniforms.get(counterForUniform++%listOfUniforms.size()).getValue().scalar();
     }
 
     @Override
@@ -60,7 +60,7 @@ public class VertexBackedRandomFactory implements RandomFactory<Double> {
 
     @Override
     public Double nextGaussian(double mu, double sigma) {
-        return listOfGaussians.get(counterForGaussians++%listOfGaussians.size()).getValue() * sigma + mu;
+        return listOfGaussians.get(counterForGaussians++%listOfGaussians.size()).getValue().scalar() * sigma + mu;
     }
 
     public VertexBackedRandomFactory nextRandomFactory() {

@@ -1,38 +1,43 @@
 package io.improbable.keanu.algorithms.mcmc;
 
+import io.improbable.keanu.DeterministicRule;
 import io.improbable.keanu.algorithms.NetworkSamples;
-import io.improbable.keanu.network.BayesNet;
+import io.improbable.keanu.network.BayesianNetwork;
+import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.vertices.Vertex;
+import io.improbable.keanu.vertices.dbl.KeanuRandom;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
-
-import java.util.Random;
 
 public class HamiltonianTest {
 
-    private Random random;
+    @Rule
+    public DeterministicRule deterministicRule = new DeterministicRule();
+
+    private KeanuRandom random;
 
     @Before
     public void setup() {
-        random = new Random(1);
+        random = new KeanuRandom(1);
     }
 
     @Test
     public void samplesGaussian() {
         double mu = 0.0;
         double sigma = 1.0;
-        BayesNet simpleGaussian = MCMCTestDistributions.createSimpleGaussian(mu, sigma, random);
+        BayesianNetwork simpleGaussian = MCMCTestDistributions.createSimpleGaussian(mu, sigma, random);
 
         NetworkSamples posteriorSamples = Hamiltonian.getPosteriorSamples(
             simpleGaussian,
             simpleGaussian.getLatentVertices(),
             1000,
-            20,
-            0.15,
+            10,
+            0.4,
             random
         );
 
-        Vertex<Double> vertex = simpleGaussian.getContinuousLatentVertices().get(0);
+        Vertex<DoubleTensor> vertex = simpleGaussian.getContinuousLatentVertices().get(0);
 
         MCMCTestDistributions.samplesMatchSimpleGaussian(mu, sigma, posteriorSamples.get(vertex).asList());
     }
@@ -40,7 +45,7 @@ public class HamiltonianTest {
     @Test
     public void samplesContinuousPrior() {
 
-        BayesNet bayesNet = MCMCTestDistributions.createSumOfGaussianDistribution(20.0, 1.0, 46.0, random);
+        BayesianNetwork bayesNet = MCMCTestDistributions.createSumOfGaussianDistribution(20.0, 1.0, 46.0);
 
         NetworkSamples posteriorSamples = Hamiltonian.getPosteriorSamples(
             bayesNet,
@@ -51,8 +56,8 @@ public class HamiltonianTest {
             random
         );
 
-        Vertex<Double> A = bayesNet.getContinuousLatentVertices().get(0);
-        Vertex<Double> B = bayesNet.getContinuousLatentVertices().get(1);
+        Vertex<DoubleTensor> A = bayesNet.getContinuousLatentVertices().get(0);
+        Vertex<DoubleTensor> B = bayesNet.getContinuousLatentVertices().get(1);
 
         MCMCTestDistributions.samplesMatchesSumOfGaussians(44.0, posteriorSamples.get(A).asList(), posteriorSamples.get(B).asList());
     }
@@ -60,19 +65,19 @@ public class HamiltonianTest {
     @Test
     public void samplesFromDonut() {
 
-        BayesNet donutBayesNet = MCMCTestDistributions.create2DDonutDistribution(random);
+        BayesianNetwork donutBayesNet = MCMCTestDistributions.create2DDonutDistribution();
 
         NetworkSamples samples = Hamiltonian.getPosteriorSamples(
             donutBayesNet,
             donutBayesNet.getLatentVertices(),
             2500,
-            10,
-            0.05,
+            15,
+            0.02,
             random
         );
 
-        Vertex<Double> A = donutBayesNet.getContinuousLatentVertices().get(0);
-        Vertex<Double> B = donutBayesNet.getContinuousLatentVertices().get(1);
+        Vertex<DoubleTensor> A = donutBayesNet.getContinuousLatentVertices().get(0);
+        Vertex<DoubleTensor> B = donutBayesNet.getContinuousLatentVertices().get(1);
 
         MCMCTestDistributions.samplesMatch2DDonut(samples.get(A).asList(), samples.get(B).asList());
     }

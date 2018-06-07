@@ -2,7 +2,7 @@ package io.improbable.keanu.research;
 
 import io.improbable.keanu.algorithms.NetworkSamples;
 import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
-import io.improbable.keanu.network.BayesNet;
+import io.improbable.keanu.network.BayesianNetwork;
 import io.improbable.keanu.randomfactory.RandomFactory;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
@@ -28,14 +28,14 @@ public class BlackBoxTest {
         box.fuzzyObserve(0, 49.0, 0.5);
         box.fuzzyObserve(1, 14.0, 0.5);
 
-        BayesNet testNet = new BayesNet(box.getConnectedGraph());
+        BayesianNetwork testNet = new BayesianNetwork(box.getConnectedGraph());
 
         // TODO convert into test, given observations, both inputs should converge to ~ 7.0
         // TODO Maybe test observation of the inputs gives convergence to expected outputs
 
         NetworkSamples testMet = MetropolisHastings.getPosteriorSamples(testNet, inputs, 500000).drop(1000);
 
-        Double answer = testMet.probability( sample -> sample.get(inputs.get(0)) + sample.get(inputs.get(1)) > 14.0 );
+        Double answer = testMet.probability( sample -> sample.get(inputs.get(0)).scalar() + sample.get(inputs.get(1)).scalar() > 14.0 );
         System.out.println(answer);
     }
 }

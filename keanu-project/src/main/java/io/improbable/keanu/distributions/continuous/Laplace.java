@@ -1,6 +1,6 @@
 package io.improbable.keanu.distributions.continuous;
 
-import java.util.Random;
+import io.improbable.keanu.vertices.dbl.KeanuRandom;
 
 /**
  * Computer Generation of Statistical Distributions
@@ -20,7 +20,7 @@ public class Laplace {
      * @param random source of randomness
      * @return a random number from the Laplace distribution
      */
-    public static double sample(double mu, double beta, Random random) {
+    public static double sample(double mu, double beta, KeanuRandom random) {
         if (beta <= 0.0) {
             throw new IllegalArgumentException("Invalid value for beta: " + beta);
         }
@@ -33,17 +33,6 @@ public class Laplace {
 
     public static double pdf(double mu, double beta, double x) {
         return 1 / (2 * beta) * Math.exp(-Math.abs(x - mu) / beta);
-    }
-
-    public static Diff dPdf(double mu, double beta, double x) {
-        double absMuMinusX = Math.abs(mu - x);
-        double denominator = 2 * Math.pow(beta, 2) * absMuMinusX;
-        double expAbsMuMinusXDivBeta = Math.exp(-(absMuMinusX / beta));
-
-        double dPdx = ((mu - x) * expAbsMuMinusXDivBeta) / denominator;
-        double dPdm = ((x - mu) * expAbsMuMinusXDivBeta) / denominator;
-        double dPdb = (expAbsMuMinusXDivBeta * (absMuMinusX - beta)) / (2 * Math.pow(beta, 3));
-        return new Diff(dPdm, dPdb, dPdx);
     }
 
     public static double logPdf(double mu, double beta, double x) {

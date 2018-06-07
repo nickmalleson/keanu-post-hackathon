@@ -1,11 +1,15 @@
 package io.improbable.keanu.algorithms.mcmc;
 
-import io.improbable.keanu.network.BayesNet;
+import io.improbable.keanu.network.BayesianNetwork;
 import io.improbable.keanu.network.NetworkState;
 import io.improbable.keanu.network.SimpleNetworkState;
 import io.improbable.keanu.vertices.Vertex;
+import io.improbable.keanu.vertices.dbl.KeanuRandom;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Simulated Annealing is a modified version of Metropolis Hastings that causes the MCMC random walk to
@@ -13,24 +17,24 @@ import java.util.*;
  */
 public class SimulatedAnnealing {
 
-    public static NetworkState getMaxAPosteriori(BayesNet bayesNet,
+    public static NetworkState getMaxAPosteriori(BayesianNetwork bayesNet,
                                                  int sampleCount,
                                                  AnnealingSchedule schedule) {
-        return getMaxAPosteriori(bayesNet, sampleCount, schedule, new Random());
+        return getMaxAPosteriori(bayesNet, sampleCount, schedule, KeanuRandom.getDefaultRandom());
     }
 
-    public static NetworkState getMaxAPosteriori(BayesNet bayesNet,
+    public static NetworkState getMaxAPosteriori(BayesianNetwork bayesNet,
                                                  int sampleCount,
-                                                 Random random) {
+                                                 KeanuRandom random) {
         AnnealingSchedule schedule = exponentialSchedule(sampleCount, 2, 0.01);
         return getMaxAPosteriori(bayesNet, sampleCount, schedule, random);
     }
 
-    public static NetworkState getMaxAPosteriori(BayesNet bayesNet, int sampleCount) {
+    public static NetworkState getMaxAPosteriori(BayesianNetwork bayesNet, int sampleCount) {
 
         AnnealingSchedule schedule = exponentialSchedule(sampleCount, 2, 0.01);
 
-        return getMaxAPosteriori(bayesNet, sampleCount, schedule, new Random());
+        return getMaxAPosteriori(bayesNet, sampleCount, schedule, KeanuRandom.getDefaultRandom());
     }
 
     /**
@@ -42,10 +46,12 @@ public class SimulatedAnnealing {
      * @param random            the source of randomness
      * @return the NetworkState that represents the Max A Posteriori
      */
-    public static NetworkState getMaxAPosteriori(BayesNet bayesNet,
+    public static NetworkState getMaxAPosteriori(BayesianNetwork bayesNet,
                                                  int sampleCount,
                                                  AnnealingSchedule annealingSchedule,
-                                                 Random random) {
+                                                 KeanuRandom random) {
+
+        bayesNet.cascadeObservations();
 
         if (bayesNet.isInImpossibleState()) {
             throw new IllegalArgumentException("Cannot start optimizer on zero probability network");

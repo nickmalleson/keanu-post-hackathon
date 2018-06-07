@@ -1,5 +1,6 @@
 package io.improbable.keanu.kotlin
 
+import io.improbable.keanu.DeterministicRule
 import io.improbable.keanu.vertices.dbl.DoubleVertex
 import io.improbable.keanu.vertices.dbl.nonprobabilistic.ConstantDoubleVertex
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex
@@ -9,13 +10,15 @@ import io.improbable.keanu.vertices.intgr.nonprobabilistic.ConstantIntegerVertex
 import io.improbable.keanu.vertices.intgr.probabilistic.PoissonVertex
 import io.improbable.keanu.vertices.intgr.probabilistic.UniformIntVertex
 import junit.framework.TestCase.assertEquals
+import org.junit.Rule
 import org.junit.Test
-import java.util.*
 
 
 class OperatorOverloadingTest {
 
-    private val random = Random(1)
+    @Rule
+    @JvmField
+    var deterministicRule = DeterministicRule()
 
     @Test
     fun doubleVertexPlus() {
@@ -55,8 +58,8 @@ class OperatorOverloadingTest {
 
     @Test
     fun integerVertexPlus() {
-        val a = PoissonVertex(1.0, random)
-        val b = PoissonVertex(2.0, random)
+        val a = PoissonVertex(1.0)
+        val b = PoissonVertex(2.0)
 
         val e1 = a.value + b.value
         val r1 = a + b
@@ -127,8 +130,8 @@ class OperatorOverloadingTest {
 
     @Test
     fun integerVertexMinus() {
-        val a = PoissonVertex(1.0, random)
-        val b = PoissonVertex(2.0, random)
+        val a = PoissonVertex(1.0)
+        val b = PoissonVertex(2.0)
 
         val e1 = a.value - b.value
         val r1 = a - b
@@ -181,7 +184,7 @@ class OperatorOverloadingTest {
 
     @Test
     fun integerVertexUnaryMinus() {
-        val a = PoissonVertex(1.0, random)
+        val a = PoissonVertex(1.0)
 
         val e1 = -a.value
         val r1 = -a
@@ -231,8 +234,8 @@ class OperatorOverloadingTest {
 
     @Test
     fun integerVertexTimes() {
-        val a = PoissonVertex(1.0, random)
-        val b = PoissonVertex(2.0, random)
+        val a = PoissonVertex(1.0)
+        val b = PoissonVertex(2.0)
 
         val e1 = a.value * b.value
         val r1 = a * b
@@ -304,7 +307,7 @@ class OperatorOverloadingTest {
 
     @Test
     fun integerVertexDivide() {
-        val a = PoissonVertex(1.0, random)
+        val a = PoissonVertex(1.0)
         val b = ConstantIntegerVertex(2)
 
         val e1 = a.value / b.value
@@ -315,8 +318,8 @@ class OperatorOverloadingTest {
         val r2 = a / 2
         assertEquals(e2, r2.value)
 
-        val e3 = 2 / a.value
-        val r3 = 2 / a
+        val e3 = 2 / (a.value + 1)
+        val r3 = 2 / (a + 1)
         assertEquals(e3, r3.value)
     }
 
@@ -371,8 +374,8 @@ class OperatorOverloadingTest {
     @Test
     fun integerVertexNestedOperators() {
         val a = 4
-        val b = PoissonVertex(1.0, random)
-        val c = PoissonVertex(2.0, random)
+        val b = PoissonVertex(1.0)
+        val c = PoissonVertex(2.0)
         val d = ConstantIntegerVertex(1)
         val e = UniformIntVertex(1, 10)
         val f = 10
@@ -420,8 +423,8 @@ class OperatorOverloadingTest {
         val iv2 = ConstantIntegerVertex(2)
         val resultI2 = modelB.add(iv1, iv2)
 
-        assertEquals(resultD1.value, resultD2.value)
-        assertEquals(resultI1.value, resultI2.value)
+        assertEquals(resultD1.value, resultD2.value.scalar())
+        assertEquals(resultI1.value, resultI2.value.scalar())
     }
 
     class SimpleModel<A : DoubleOperators<A>, B : IntegerOperators<B>> {
@@ -439,14 +442,14 @@ class OperatorOverloadingTest {
     fun vertexOperatorTest() {
         val a = ConstantDoubleVertex(0.123)
 
-        assertEquals(Math.acos(a.value), acos(a).value)
-        assertEquals(Math.asin(a.value), asin(a).value)
-        assertEquals(Math.cos(a.value), cos(a).value)
-        assertEquals(Math.sin(a.value), sin(a).value)
-        assertEquals(Math.exp(a.value), exp(a).value)
-        assertEquals(Math.log(a.value), log(a).value)
-        assertEquals(Math.pow(a.value, 2.345), pow(a, 2.345).value)
-        assertEquals(Math.pow(a.value, a.value), pow(a, a).value)
+        assertEquals(Math.acos(a.value.scalar()), acos(a).value.scalar())
+        assertEquals(Math.asin(a.value.scalar()), asin(a).value.scalar())
+        assertEquals(Math.cos(a.value.scalar()), cos(a).value.scalar())
+        assertEquals(Math.sin(a.value.scalar()), sin(a).value.scalar())
+        assertEquals(Math.exp(a.value.scalar()), exp(a).value.scalar())
+        assertEquals(Math.log(a.value.scalar()), log(a).value.scalar())
+        assertEquals(Math.pow(a.value.scalar(), 2.345), pow(a, 2.345).value.scalar())
+        assertEquals(Math.pow(a.value.scalar(), a.value.scalar()), pow(a, a).value.scalar())
     }
 
     @Test

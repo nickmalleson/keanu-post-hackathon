@@ -1,88 +1,95 @@
 package io.improbable.keanu.vertices.dbl.probabilistic;
 
-import io.improbable.keanu.distributions.continuous.Logistic;
+import io.improbable.keanu.distributions.tensors.continuous.TensorLogistic;
+import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
+import io.improbable.keanu.vertices.dbl.KeanuRandom;
 import io.improbable.keanu.vertices.dbl.nonprobabilistic.ConstantDoubleVertex;
 import io.improbable.keanu.vertices.dbl.nonprobabilistic.diff.PartialDerivatives;
-import io.improbable.keanu.vertices.dbltensor.DoubleTensor;
 
 import java.util.Map;
-import java.util.Random;
+
+import static io.improbable.keanu.tensor.TensorShapeValidation.checkHasSingleNonScalarShapeOrAllScalar;
+import static io.improbable.keanu.tensor.TensorShapeValidation.checkTensorsMatchNonScalarShapeOrAreScalar;
 
 public class LogisticVertex extends ProbabilisticDouble {
 
     private final DoubleVertex a;
     private final DoubleVertex b;
-    private final Random random;
 
-    public LogisticVertex(DoubleVertex a, DoubleVertex b, Random random) {
+    /**
+     * One a or b or both driving an arbitrarily shaped tensor of Logistic
+     *
+     * @param shape the desired shape of the vertex
+     * @param a     the a of the Logistic with either the same shape as specified for this vertex or a scalar
+     * @param b     the b of the Logistic with either the same shape as specified for this vertex or a scalar
+     */
+    public LogisticVertex(int[] shape, DoubleVertex a, DoubleVertex b) {
+
+        checkTensorsMatchNonScalarShapeOrAreScalar(shape, a.getShape(), b.getShape());
+
         this.a = a;
         this.b = b;
-        this.random = random;
         setParents(a, b);
+        setValue(DoubleTensor.placeHolder(shape));
     }
 
-    public LogisticVertex(DoubleVertex a, double b, Random random) {
-        this(a, new ConstantDoubleVertex(b), random);
-    }
-
-    public LogisticVertex(double a, DoubleVertex b, Random random) {
-        this(new ConstantDoubleVertex(a), b, random);
-    }
-
-    public LogisticVertex(double a, double b, Random random) {
-        this(new ConstantDoubleVertex(a), new ConstantDoubleVertex(b), random);
-    }
-
+    /**
+     * One to one constructor for mapping some shape of a and b to
+     * a matching shaped logistic.
+     *
+     * @param a the a of the Logistic with either the same shape as specified for this vertex or a scalar
+     * @param b the b of the Logistic with either the same shape as specified for this vertex or a scalar
+     */
     public LogisticVertex(DoubleVertex a, DoubleVertex b) {
-        this(a, b, new Random());
+        this(checkHasSingleNonScalarShapeOrAllScalar(a.getShape(), a.getShape()), a, b);
     }
 
     public LogisticVertex(DoubleVertex a, double b) {
-        this(a, new ConstantDoubleVertex(b), new Random());
+        this(a, new ConstantDoubleVertex(b));
     }
 
     public LogisticVertex(double a, DoubleVertex b) {
-        this(new ConstantDoubleVertex(a), b, new Random());
+        this(new ConstantDoubleVertex(a), b);
     }
 
     public LogisticVertex(double a, double b) {
-        this(new ConstantDoubleVertex(a), new ConstantDoubleVertex(b), new Random());
-    }
-
-    public DoubleVertex getA() {
-        return a;
-    }
-
-    public DoubleVertex getB() {
-        return b;
+        this(new ConstantDoubleVertex(a), new ConstantDoubleVertex(b));
     }
 
     @Override
-    public double logPdf(Double value) {
-        return Logistic.logPdf(a.getValue(), b.getValue(), value);
+    public double logPdf(DoubleTensor value) {
+        DoubleTensor aValues = a.getValue();
+        DoubleTensor bValues = b.getValue();
+
+        DoubleTensor logPdfs = TensorLogistic.logPdf(aValues, bValues, value);
+
+        return logPdfs.sum();
     }
 
     @Override
-    public Map<Long, DoubleTensor> dLogPdf(Double value) {
-        Logistic.Diff diff = Logistic.dlnPdf(a.getValue(), b.getValue(), value);
-        return convertDualNumbersToDiff(diff.dPda, diff.dPdb, diff.dPdx);
+    public Map<Long, DoubleTensor> dLogPdf(DoubleTensor value) {
+        TensorLogistic.Diff dlnP = TensorLogistic.dlnPdf(a.getValue(), b.getValue(), value);
+        return convertDualNumbersToDiff(dlnP.dPda, dlnP.dPdb, dlnP.dPdx);
     }
 
-    private Map<Long, DoubleTensor> convertDualNumbersToDiff(double dPda, double dPdb, double dPdx) {
-        PartialDerivatives dPdInputsFromMu = a.getDualNumber().getPartialDerivatives().multiplyBy(dPda);
-        PartialDerivatives dPdInputsFromSigma = b.getDualNumber().getPartialDerivatives().multiplyBy(dPdb);
-        PartialDerivatives dPdInputs = dPdInputsFromMu.add(dPdInputsFromSigma);
+    private Map<Long, DoubleTensor> convertDualNumbersToDiff(DoubleTensor dPda,
+                                                             DoubleTensor dPdb,
+                                                             DoubleTensor dPdx) {
 
-        if (!isObserved()) {
+        PartialDerivatives dPdInputsFromA = a.getDualNumber().getPartialDerivatives().multiplyBy(dPda);
+        PartialDerivatives dPdInputsFromB = b.getDualNumber().getPartialDerivatives().multiplyBy(dPdb);
+        PartialDerivatives dPdInputs = dPdInputsFromA.add(dPdInputsFromB);
+
+        if (!this.isObserved()) {
             dPdInputs.putWithRespectTo(getId(), dPdx);
         }
 
-        return DoubleTensor.fromScalars(dPdInputs.asMap());
+        return dPdInputs.asMap();
     }
 
     @Override
-    public Double sample() {
-        return Logistic.sample(a.getValue(), b.getValue(), random);
+    public DoubleTensor sample(KeanuRandom random) {
+        return TensorLogistic.sample(getShape(), a.getValue(), b.getValue(), random);
     }
 }

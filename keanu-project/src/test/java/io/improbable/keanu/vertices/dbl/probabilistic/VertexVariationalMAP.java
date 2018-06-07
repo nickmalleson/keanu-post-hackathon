@@ -1,11 +1,11 @@
 package io.improbable.keanu.vertices.dbl.probabilistic;
 
 import io.improbable.keanu.algorithms.variational.GradientOptimizer;
-import io.improbable.keanu.network.BayesNet;
-import io.improbable.keanu.plating.PlateBuilder;
+import io.improbable.keanu.network.BayesianNetwork;
+import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
+import io.improbable.keanu.vertices.dbl.KeanuRandom;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 
@@ -17,50 +17,33 @@ public class VertexVariationalMAP {
         Function<List<DoubleVertex>, DoubleVertex> vertexUnderTestCreator,
         List<DoubleVertex> hyperParamsForSampling,
         List<DoubleVertex> latentsToInfer,
-        int numSamples) {
+        KeanuRandom random) {
 
         // SOURCE OF TRUTH
         DoubleVertex sourceVertex = vertexUnderTestCreator.apply(hyperParamsForSampling);
 
         // GENERATE FAKE DATA
-        List<Double> samples = getSamples(sourceVertex, numSamples);
+        DoubleTensor samples = sourceVertex.sample(random);
 
-        // OBSERVE
-        new PlateBuilder<Double>()
-            .fromIterator(samples.iterator())
-            .withFactory((plate, sample) -> {
-
-                DoubleVertex observedDistribution = vertexUnderTestCreator.apply(latentsToInfer);
-
-                observedDistribution.observe(sample);
-
-            }).build();
+        DoubleVertex observedDistribution = vertexUnderTestCreator.apply(latentsToInfer);
+        observedDistribution.observe(samples);
 
         // INFER HYPER PARAMETERS
-        doInferenceOn(latentsToInfer.get(0));
+        doInferenceOn(latentsToInfer.get(0), random);
 
         for (int i = 0; i < latentsToInfer.size(); i++) {
-            assertEquals(hyperParamsForSampling.get(i).getValue(), latentsToInfer.get(i).getValue(), 0.1);
+            assertEquals(hyperParamsForSampling.get(i).getValue().scalar(), latentsToInfer.get(i).getValue().scalar(), 0.1);
         }
     }
 
-    private static void doInferenceOn(DoubleVertex unknownVertex) {
-        BayesNet inferNet = new BayesNet(unknownVertex.getConnectedGraph());
+    private static void doInferenceOn(DoubleVertex unknownVertex, KeanuRandom random) {
+        BayesianNetwork inferNet = new BayesianNetwork(unknownVertex.getConnectedGraph());
 
-        inferNet.probeForNonZeroMasterP(100);
+        inferNet.probeForNonZeroMasterP(100, random);
 
-        GradientOptimizer g = new GradientOptimizer(inferNet);
+        GradientOptimizer gradientOptimizer = new GradientOptimizer(inferNet);
 
-        g.maxAPosteriori(5000);
+        gradientOptimizer.maxAPosteriori(5000);
     }
 
-    private static List<Double> getSamples(DoubleVertex knownVertex, int numSamples) {
-
-        List<Double> samples = new ArrayList<>();
-        for (int i = 0; i < numSamples; i++) {
-            samples.add(knownVertex.sample());
-        }
-
-        return samples;
-    }
 }

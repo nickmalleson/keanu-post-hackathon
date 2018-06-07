@@ -2,16 +2,18 @@ package io.improbable.keanu.vertices;
 
 import io.improbable.keanu.algorithms.graphtraversal.DiscoverGraph;
 import io.improbable.keanu.algorithms.graphtraversal.VertexValuePropagation;
-import io.improbable.keanu.vertices.dbltensor.DoubleTensor;
+import io.improbable.keanu.tensor.Tensor;
+import io.improbable.keanu.tensor.dbl.DoubleTensor;
+import io.improbable.keanu.vertices.dbl.KeanuRandom;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicLong;
 
 public abstract class Vertex<T> {
 
-    public static final AtomicLong idGenerator = new AtomicLong(0L);
+    public static final AtomicLong ID_GENERATOR = new AtomicLong(0L);
 
-    private long uuid = idGenerator.getAndIncrement();
+    private long uuid = ID_GENERATOR.getAndIncrement();
     private Set<Vertex> children = new HashSet<>();
     private Set<Vertex> parents = new HashSet<>();
     private T value;
@@ -44,10 +46,15 @@ public abstract class Vertex<T> {
     }
 
     /**
+     * @param random source of randomness
      * @return a sample from the vertex's distribution. For non-probabilistic vertices,
      * this will always be the same value.
      */
-    public abstract T sample();
+    public abstract T sample(KeanuRandom random);
+
+    public T sampleUsingDefaultRandom() {
+        return sample(KeanuRandom.getDefaultRandom());
+    }
 
     /**
      * This causes a non-probabilistic vertex to recalculate it's value based off it's
@@ -60,12 +67,13 @@ public abstract class Vertex<T> {
     /**
      * This causes a backwards propagating calculation of the vertex value. This
      * propagation only happens for vertices with values dependent on parent values
-     * i.e. non-probabilistic vertices.
+     * i.e. non-probabilistic vertices. This will also cause probabilistic
+     * vertices that have no value to set their value by calling their sample method.
      *
      * @return The value at this vertex after recalculating any parent non-probabilistic
      * vertices.
      */
-    public T lazyEval() {
+    public final T lazyEval() {
         Deque<Vertex<?>> stack = new ArrayDeque<>();
         stack.push(this);
         Set<Vertex<?>> hasCalculated = new HashSet<>();
@@ -113,11 +121,27 @@ public abstract class Vertex<T> {
     }
 
     public T getValue() {
-        return !hasValue() ? lazyEval() : value;
+        return hasValue() ? value : lazyEval();
+    }
+
+    protected T getRawValue() {
+        return value;
     }
 
     public boolean hasValue() {
-        return value != null;
+        if (value instanceof Tensor) {
+            return !((Tensor) value).isShapePlaceholder();
+        } else {
+            return value != null;
+        }
+    }
+
+    public int[] getShape() {
+        if (value instanceof Tensor) {
+            return ((Tensor) value).getShape();
+        } else {
+            return Tensor.SCALAR_SHAPE;
+        }
     }
 
     /**

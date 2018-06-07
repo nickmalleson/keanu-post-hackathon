@@ -1,22 +1,27 @@
 package io.improbable.keanu.algorithms.particlefiltering;
 
-import io.improbable.keanu.e2e.regression.LinearRegression;
+import io.improbable.keanu.DeterministicRule;
+import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
+import io.improbable.keanu.vertices.dbl.KeanuRandom;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.UniformVertex;
+import org.junit.Rule;
 import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
-import java.util.Random;
 
 import static java.lang.Math.exp;
 import static org.junit.Assert.assertTrue;
 
 public class ParticleFilteringTest {
 
-    private final Logger log = LoggerFactory.getLogger(LinearRegression.class);
+    @Rule
+    public DeterministicRule deterministicRule = new DeterministicRule();
+
+    private final Logger log = LoggerFactory.getLogger(ParticleFilteringTest.class);
 
     @Test
     public void findsCorrectTemp() {
@@ -43,13 +48,18 @@ public class ParticleFilteringTest {
         int resamplingCycles = 3;
         double resamplingProportion = 0.5;
 
+        List<ParticleFilter.Particle> particles = ParticleFilter.getProbableValues(
+            temperature.getConnectedGraph(),
+            numParticles,
+            resamplingCycles,
+            resamplingProportion,
+            new KeanuRandom(1)
+        );
 
-        List<ParticleFilter.Particle> particles = ParticleFilter.getProbableValues(temperature.getConnectedGraph(),
-            numParticles, resamplingCycles, resamplingProportion, new Random());
         particles.sort(ParticleFilter.Particle::sortDescending);
         ParticleFilter.Particle p = particles.get(0);
 
-        double estimatedTemp = (double) p.getLatentVertices().get(temperature);
+        double estimatedTemp = ((DoubleTensor) p.getLatentVertices().get(temperature)).scalar();
         double probability = exp(p.getSumLogPOfSubgraph());
 
         log.info("Final temp estimate = " + estimatedTemp + ", probability = " + probability);

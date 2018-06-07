@@ -2,24 +2,25 @@ package io.improbable.keanu.algorithms.particlefiltering;
 
 import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
-import io.improbable.keanu.vertices.dbl.nonprobabilistic.ConstantDoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.UniformVertex;
+import io.improbable.keanu.vertices.ConstantVertex;
 import org.junit.Test;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static junit.framework.TestCase.assertEquals;
 import static junit.framework.TestCase.assertTrue;
 
 public class LatentIncrementSortTest {
 
-    private Random random = new Random();
-
     @Test
     public void simpleGraph() {
-        DoubleVertex muA = new ConstantDoubleVertex(0.0);
-        DoubleVertex muB = new ConstantDoubleVertex(3.0);
+        DoubleVertex muA = ConstantVertex.of(0.0);
+        DoubleVertex muB = ConstantVertex.of(3.0);
         DoubleVertex sigma = new UniformVertex(1.0, 2.0);
 
         DoubleVertex gA = new GaussianVertex(muA, sigma);
@@ -41,7 +42,7 @@ public class LatentIncrementSortTest {
 
     @Test
     public void moreComplexGraph() {
-        DoubleVertex mu = new ConstantDoubleVertex(0.0);
+        DoubleVertex mu = ConstantVertex.of(0.0);
         DoubleVertex sigma1 = new UniformVertex(1.0, 2.0);
         DoubleVertex g1 = new GaussianVertex(mu, sigma1);
         g1.observe(0.0);

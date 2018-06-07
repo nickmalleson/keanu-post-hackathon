@@ -1,7 +1,9 @@
 package io.improbable.keanu.research;
 
+import io.improbable.keanu.tensor.Tensor;
 import io.improbable.keanu.vertices.NonProbabilisticObservationException;
 import io.improbable.keanu.vertices.Vertex;
+import io.improbable.keanu.vertices.dbl.KeanuRandom;
 import io.improbable.keanu.vertices.generic.nonprobabilistic.NonProbabilistic;
 
 import java.util.*;
@@ -29,14 +31,8 @@ public class ReduceVertex<INPUT, OUTPUT> extends NonProbabilistic<OUTPUT> {
     }
 
     @Override
-    public OUTPUT sample() {
-        return applyReduce(Vertex::sample);
-    }
-
-    @Override
-    public OUTPUT lazyEval() {
-        setValue(applyReduce(Vertex::lazyEval));
-        return getValue();
+    public OUTPUT sample(KeanuRandom random) {
+        return applyReduce(V -> V.sample(random));
     }
 
     @Override

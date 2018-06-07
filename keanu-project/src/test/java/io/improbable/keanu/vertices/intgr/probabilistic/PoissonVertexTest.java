@@ -1,6 +1,6 @@
 package io.improbable.keanu.vertices.intgr.probabilistic;
 
-import io.improbable.keanu.vertices.dbl.nonprobabilistic.ConstantDoubleVertex;
+import io.improbable.keanu.vertices.dbl.KeanuRandom;
 import org.apache.commons.math3.stat.descriptive.SummaryStatistics;
 import org.junit.Test;
 import org.slf4j.Logger;
@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -21,11 +20,12 @@ public class PoissonVertexTest {
         int N = 100000;
         double epsilon = 0.1;
         Double mu = 10.0;
-        PoissonVertex testPoissonVertex = new PoissonVertex(new ConstantDoubleVertex(mu), new Random(1));
+        KeanuRandom random = new KeanuRandom(1);
+        PoissonVertex testPoissonVertex = new PoissonVertex(mu);
 
         List<Integer> samples = new ArrayList<>();
         for (int i = 0; i < N; i++) {
-            Integer sample = testPoissonVertex.sample();
+            Integer sample = testPoissonVertex.sample(random).scalar();
             samples.add(sample);
         }
 
@@ -46,11 +46,11 @@ public class PoissonVertexTest {
     public void logProbForValuesGreaterThanTwenty() {
         double mu = 25.0;
 
-        PoissonVertex poissonVertex = new PoissonVertex(mu, new Random(1));
+        PoissonVertex poissonVertex = new PoissonVertex(mu);
 
-        double logProb = poissonVertex.logProb(19);
-        double logProbThreshold = poissonVertex.logProb(20);
-        double logProbAboveThreshold = poissonVertex.logProb(21);
+        double logProb = poissonVertex.logPmf(19);
+        double logProbThreshold = poissonVertex.logPmf(20);
+        double logProbAboveThreshold = poissonVertex.logPmf(21);
 
         assertTrue(logProbAboveThreshold > logProbThreshold && logProbThreshold > logProb);
     }

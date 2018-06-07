@@ -1,44 +1,38 @@
 package io.improbable.keanu.algorithms.variational;
 
+import io.improbable.keanu.tensor.dbl.DoubleTensor;
+import io.improbable.keanu.tensor.dbl.Nd4jDoubleTensor;
 import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
-import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 
 public class FitnessFunctionWithGradientTest {
 
     private final double dx = 0.0000000001;
-    private Random random;
-
-    @Before
-    public void setup() {
-        this.random = new Random(1);
-    }
 
     @Test
     public void calculatesGradientCorrectlyWithMultiplyAndMinus() {
 
-        GaussianVertex A = new GaussianVertex(1.0, 1.0, random);
-        GaussianVertex B = new GaussianVertex(2.0, 1.0, random);
+        GaussianVertex A = new GaussianVertex(1.0, 1.0);
+        GaussianVertex B = new GaussianVertex(2.0, 1.0);
 
-        A.setValue(1.5);
-        B.setValue(2.5);
+        A.setAndCascade(Nd4jDoubleTensor.scalar(1.5));
+        B.setAndCascade(Nd4jDoubleTensor.scalar(2.5));
 
         DoubleVertex C = A.multiply(B);
         DoubleVertex D = A.minus(B);
 
-        GaussianVertex cObservation = new GaussianVertex(C, 1.0, random);
-        cObservation.observe(3.0);
+        GaussianVertex cObservation = new GaussianVertex(C, 1.0);
+        cObservation.observe(Nd4jDoubleTensor.scalar(3.0));
 
-        GaussianVertex dObservation = new GaussianVertex(D, 1.0, random);
-        dObservation.observe(3.0);
+        GaussianVertex dObservation = new GaussianVertex(D, 1.0);
+        dObservation.observe(Nd4jDoubleTensor.scalar(3.0));
 
         assert2DGradientEqualsApproxGradient(
             new double[]{5, 5},
@@ -52,20 +46,20 @@ public class FitnessFunctionWithGradientTest {
     @Test
     public void calculatesGradientCorrectlyWithAdditionAndDivision() {
 
-        GaussianVertex A = new GaussianVertex(7.0, 3.0, random);
-        GaussianVertex B = new GaussianVertex(3.0, 3.0, random);
+        GaussianVertex A = new GaussianVertex(7.0, 3.0);
+        GaussianVertex B = new GaussianVertex(3.0, 3.0);
 
-        A.setValue(6.0);
-        B.setValue(3.0);
+        A.setAndCascade(Nd4jDoubleTensor.scalar(6.0));
+        B.setAndCascade(Nd4jDoubleTensor.scalar(3.0));
 
         DoubleVertex C = A.divideBy(B);
         DoubleVertex D = A.multiply(B);
 
-        GaussianVertex cObservation = new GaussianVertex(C, 5.0, random);
-        cObservation.observe(2.1);
+        GaussianVertex cObservation = new GaussianVertex(C, 5.0);
+        cObservation.observe(Nd4jDoubleTensor.scalar(2.1));
 
-        GaussianVertex dObservation = new GaussianVertex(D, 5.0, random);
-        dObservation.observe(18.0);
+        GaussianVertex dObservation = new GaussianVertex(D, 5.0);
+        dObservation.observe(Nd4jDoubleTensor.scalar(18.0));
 
         assert2DGradientEqualsApproxGradient(
             new double[]{10, 10},
@@ -79,11 +73,11 @@ public class FitnessFunctionWithGradientTest {
     @Test
     public void calculatesGradientCorrectlyWithAdditionMultiplicationSubtractionDivision() {
 
-        GaussianVertex A = new GaussianVertex(2.0, 3.0, random);
-        GaussianVertex B = new GaussianVertex(3.0, 3.0, random);
+        GaussianVertex A = new GaussianVertex(2.0, 3.0);
+        GaussianVertex B = new GaussianVertex(3.0, 3.0);
 
-        A.setValue(2.2);
-        B.setValue(3.2);
+        A.setAndCascade(Nd4jDoubleTensor.scalar(2.2));
+        B.setAndCascade(Nd4jDoubleTensor.scalar(3.2));
 
         DoubleVertex C = A.plus(B);
         DoubleVertex D = A.multiply(B);
@@ -91,11 +85,11 @@ public class FitnessFunctionWithGradientTest {
         DoubleVertex E = C.minus(D);
         DoubleVertex F = C.divideBy(D);
 
-        GaussianVertex eObservation = new GaussianVertex(E, 5.0, random);
-        eObservation.observe(1.2);
+        GaussianVertex eObservation = new GaussianVertex(E, 5.0);
+        eObservation.observe(Nd4jDoubleTensor.scalar(1.2));
 
         GaussianVertex fObservation = new GaussianVertex(F, C);
-        fObservation.observe(1.0);
+        fObservation.observe(Nd4jDoubleTensor.scalar(1.0));
 
         assert2DGradientEqualsApproxGradient(
             new double[]{5, 5},
@@ -116,9 +110,9 @@ public class FitnessFunctionWithGradientTest {
                                                       double[] bottomLeft,
                                                       double stepSize,
                                                       List<Vertex> probabilisticVertices,
-                                                      List<? extends Vertex<Double>> latentVertices) {
+                                                      List<? extends Vertex<DoubleTensor>> latentVertices) {
 
-        FitnessFunctionWithGradient f = new FitnessFunctionWithGradient(probabilisticVertices, latentVertices);
+        FitnessFunctionWithGradient fitness = new FitnessFunctionWithGradient(probabilisticVertices, latentVertices);
 
         double[] point = Arrays.copyOf(bottomLeft, bottomLeft.length);
 
@@ -129,14 +123,13 @@ public class FitnessFunctionWithGradientTest {
 
             for (int y = 0; y < yStepCount; y++) {
 
-                double[] gradient0 = f.gradient().value(point);
-                double fitness0 = f.fitness().value(point);
+                double[] gradient0 = fitness.gradient().value(point);
+                double fitness0 = fitness.fitness().value(point);
 
                 double da = dx;
                 double[] pointA = {point[0] + da, point[1]};
 
-                double[] gradient1a = f.gradient().value(pointA);
-                double fitness1a = f.fitness().value(pointA);
+                double fitness1a = fitness.fitness().value(pointA);
 
                 double approxGradientA = (fitness1a - fitness0) / da;
                 double epsA = Math.max(Math.abs(gradient0[0] * 0.01), 0.0001);
@@ -145,8 +138,7 @@ public class FitnessFunctionWithGradientTest {
                 double db = dx;
                 double[] pointB = {point[0], point[1] + db};
 
-                double[] gradient1b = f.gradient().value(pointB);
-                double fitness1b = f.fitness().value(pointB);
+                double fitness1b = fitness.fitness().value(pointB);
 
                 double approxGradientB = (fitness1b - fitness0) / db;
                 double epsB = Math.max(Math.abs(gradient0[1] * 0.01), 0.0001);

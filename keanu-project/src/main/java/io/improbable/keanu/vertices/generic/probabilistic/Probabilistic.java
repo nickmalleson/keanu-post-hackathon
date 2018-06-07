@@ -1,18 +1,14 @@
 package io.improbable.keanu.vertices.generic.probabilistic;
 
+import io.improbable.keanu.tensor.Tensor;
 import io.improbable.keanu.vertices.Vertex;
 
-public abstract class Probabilistic<T> extends Vertex<T> {
+public abstract class Probabilistic<T, TENSOR extends Tensor<T>> extends Vertex<TENSOR> {
 
     @Override
-    public T updateValue() {
-        return getValue();
-    }
-
-    @Override
-    public T lazyEval() {
+    public TENSOR updateValue() {
         if (!hasValue()) {
-            setValue(sample());
+            setValue(sampleUsingDefaultRandom());
         }
         return getValue();
     }

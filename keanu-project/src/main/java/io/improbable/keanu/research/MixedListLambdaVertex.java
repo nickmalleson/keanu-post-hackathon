@@ -5,7 +5,7 @@ import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.binary.BinaryOpLambda;
 import org.apache.commons.math3.util.Pair;
 
-public class MixedListLambdaVertex extends BinaryOpLambda<Integer[], Double[], Pair<Integer [], Double []>> {
+public class MixedListLambdaVertex extends BinaryOpLambda<Integer[], Double[], Pair<Integer[], Double[]>> {
 
     public MixedListLambdaVertex(Vertex<Integer[]> integerInputs,
                                  Vertex<Double[]> doubleInputs,

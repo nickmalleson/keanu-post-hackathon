@@ -1,47 +1,46 @@
 package io.improbable.keanu.algorithms.mcmc;
 
 import io.improbable.keanu.algorithms.NetworkSamples;
-import io.improbable.keanu.network.BayesNet;
+import io.improbable.keanu.network.BayesianNetwork;
+import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.vertices.bool.BoolVertex;
 import io.improbable.keanu.vertices.bool.probabilistic.Flip;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
-import io.improbable.keanu.vertices.dbl.nonprobabilistic.ConstantDoubleVertex;
-import io.improbable.keanu.vertices.dbl.nonprobabilistic.operators.unary.DoubleUnaryOpLambda;
+import io.improbable.keanu.vertices.dbl.KeanuRandom;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
+import io.improbable.keanu.vertices.generic.nonprobabilistic.If;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.OptionalDouble;
-import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 
 public class MetropolisHastingsTest {
 
-    private Random random;
+    private KeanuRandom random;
 
     @Before
     public void setup() {
-        random = new Random(1);
+        random = new KeanuRandom(1);
     }
 
     @Test
     public void samplesContinuousPrior() {
 
-        DoubleVertex A = new GaussianVertex(20.0, 1.0, random);
-        DoubleVertex B = new GaussianVertex(20.0, 1.0, random);
+        DoubleVertex A = new GaussianVertex(20.0, 1.0);
+        DoubleVertex B = new GaussianVertex(20.0, 1.0);
 
         A.setValue(20.0);
-        B.setAndCascade(20.0);
+        B.setValue(20.0);
 
-        DoubleVertex Cobserved = new GaussianVertex(A.plus(B), new ConstantDoubleVertex(1.0), random);
+        DoubleVertex Cobserved = new GaussianVertex(A.plus(B), 1.0);
 
         Cobserved.observe(46.0);
 
-        BayesNet bayesNet = new BayesNet(Arrays.asList(A, B, Cobserved));
-        bayesNet.probeForNonZeroMasterP(100);
+        BayesianNetwork bayesNet = new BayesianNetwork(Arrays.asList(A, B, Cobserved));
+        bayesNet.probeForNonZeroMasterP(100, random);
 
         NetworkSamples posteriorSamples = MetropolisHastings.getPosteriorSamples(
             bayesNet,
@@ -50,30 +49,61 @@ public class MetropolisHastingsTest {
             random
         );
 
-        OptionalDouble averagePosteriorA = posteriorSamples.get(A).asList().stream()
-            .mapToDouble(sample -> sample)
-            .average();
+        double averagePosteriorA = posteriorSamples.getDoubleTensorSamples(A).getAverages().scalar();
+        double averagePosteriorB = posteriorSamples.getDoubleTensorSamples(B).getAverages().scalar();
 
-        OptionalDouble averagePosteriorB = posteriorSamples.get(B).asList().stream()
-            .mapToDouble(sample -> sample)
-            .average();
+        double actual = averagePosteriorA + averagePosteriorB;
+        assertEquals(44.0, actual, 0.1);
+    }
 
-        assertEquals(44.0, averagePosteriorA.getAsDouble() + averagePosteriorB.getAsDouble(), 0.1);
+    @Test
+    public void samplesContinuousTensorPrior() {
+
+        int[] shape = new int[]{1, 1};
+        DoubleVertex A = new GaussianVertex(shape, 20.0, 1.0);
+        DoubleVertex B = new GaussianVertex(shape, 20.0, 1.0);
+
+        A.setValue(20.0);
+        B.setValue(20.0);
+
+        DoubleVertex Cobserved = new GaussianVertex(A.plus(B), 1.0);
+        Cobserved.observe(46.0);
+
+        BayesianNetwork bayesNet = new BayesianNetwork(Arrays.asList(A, B, Cobserved));
+        bayesNet.probeForNonZeroMasterP(100, random);
+
+        NetworkSamples posteriorSamples = MetropolisHastings.getPosteriorSamples(
+            bayesNet,
+            Arrays.asList(A, B),
+            100000,
+            random
+        );
+
+        DoubleTensor averagePosteriorA = posteriorSamples.getDoubleTensorSamples(A).getAverages();
+        DoubleTensor averagePosteriorB = posteriorSamples.getDoubleTensorSamples(B).getAverages();
+
+        DoubleTensor allActuals = averagePosteriorA.plus(averagePosteriorB);
+
+        for (double actual : allActuals.asFlatDoubleArray()) {
+            assertEquals(44.0, actual, 0.1);
+        }
     }
 
     @Test
     public void samplesSimpleDiscretePrior() {
 
-        Flip A = new Flip(0.5, random);
+        Flip A = new Flip(0.5);
 
-        DoubleVertex B = new DoubleUnaryOpLambda<>(A, val -> val ? 0.9 : 0.1);
+        DoubleVertex B = If.isTrue(A)
+            .then(0.9)
+            .orElse(0.1);
 
-        Flip C = new Flip(B, random);
+        Flip C = new Flip(B);
 
         C.observe(true);
 
-        BayesNet bayesNet = new BayesNet(Arrays.asList(A, B, C));
-        bayesNet.probeForNonZeroMasterP(100);
+        BayesianNetwork bayesNet = new BayesianNetwork(Arrays.asList(A, B, C));
+        bayesNet.probeForNonZeroMasterP(100, random);
 
         NetworkSamples posteriorSamples = MetropolisHastings.getPosteriorSamples(
             bayesNet,
@@ -82,7 +112,7 @@ public class MetropolisHastingsTest {
             random
         );
 
-        double postProbTrue = posteriorSamples.get(A).probability(v -> v);
+        double postProbTrue = posteriorSamples.get(A).probability(v -> v.scalar());
 
         assertEquals(0.9, postProbTrue, 0.01);
     }
@@ -90,18 +120,21 @@ public class MetropolisHastingsTest {
     @Test
     public void samplesComplexDiscretePrior() {
 
-        Flip A = new Flip(0.5, random);
-        Flip B = new Flip(0.5, random);
+        Flip A = new Flip(0.5);
+        Flip B = new Flip(0.5);
 
         BoolVertex C = A.or(B);
-        DoubleVertex D = new DoubleUnaryOpLambda<>(C, val -> val ? 0.9 : 0.1);
 
-        Flip E = new Flip(D, random);
+        DoubleVertex D = If.isTrue(C)
+            .then(0.9)
+            .orElse(0.1);
+
+        Flip E = new Flip(D);
 
         E.observe(true);
 
-        BayesNet bayesNet = new BayesNet(Arrays.asList(A, B, C, D, E));
-        bayesNet.probeForNonZeroMasterP(100);
+        BayesianNetwork bayesNet = new BayesianNetwork(Arrays.asList(A, B, C, D, E));
+        bayesNet.probeForNonZeroMasterP(100, random);
 
         NetworkSamples posteriorSamples = MetropolisHastings.getPosteriorSamples(
             bayesNet,
@@ -110,7 +143,7 @@ public class MetropolisHastingsTest {
             random
         );
 
-        double postProbTrue = posteriorSamples.get(A).probability(v -> v);
+        double postProbTrue = posteriorSamples.get(A).probability(v -> v.scalar());
 
         assertEquals(0.643, postProbTrue, 0.01);
     }
@@ -118,13 +151,13 @@ public class MetropolisHastingsTest {
     @Test
     public void samplesFromPriorWithObservedDeterministic() {
 
-        Flip A = new Flip(0.5, random);
-        Flip B = new Flip(0.5, random);
+        Flip A = new Flip(0.5);
+        Flip B = new Flip(0.5);
         BoolVertex C = A.or(B);
         C.observe(false);
 
-        BayesNet net = new BayesNet(A.getConnectedGraph());
-        net.probeForNonZeroMasterP(100);
+        BayesianNetwork net = new BayesianNetwork(A.getConnectedGraph());
+        net.probeForNonZeroMasterP(100, random);
 
         NetworkSamples posteriorSamples = MetropolisHastings.getPosteriorSamples(
             net,
@@ -133,7 +166,7 @@ public class MetropolisHastingsTest {
             random
         );
 
-        double postProbTrue = posteriorSamples.get(A).probability(v -> v);
+        double postProbTrue = posteriorSamples.get(A).probability(v -> v.scalar());
 
         assertEquals(0.5, postProbTrue, 0.01);
     }

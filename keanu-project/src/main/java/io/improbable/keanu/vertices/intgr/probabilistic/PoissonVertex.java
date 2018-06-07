@@ -1,53 +1,65 @@
 package io.improbable.keanu.vertices.intgr.probabilistic;
 
-import io.improbable.keanu.distributions.discrete.Poisson;
+import io.improbable.keanu.distributions.tensors.discrete.TensorPoisson;
+import io.improbable.keanu.tensor.NumberTensor;
+import io.improbable.keanu.tensor.Tensor;
+import io.improbable.keanu.tensor.dbl.DoubleTensor;
+import io.improbable.keanu.tensor.intgr.IntegerTensor;
 import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
+import io.improbable.keanu.vertices.dbl.KeanuRandom;
+import io.improbable.keanu.vertices.dbl.nonprobabilistic.CastDoubleVertex;
 import io.improbable.keanu.vertices.dbl.nonprobabilistic.ConstantDoubleVertex;
-import io.improbable.keanu.vertices.dbltensor.DoubleTensor;
 
 import java.util.Map;
-import java.util.Random;
+
+import static io.improbable.keanu.tensor.TensorShapeValidation.checkTensorsMatchNonScalarShapeOrAreScalar;
 
 public class PoissonVertex extends ProbabilisticInteger {
 
-    private final Random random;
     private final DoubleVertex mu;
 
-    public PoissonVertex(DoubleVertex mu, Random random) {
+    public PoissonVertex(int[] shape, DoubleVertex mu) {
+
+        checkTensorsMatchNonScalarShapeOrAreScalar(shape, mu.getShape());
+
         this.mu = mu;
-        this.random = random;
         setParents(mu);
+        setValue(IntegerTensor.placeHolder(shape));
     }
 
-    public PoissonVertex(double mu, Random random) {
-        this(new ConstantDoubleVertex(mu), random);
+    public PoissonVertex(int[] shape, double mu) {
+        this(shape, new ConstantDoubleVertex(mu));
     }
 
     public PoissonVertex(DoubleVertex mu) {
-        this(mu, new Random());
+        this(mu.getShape(), mu);
+    }
+
+    public PoissonVertex(Vertex<? extends NumberTensor> mu) {
+        this(mu.getShape(), new CastDoubleVertex(mu));
     }
 
     public PoissonVertex(double mu) {
-        this(new ConstantDoubleVertex(mu), new Random());
+        this(Tensor.SCALAR_SHAPE, new ConstantDoubleVertex(mu));
     }
 
-    public Vertex<Double> getMu() {
+    public Vertex<DoubleTensor> getMu() {
         return mu;
     }
 
     @Override
-    public double logPmf(Integer value) {
-        return Math.log(Poisson.pmf(mu.getValue(), value));
+    public double logPmf(IntegerTensor value) {
+        return TensorPoisson.logPmf(mu.getValue(), value).sum();
     }
 
     @Override
-    public Map<Long, DoubleTensor> dLogPmf(Integer value) {
+    public Map<Long, DoubleTensor> dLogPmf(IntegerTensor value) {
         throw new UnsupportedOperationException();
     }
 
     @Override
-    public Integer sample() {
-        return new Poisson(mu.getValue(), random).sample();
+    public IntegerTensor sample(KeanuRandom random) {
+        return TensorPoisson.sample(getShape(), mu.getValue(), random);
     }
 }

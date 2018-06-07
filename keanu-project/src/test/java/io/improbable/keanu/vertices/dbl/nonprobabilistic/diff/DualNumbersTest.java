@@ -1,29 +1,25 @@
 package io.improbable.keanu.vertices.dbl.nonprobabilistic.diff;
 
+import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
-import io.improbable.keanu.vertices.dbl.nonprobabilistic.ConstantDoubleVertex;
 import io.improbable.keanu.vertices.dbl.nonprobabilistic.operators.unary.LogVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.util.Map;
-import java.util.Random;
 
-import static io.improbable.keanu.kotlin.ExtendPrefixOperatorsKt.exp;
 import static org.junit.Assert.assertEquals;
 
 public class DualNumbersTest {
 
-    Random random;
     DoubleVertex vA;
     DoubleVertex vB;
 
     @Before
     public void setup() {
-        random = new Random();
-        vA = new GaussianVertex(new ConstantDoubleVertex(1.0), new ConstantDoubleVertex(0.0), random);
-        vB = new GaussianVertex(new ConstantDoubleVertex(2.0), new ConstantDoubleVertex(0.0), random);
+        vA = new GaussianVertex(1.0, 0.0);
+        vB = new GaussianVertex(2.0, 0.0);
     }
 
     @Test
@@ -43,7 +39,7 @@ public class DualNumbersTest {
 
     @Test
     public void diffOverExponent() {
-        assertDiffIsCorrect(vA, vB, exp(vA.times(vB)));
+        assertDiffIsCorrect(vA, vB, vA.multiply(vB).exp());
     }
 
     @Test
@@ -73,18 +69,18 @@ public class DualNumbersTest {
 
         DualNumber cDual = vC.getDualNumber();
 
-        double C = cDual.getValue();
-        Map<Long, Double> dc = cDual.getPartialDerivatives().asMap();
+        DoubleTensor C = cDual.getValue();
+        Map<Long, DoubleTensor> dc = cDual.getPartialDerivatives().asMap();
 
         double da = 0.00000001;
 
-        vA.setValue(vA.getValue() + da);
+        vA.setValue(vA.getValue().plus(da));
         vB.setValue(B);
         vC.lazyEval();
 
-        double dcdaApprox = (vC.getValue() - C) / da;
+        DoubleTensor dcdaApprox = (vC.getValue().minus(C)).div(da);
 
-        assertEquals(dcdaApprox, dc.get(vA.getId()), 0.00001);
+        assertEquals(dcdaApprox.scalar(), dc.get(vA.getId()).scalar(), 0.00001);
 
         double db = da;
 
@@ -92,8 +88,8 @@ public class DualNumbersTest {
         vB.setValue(B + db);
         vC.lazyEval();
 
-        double dcdbApprox = (vC.getValue() - C) / db;
+        DoubleTensor dcdbApprox = (vC.getValue().minus(C)).div(db);
 
-        assertEquals(dcdbApprox, dc.get(vB.getId()), 0.00001);
+        assertEquals(dcdbApprox.scalar(), dc.get(vB.getId()).scalar(), 0.00001);
     }
 }

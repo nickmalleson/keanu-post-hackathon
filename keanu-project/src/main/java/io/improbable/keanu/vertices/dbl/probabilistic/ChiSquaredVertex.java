@@ -1,48 +1,53 @@
 package io.improbable.keanu.vertices.dbl.probabilistic;
 
-import io.improbable.keanu.distributions.continuous.ChiSquared;
-import io.improbable.keanu.vertices.dbltensor.DoubleTensor;
+import io.improbable.keanu.distributions.tensors.continuous.TensorChiSquared;
+import io.improbable.keanu.tensor.Tensor;
+import io.improbable.keanu.tensor.dbl.DoubleTensor;
+import io.improbable.keanu.tensor.intgr.IntegerTensor;
+import io.improbable.keanu.vertices.dbl.KeanuRandom;
 import io.improbable.keanu.vertices.intgr.IntegerVertex;
 import io.improbable.keanu.vertices.intgr.nonprobabilistic.ConstantIntegerVertex;
 
 import java.util.Map;
-import java.util.Random;
+
+import static io.improbable.keanu.tensor.TensorShapeValidation.checkTensorsMatchNonScalarShapeOrAreScalar;
 
 public class ChiSquaredVertex extends ProbabilisticDouble {
 
     private IntegerVertex k;
-    private Random random;
 
-    public ChiSquaredVertex(IntegerVertex k, Random random) {
+    public ChiSquaredVertex(int[] shape, IntegerVertex k) {
+        checkTensorsMatchNonScalarShapeOrAreScalar(shape, k.getShape());
+
         this.k = k;
-        this.random = random;
         setParents(k);
+        setValue(DoubleTensor.placeHolder(shape));
     }
 
-    public ChiSquaredVertex(IntegerVertex k) {
-        this(k, new Random());
+    public ChiSquaredVertex(int[] shape, int k) {
+        this(shape, new ConstantIntegerVertex(k));
     }
 
-    public ChiSquaredVertex(int k, Random random) {
-        this(new ConstantIntegerVertex(k), random);
+    public ChiSquaredVertex(IntegerTensor k) {
+        this(k.getShape(), new ConstantIntegerVertex(k));
     }
 
     public ChiSquaredVertex(int k) {
-        this(new ConstantIntegerVertex(k), new Random());
+        this(Tensor.SCALAR_SHAPE, new ConstantIntegerVertex(k));
     }
 
     @Override
-    public Double sample() {
-        return ChiSquared.sample(k.getValue(), random);
+    public DoubleTensor sample(KeanuRandom random) {
+        return TensorChiSquared.sample(getShape(), k.getValue(), random);
     }
 
     @Override
-    public double logPdf(Double value) {
-        return ChiSquared.logPdf(k.getValue(), value);
+    public double logPdf(DoubleTensor value) {
+        return TensorChiSquared.logPdf(k.getValue(), value).sum();
     }
 
     @Override
-    public Map<Long, DoubleTensor> dLogPdf(Double value) {
+    public Map<Long, DoubleTensor> dLogPdf(DoubleTensor value) {
         throw new UnsupportedOperationException();
     }
 

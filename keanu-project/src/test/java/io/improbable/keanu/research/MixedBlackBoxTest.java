@@ -2,8 +2,8 @@ package io.improbable.keanu.research;
 
 import io.improbable.keanu.algorithms.NetworkSamples;
 import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
-import io.improbable.keanu.algorithms.variational.GradientOptimizer;
-import io.improbable.keanu.network.BayesNet;
+import io.improbable.keanu.algorithms.variational.NonGradientOptimizer;
+import io.improbable.keanu.network.BayesianNetwork;
 import io.improbable.keanu.randomfactory.RandomFactory;
 import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
@@ -13,7 +13,6 @@ import io.improbable.keanu.vertices.intgr.probabilistic.PoissonVertex;
 import org.apache.commons.math3.util.Pair;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class MixedBlackBoxTest {
 
@@ -75,18 +74,18 @@ public class MixedBlackBoxTest {
         box.fuzzyObserveDoubleOutput(2, 19.21, 1.0);
         box.fuzzyObserveDoubleOutput(3, 443.556, 1.0);
 
-        BayesNet testNet = new BayesNet(box.getConnectedGraph());
+        BayesianNetwork testNet = new BayesianNetwork(box.getConnectedGraph());
         ArrayList<Vertex> fromVertices = new ArrayList<>();
         fromVertices.addAll(doubleInputs);
         fromVertices.addAll(integerInputs);
 
-        GradientOptimizer optimizer = new GradientOptimizer(testNet);
-        optimizer.maxAPosteriori(100000);
+        NonGradientOptimizer optimizer = new NonGradientOptimizer(testNet);
+        optimizer.maxAPosteriori(10000, 10.0);
         System.out.println(doubleInputs.get(0));
 
         NetworkSamples testMet = MetropolisHastings.getPosteriorSamples(testNet, fromVertices, 1000000).drop(10000);
 
-        Double answer_doubleOne = testMet.probability( sample -> sample.get(doubleInputs.get(0)) > 5.0 && sample.get(doubleInputs.get(0)) < 7.0 );
+        Double answer_doubleOne = testMet.probability( sample -> sample.get(doubleInputs.get(0)).scalar() > 5.0 && sample.get(doubleInputs.get(0)).scalar() < 7.0 );
 
         System.out.println(answer_doubleOne);
 

@@ -1,151 +1,166 @@
 package io.improbable.keanu.vertices.dbl.probabilistic;
 
+import io.improbable.keanu.distributions.continuous.Logistic;
+import io.improbable.keanu.tensor.dbl.DoubleTensor;
+import io.improbable.keanu.tensor.dbl.Nd4jDoubleTensor;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
-import io.improbable.keanu.vertices.dbl.nonprobabilistic.ConstantDoubleVertex;
+import io.improbable.keanu.vertices.dbl.KeanuRandom;
+import io.improbable.keanu.vertices.dbl.nonprobabilistic.diff.PartialDerivatives;
+import io.improbable.keanu.vertices.ConstantVertex;
 import org.junit.Before;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Random;
+import java.util.Map;
 
-import static io.improbable.keanu.vertices.dbl.probabilistic.ProbabilisticDoubleContract.moveAlongDistributionAndTestGradientOnARangeOfHyperParameterValues;
-import static junit.framework.TestCase.assertTrue;
+import static io.improbable.keanu.vertices.dbl.probabilistic.ProbabilisticDoubleTensorContract.moveAlongDistributionAndTestGradientOnARangeOfHyperParameterValues;
 import static org.junit.Assert.assertEquals;
 
 public class LogisticVertexTest {
-    private final Logger log = LoggerFactory.getLogger(LogisticVertexTest.class);
 
     private static final double DELTA = 0.0001;
 
-    private Random random;
+    private KeanuRandom random;
 
     @Before
     public void setup() {
-        random = new Random(1);
+        random = new KeanuRandom(1);
     }
 
     @Test
-    public void samplingProducesRealisticMeanAndStandardDeviation() {
-        int N = (int) 1e6;
-        double epsilon = 1e-2;
-        double a = 0.0;
-        double b = 1.0;
+    public void matchesKnownLogDensityOfScalar() {
+        LogisticVertex tensorLogisticVertex = new LogisticVertex(0.5, 1.5);
+        double expectedDensity = Logistic.logPdf(0.5, 1.5, 2.0);
 
-        LogisticVertex l = new LogisticVertex(a, b, new Random(1));
-
-        double mean = a;
-        double standardDeviation = Math.sqrt((Math.pow(Math.PI, 2) / 3) * Math.pow(b, 2));
-
-        ProbabilisticDoubleContract.samplingProducesRealisticMeanAndStandardDeviation(N, l, mean, standardDeviation, epsilon);
+        ProbabilisticDoubleTensorContract.matchesKnownLogDensityOfScalar(tensorLogisticVertex, 2.0, expectedDensity);
     }
 
     @Test
-    public void gradientAtAIsZero() {
-        double a = 0.0;
-        double b = 0.5;
-        LogisticVertex l = new LogisticVertex(a, b, new Random(1));
-        l.setValue(a);
-        double gradient = l.dLogProbAtValue().get(l.getId()).scalar();
-        log.info("Gradient at a: " + gradient);
-        assertEquals(gradient, 0, 0);
+    public void matchesKnownLogDensityOfVector() {
+
+        double expectedLogDensity = Logistic.logPdf(0.0, 1.0, 0.25) + Logistic.logPdf(0.0, 1.0, .75);
+        LogisticVertex ndLogisticVertex = new LogisticVertex(0.0, 1);
+        ProbabilisticDoubleTensorContract.matchesKnownLogDensityOfVector(ndLogisticVertex, new double[]{0.25, .75}, expectedLogDensity);
     }
 
     @Test
-    public void gradientBeforeAIsPositive() {
-        double a = 0.0;
-        double b = 0.5;
-        LogisticVertex l = new LogisticVertex(a, b, new Random(1));
-        l.setValue(a - 1.0);
-        double gradient = l.dLogProbAtValue().get(l.getId()).scalar();
-        log.info("Gradient at x < a: " + gradient);
-        assertTrue(gradient > 0);
-    }
+    public void matchesKnownDerivativeLogDensityOfScalar() {
 
-    @Test
-    public void gradientAfterAIsNegative() {
-        double a = 0.0;
-        double b = 0.5;
-        LogisticVertex l = new LogisticVertex(a, b, new Random(1));
-        l.setValue(a + 1.0);
-        double gradient = l.dLogProbAtValue().get(l.getId()).scalar();
-        log.info("Gradient at x > a: " + gradient);
-        assertTrue(gradient < 0);
-    }
+        Logistic.Diff logisticLogDiff = Logistic.dlnPdf(0.0, 0.5, 1.5);
 
-    @Test
-    public void dLogProbMatchesFiniteDifferenceCalculationFordPda() {
-        UniformVertex uniformA = new UniformVertex(new ConstantDoubleVertex(0.), new ConstantDoubleVertex(1.));
-        LogisticVertex l = new LogisticVertex(uniformA, new ConstantDoubleVertex(1.0));
+        UniformVertex aTensor = new UniformVertex(0.0, 5.0);
+        aTensor.setValue(0.0);
 
-        double vertexStartValue = 0.5;
-        double vertexEndValue = 5.0;
-        double vertexIncrement = 0.1;
+        UniformVertex bTensor = new UniformVertex(0.0, 5.0);
+        bTensor.setValue(0.5);
 
-        moveAlongDistributionAndTestGradientOnARangeOfHyperParameterValues(0.0,
-            0.9,
-            0.1,
-            uniformA,
-            l,
-            vertexStartValue,
-            vertexEndValue,
-            vertexIncrement,
-            DELTA);
+        LogisticVertex tensorLogisticVertex = new LogisticVertex(aTensor, bTensor);
+        Map<Long, DoubleTensor> actualDerivatives = tensorLogisticVertex.dLogPdf(1.5);
+
+        PartialDerivatives actual = new PartialDerivatives(actualDerivatives);
+
+        assertEquals(logisticLogDiff.dPda, actual.withRespectTo(aTensor.getId()).scalar(), 1e-5);
+        assertEquals(logisticLogDiff.dPdb, actual.withRespectTo(bTensor.getId()).scalar(), 1e-5);
+        assertEquals(logisticLogDiff.dPdx, actual.withRespectTo(tensorLogisticVertex.getId()).scalar(), 1e-5);
     }
 
     @Test
     public void isTreatedAsConstantWhenObserved() {
+        UniformVertex mu = new UniformVertex(0.0, 1.0);
+        mu.setAndCascade(Nd4jDoubleTensor.scalar(0.5));
         LogisticVertex vertexUnderTest = new LogisticVertex(
-            new UniformVertex(0.0, 1.0),
-            new ConstantDoubleVertex(3.0),
-            random
+            mu,
+            3.
         );
-        ProbabilisticDoubleContract.isTreatedAsConstantWhenObserved(vertexUnderTest);
-        ProbabilisticDoubleContract.hasNoGradientWithRespectToItsValueWhenObserved(vertexUnderTest);
+        vertexUnderTest.setAndCascade(Nd4jDoubleTensor.scalar(1.0));
+        ProbabilisticDoubleTensorContract.isTreatedAsConstantWhenObserved(vertexUnderTest);
+        ProbabilisticDoubleTensorContract.hasNoGradientWithRespectToItsValueWhenObserved(vertexUnderTest);
     }
 
     @Test
-    public void dLogProbMatchesFiniteDifferenceCalculationFordPdb() {
-        UniformVertex uniformB = new UniformVertex(new ConstantDoubleVertex(0.0), new ConstantDoubleVertex(1.));
-        LogisticVertex l = new LogisticVertex(new ConstantDoubleVertex(0.0), uniformB);
+    public void dLogProbMatchesFiniteDifferenceCalculationFordPda() {
+        UniformVertex uniformA = new UniformVertex(0.0, 1.0);
+        LogisticVertex logistic = new LogisticVertex(uniformA, 1.0);
 
-        double vertexStartValue = 0.5;
-        double vertexEndValue = 1.0;
+        DoubleTensor vertexStartValue = Nd4jDoubleTensor.scalar(1.0);
+        DoubleTensor vertexEndValue = Nd4jDoubleTensor.scalar(5.0);
         double vertexIncrement = 0.1;
 
         moveAlongDistributionAndTestGradientOnARangeOfHyperParameterValues(
-            0.5,
-            3.0,
+            Nd4jDoubleTensor.scalar(0.0),
+            Nd4jDoubleTensor.scalar(0.9),
             0.1,
-            uniformB,
-            l,
+            uniformA,
+            logistic,
             vertexStartValue,
             vertexEndValue,
             vertexIncrement,
             DELTA);
+    }
+
+    @Test
+    public void dLogProbMatchesFiniteDifferenceCalculationFordPdb() {
+        UniformVertex uniformA = new UniformVertex(0., 1.);
+        LogisticVertex logistic = new LogisticVertex(0.0, uniformA);
+
+        DoubleTensor vertexStartValue = Nd4jDoubleTensor.scalar(0.0);
+        DoubleTensor vertexEndValue = Nd4jDoubleTensor.scalar(1.0);
+        double vertexIncrement = 0.1;
+
+        moveAlongDistributionAndTestGradientOnARangeOfHyperParameterValues(
+            Nd4jDoubleTensor.scalar(0.5),
+            Nd4jDoubleTensor.scalar(3.5),
+            0.1,
+            uniformA,
+            logistic,
+            vertexStartValue,
+            vertexEndValue,
+            vertexIncrement,
+            DELTA);
+    }
+
+    @Test
+    public void logisticSampleMethodMatchesLogProbMethod() {
+
+        KeanuRandom random = new KeanuRandom(1);
+
+        int sampleCount = 1000000;
+        LogisticVertex vertex = new LogisticVertex(
+            new int[]{sampleCount, 1},
+            ConstantVertex.of(0.0),
+            ConstantVertex.of(0.5)
+        );
+
+        double from = 0.5;
+        double to = 4;
+        double bucketSize = 0.05;
+
+        ProbabilisticDoubleTensorContract.sampleMethodMatchesLogProbMethod(vertex, from, to, bucketSize, 1e-2, random);
     }
 
     @Test
     public void inferHyperParamsFromSamples() {
 
-        double trueA = 2.0;
-        double trueB = 2.0;
+        double trueA = 0.0;
+        double trueB = 0.5;
 
-        List<DoubleVertex> AB = new ArrayList<>();
-        AB.add(new ConstantDoubleVertex(trueA));
-        AB.add(new ConstantDoubleVertex(trueB));
+        List<DoubleVertex> aB = new ArrayList<>();
+        aB.add(ConstantVertex.of(trueA));
+        aB.add(ConstantVertex.of(trueB));
 
         List<DoubleVertex> latentAB = new ArrayList<>();
-        latentAB.add(new SmoothUniformVertex(0.01, 10.0, random));
-        latentAB.add(new SmoothUniformVertex(0.01, 10.0, random));
+        UniformVertex latentB = new UniformVertex(0.01, 10.0);
+        latentB.setAndCascade(0.1);
+        latentAB.add(ConstantVertex.of(trueA));
+        latentAB.add(latentB);
 
+        int numSamples = 2000;
         VertexVariationalMAP.inferHyperParamsFromSamples(
-            hyperParams -> new LogisticVertex(hyperParams.get(0), hyperParams.get(1), random),
-            AB,
+            hyperParams -> new LogisticVertex(new int[]{numSamples, 1}, hyperParams.get(0), hyperParams.get(1)),
+            aB,
             latentAB,
-            1000
+            random
         );
     }
 

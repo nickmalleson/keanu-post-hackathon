@@ -1,9 +1,8 @@
 package io.improbable.keanu.distributions.continuous;
 
 
-import java.util.Random;
+import io.improbable.keanu.vertices.dbl.KeanuRandom;
 
-import static java.lang.Math.log;
 import static java.lang.Math.pow;
 import static org.apache.commons.math3.special.Gamma.*;
 
@@ -23,11 +22,11 @@ public class Beta {
      * @param alpha  location
      * @param beta   shape
      * @param xMin   minimum x
-     * @param xMax   source of randomness
+     * @param xMax   maximum x
      * @param random source of randomness
      * @return a random number from the Beta distribution
      */
-    public static double sample(double alpha, double beta, double xMin, double xMax, Random random) {
+    public static double sample(double alpha, double beta, double xMin, double xMax, KeanuRandom random) {
         double y1 = Gamma.sample(0.0, 1.0, alpha, random);
         double y2 = Gamma.sample(0.0, 1.0, beta, random);
 
@@ -41,21 +40,6 @@ public class Beta {
     public static double pdf(double alpha, double beta, double x) {
         double denominator = gamma(alpha) * gamma(beta) / gamma(alpha + beta);
         return pow(x, alpha - 1) * pow(1 - x, beta - 1) / denominator;
-    }
-
-    public static Diff dPdf(double alpha, double beta, double x) {
-        double gammaAgammaB = gamma(alpha) * gamma(beta);
-        double gammaAplusB = gamma(alpha + beta);
-        double dPdx = -((pow(x, alpha - 2) * pow(1 - x, beta - 2) * (alpha * (x - 1) + (beta - 2) * x + 1) * gammaAplusB) / gammaAgammaB);
-
-        double pow1minusXToTheBminus1 = pow(1 - x, beta - 1);
-        double powXToTheAminus1 = pow(x, alpha - 1);
-        double diagammaAplusB = digamma(alpha + beta);
-        double commonToDaAndDb = powXToTheAminus1 * pow1minusXToTheBminus1 * gammaAplusB;
-        double dPdAlpha = commonToDaAndDb * (diagammaAplusB + log(x) - digamma(alpha)) / gammaAgammaB;
-        double dPdBeta = commonToDaAndDb * (diagammaAplusB + log(1 - x) - digamma(beta)) / gammaAgammaB;
-
-        return new Diff(dPdAlpha, dPdBeta, dPdx);
     }
 
     public static double logPdf(double alpha, double beta, double x) {
@@ -72,13 +56,13 @@ public class Beta {
     }
 
     public static class Diff {
-        public final double dPdAlpha;
-        public final double dPdBeta;
+        public final double dPdalpha;
+        public final double dPdbeta;
         public final double dPdx;
 
-        public Diff(double dPdAlpha, double dPdBeta, double dPdx) {
-            this.dPdAlpha = dPdAlpha;
-            this.dPdBeta = dPdBeta;
+        public Diff(double dPdalpha, double dPdbeta, double dPdx) {
+            this.dPdalpha = dPdalpha;
+            this.dPdbeta = dPdbeta;
             this.dPdx = dPdx;
         }
     }

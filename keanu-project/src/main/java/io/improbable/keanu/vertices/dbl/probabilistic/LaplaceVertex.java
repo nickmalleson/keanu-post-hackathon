@@ -1,80 +1,97 @@
 package io.improbable.keanu.vertices.dbl.probabilistic;
 
-import io.improbable.keanu.distributions.continuous.Laplace;
+import io.improbable.keanu.distributions.tensors.continuous.TensorLaplace;
+import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
+import io.improbable.keanu.vertices.dbl.KeanuRandom;
 import io.improbable.keanu.vertices.dbl.nonprobabilistic.ConstantDoubleVertex;
 import io.improbable.keanu.vertices.dbl.nonprobabilistic.diff.PartialDerivatives;
-import io.improbable.keanu.vertices.dbltensor.DoubleTensor;
 
 import java.util.Map;
-import java.util.Random;
+
+import static io.improbable.keanu.tensor.TensorShapeValidation.checkHasSingleNonScalarShapeOrAllScalar;
+import static io.improbable.keanu.tensor.TensorShapeValidation.checkTensorsMatchNonScalarShapeOrAreScalar;
 
 public class LaplaceVertex extends ProbabilisticDouble {
 
     private final DoubleVertex mu;
     private final DoubleVertex beta;
-    private final Random random;
 
-    public LaplaceVertex(DoubleVertex mu, DoubleVertex beta, Random random) {
+    /**
+     * One mu or beta or both driving an arbitrarily shaped tensor of Laplace
+     *
+     * @param shape the desired shape of the vertex
+     * @param mu    the mu of the Laplace with either the same shape as specified for this vertex or a scalar
+     * @param beta  the beta of the Laplace with either the same shape as specified for this vertex or a scalar
+     */
+    public LaplaceVertex(int[] shape, DoubleVertex mu, DoubleVertex beta) {
+
+        checkTensorsMatchNonScalarShapeOrAreScalar(shape, mu.getShape(), beta.getShape());
+
         this.mu = mu;
         this.beta = beta;
-        this.random = random;
         setParents(mu, beta);
+        setValue(DoubleTensor.placeHolder(shape));
     }
 
-    public LaplaceVertex(DoubleVertex mu, double beta, Random random) {
-        this(mu, new ConstantDoubleVertex(beta), random);
-    }
-
-    public LaplaceVertex(double mu, DoubleVertex beta, Random random) {
-        this(new ConstantDoubleVertex(mu), beta, random);
-    }
-
-    public LaplaceVertex(double mu, double beta, Random random) {
-        this(new ConstantDoubleVertex(mu), new ConstantDoubleVertex(beta), random);
-    }
-
+    /**
+     * One to one constructor for mapping some shape of mu and sigma to
+     * a matching shaped laplace.
+     *
+     * @param mu   the mu of the Laplace with either the same shape as specified for this vertex or a scalar
+     * @param beta the beta of the Laplace with either the same shape as specified for this vertex or a scalar
+     */
     public LaplaceVertex(DoubleVertex mu, DoubleVertex beta) {
-        this(mu, beta, new Random());
+        this(checkHasSingleNonScalarShapeOrAllScalar(mu.getShape(), beta.getShape()), mu, beta);
     }
 
     public LaplaceVertex(DoubleVertex mu, double beta) {
-        this(mu, new ConstantDoubleVertex(beta), new Random());
+        this(mu, new ConstantDoubleVertex(beta));
     }
 
     public LaplaceVertex(double mu, DoubleVertex beta) {
-        this(new ConstantDoubleVertex(mu), beta, new Random());
+        this(new ConstantDoubleVertex(mu), beta);
     }
 
     public LaplaceVertex(double mu, double beta) {
-        this(new ConstantDoubleVertex(mu), new ConstantDoubleVertex(beta), new Random());
+        this(new ConstantDoubleVertex(mu), new ConstantDoubleVertex(beta));
     }
 
     @Override
-    public double logPdf(Double value) {
-        return Laplace.logPdf(mu.getValue(), beta.getValue(), value);
+    public double logPdf(DoubleTensor value) {
+
+        DoubleTensor muValues = mu.getValue();
+        DoubleTensor betaValues = beta.getValue();
+
+        DoubleTensor logPdfs = TensorLaplace.logPdf(muValues, betaValues, value);
+
+        return logPdfs.sum();
     }
 
     @Override
-    public Map<Long, DoubleTensor> dLogPdf(Double value) {
-        Laplace.Diff diff = Laplace.dlnPdf(mu.getValue(), beta.getValue(), value);
-        return convertDualNumbersToDiff(diff.dPdmu, diff.dPdbeta, diff.dPdx);
+    public Map<Long, DoubleTensor> dLogPdf(DoubleTensor value) {
+        TensorLaplace.Diff dlnP = TensorLaplace.dlnPdf(mu.getValue(), beta.getValue(), value);
+        return convertDualNumbersToDiff(dlnP.dPdmu, dlnP.dPdbeta, dlnP.dPdx);
     }
 
-    @Override
-    public Double sample() {
-        return Laplace.sample(mu.getValue(), beta.getValue(), random);
-    }
+    private Map<Long, DoubleTensor> convertDualNumbersToDiff(DoubleTensor dPdmu,
+                                                             DoubleTensor dPdbeta,
+                                                             DoubleTensor dPdx) {
 
-    private Map<Long, DoubleTensor> convertDualNumbersToDiff(double dPdmu, double dPdbeta, double dPdx) {
         PartialDerivatives dPdInputsFromMu = mu.getDualNumber().getPartialDerivatives().multiplyBy(dPdmu);
-        PartialDerivatives dPdInputsFromSigma = beta.getDualNumber().getPartialDerivatives().multiplyBy(dPdbeta);
-        PartialDerivatives dPdInputs = dPdInputsFromMu.add(dPdInputsFromSigma);
+        PartialDerivatives dPdInputsFromBeta = beta.getDualNumber().getPartialDerivatives().multiplyBy(dPdbeta);
+        PartialDerivatives dPdInputs = dPdInputsFromMu.add(dPdInputsFromBeta);
 
-        if (!isObserved()) {
+        if (!this.isObserved()) {
             dPdInputs.putWithRespectTo(getId(), dPdx);
         }
 
-        return DoubleTensor.fromScalars(dPdInputs.asMap());
+        return dPdInputs.asMap();
     }
+
+    @Override
+    public DoubleTensor sample(KeanuRandom random) {
+        return TensorLaplace.sample(getShape(), mu.getValue(), beta.getValue(), random);
+    }
+
 }
