@@ -20,42 +20,49 @@ public class MixedBlackBoxTest {
                                                   Double[] doubleInputs,
                                                   RandomFactory<Double> random) {
 
-        Integer[] intsOut = new Integer[2];
-        Double[] dubsOut = new Double[3];
+        Integer[] integersOut = new Integer[2];
+        Double[] doublesOut = new Double[4];
 
-        Integer intTotal = 0;
-        Integer intProduct = 1;
+        Integer integerTotal = 0;
+        Integer integerProduct = 1;
         for (int input : integerInputs) {
-            intTotal += input;
-            intProduct *= input;
+            integerTotal += input;
+            integerProduct *= input;
         }
-        intsOut[0] = intTotal;
-        intsOut[1] = intProduct;
+        integersOut[0] = integerTotal;
+        integersOut[1] = integerProduct;
 
-        Double dubTotal = 0.0;
-        Double dubProduct = 1.0;
+        Double doubleTotal = 0.0;
+        Double doubleProduct = 1.0;
         for (double input : doubleInputs) {
-            dubTotal += input;
-            dubProduct *= input;
+            doubleTotal += input;
+            doubleProduct *= input;
         }
-        dubsOut[0] = dubTotal;
-        dubsOut[1] = dubProduct;
-        dubsOut[2] = integerInputs[0] * doubleInputs[0];
+        doublesOut[0] = doubleTotal;
+        doublesOut[1] = doubleProduct;
 
-        return new Pair<>(intsOut, dubsOut);
+        Double mixedTotal = integerTotal + doubleTotal;
+        Double mixedProduct = integerProduct * doubleProduct;
+        doublesOut[2] = mixedTotal;
+        doublesOut[3] = mixedProduct;
+
+        return new Pair<>(integersOut, doublesOut);
     }
 
     public static void main (String[] args) {
         ArrayList<DoubleVertex> doubleInputs = new ArrayList<>(2);
-        doubleInputs.add(new GaussianVertex(5.5, 3.0));
-        doubleInputs.add(new GaussianVertex(6.1, 2.0));
+        doubleInputs.add(new GaussianVertex(5.0, 3.0));
+        doubleInputs.add(new GaussianVertex(6.0, 3.0));
 
         ArrayList<IntegerVertex> integerInputs = new ArrayList<>(2);
         integerInputs.add(new PoissonVertex(7));
         integerInputs.add(new PoissonVertex(5));
 
-        MixedInputOutputBlackBox box = new MixedInputOutputBlackBox(integerInputs, doubleInputs,
-            MixedBlackBoxTest::model, 2, 3);
+        MixedInputOutputBlackBox box = new MixedInputOutputBlackBox(integerInputs,
+                                                                    doubleInputs,
+                                                                    MixedBlackBoxTest::model,
+                                                                   2,
+                                                                   4);
 
 //        box.fuzzyObserveDoubleOutput(0, 16.0, 1.0);
 //        box.fuzzyObserveDoubleOutput(1, 64.0, 1.0);
@@ -72,14 +79,14 @@ public class MixedBlackBoxTest {
 
         NetworkSamples testMet = MetropolisHastings.getPosteriorSamples(testNet, fromVertices, 10000);
 
-        List<Integer> intOne = testMet.get(integerInputs.get(0)).asList();
-        List<Integer> intTwo = testMet.get(integerInputs.get(1)).asList();
-        List<Double> dubOne = testMet.get(doubleInputs.get(0)).asList();
-        List<Double> dubTwo = testMet.get(doubleInputs.get(1)).asList();
+        List<Integer> integerOne = testMet.get(integerInputs.get(0)).asList();
+        List<Integer> integerTwo = testMet.get(integerInputs.get(1)).asList();
+        List<Double> doubleOne = testMet.get(doubleInputs.get(0)).asList();
+        List<Double> doubleTwo = testMet.get(doubleInputs.get(1)).asList();
 
-        for (int i=0; i<intOne.size(); i++) {
-            System.out.println(intOne.get(i) + " " + intTwo.get(i) + " " + (intOne.get(i) + intTwo.get(i)) + " " + (intOne.get(i) * intTwo.get(i)) + " || " +
-                dubOne.get(i) + " " + dubTwo.get(i) + " " + (dubOne.get(i) + dubTwo.get(i)) + " " + (dubOne.get(i) * dubTwo.get(i))
+        for (int i=0; i<integerOne.size(); i++) {
+            System.out.println(integerOne.get(i) + " " + integerTwo.get(i) + " " + (integerOne.get(i) + integerTwo.get(i)) + " " + (integerOne.get(i) * integerTwo.get(i)) + " || " +
+                doubleOne.get(i) + " " + doubleTwo.get(i) + " " + (doubleOne.get(i) + doubleTwo.get(i)) + " " + (doubleOne.get(i) * doubleTwo.get(i))
 
             );
         }
