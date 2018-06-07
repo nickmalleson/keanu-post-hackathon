@@ -1,6 +1,5 @@
 package io.improbable.keanu.research;
 
-import io.improbable.keanu.tensor.Tensor;
 import io.improbable.keanu.vertices.NonProbabilisticObservationException;
 import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.dbl.KeanuRandom;
