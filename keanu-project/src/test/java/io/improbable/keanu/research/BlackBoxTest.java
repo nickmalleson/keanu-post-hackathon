@@ -25,13 +25,17 @@ public class BlackBoxTest {
 
         BlackBox box = new BlackBox(inputs, BlackBoxTest::model, 2);
 
-        box.fuzzyObserve(1, 14.0, 0.1);
+        box.fuzzyObserve(0, 49.0, 0.5);
+        box.fuzzyObserve(1, 14.0, 0.5);
 
         BayesNet testNet = new BayesNet(box.getConnectedGraph());
 
-        NetworkSamples testMet = MetropolisHastings.getPosteriorSamples(testNet, inputs, 500000).drop(1000);
-        Double answer = testMet.probability( sample -> sample.get(inputs.get(0)) + sample.get(inputs.get(1)) > 14.0 );
+        // TODO convert into test, given observations, both inputs should converge to ~ 7.0
+        // TODO Maybe test observation of the inputs gives convergence to expected outputs
 
+        NetworkSamples testMet = MetropolisHastings.getPosteriorSamples(testNet, inputs, 500000).drop(1000);
+
+        Double answer = testMet.probability( sample -> sample.get(inputs.get(0)) + sample.get(inputs.get(1)) > 14.0 );
         System.out.println(answer);
     }
 }

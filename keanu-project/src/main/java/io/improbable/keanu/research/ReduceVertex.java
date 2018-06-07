@@ -53,29 +53,10 @@ public class ReduceVertex<INPUT, OUTPUT> extends NonProbabilistic<OUTPUT> {
         return f.apply(functionInputs);
     }
 
-//    @Override
-//    public DualNumber calculateDualNumber(Map<Vertex, DualNumber> dualNumbers) {
-//        if (dualNumberSupplier != null) {
-//            return dualNumberSupplier.get();
-//        }
-//
-//        throw new UnsupportedOperationException();
-//    }
-
     @Override
     public void observe(OUTPUT value) {
         throw new NonProbabilisticObservationException();
     }
-
-//    @Override
-//    public double logPdf(T value) {
-//        return this.getDerivedValue().equals(value) ? 0.0 : Double.NEGATIVE_INFINITY;
-//    }
-
-//    @Override
-//    public Map<Long, DoubleTensor> dLogPdf(Double value) {
-//        throw new UnsupportedOperationException();
-//    }
 
     @Override
     public OUTPUT updateValue() {

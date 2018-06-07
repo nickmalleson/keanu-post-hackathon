@@ -55,7 +55,7 @@ public class MixedBlackBoxTest {
         doubleInputs.add(new GaussianVertex(6.0, 3.0));
 
         ArrayList<IntegerVertex> integerInputs = new ArrayList<>(2);
-        integerInputs.add(new PoissonVertex(7));
+        integerInputs.add(new PoissonVertex(4));
         integerInputs.add(new PoissonVertex(5));
 
         MixedInputOutputBlackBox box = new MixedInputOutputBlackBox(integerInputs,
@@ -64,31 +64,33 @@ public class MixedBlackBoxTest {
                                                                    2,
                                                                    4);
 
-//        box.fuzzyObserveDoubleOutput(0, 16.0, 1.0);
-//        box.fuzzyObserveDoubleOutput(1, 64.0, 1.0);
-//
-//        box.fuzzyObserveIntegerOutput(0, 16.0, 1.0);
-//        box.fuzzyObserveIntegerOutput(1, 64.0, 1.0);
+        // TODO inputs = [[3, 4], [5.55, 6.66]] give outputs = ([7.0, 12.0], [12.21, 36.963, 19.21, 443.556])
 
-        box.fuzzyObserveDoubleOutput(2, 64.0, 1.0);
+        box.fuzzyObserveIntegerOutput(0, 7.0, 1.0);
+        box.fuzzyObserveIntegerOutput(1, 12.0, 1.0);
+
+        box.fuzzyObserveDoubleOutput(0, 12.21, 1.0);
+        box.fuzzyObserveDoubleOutput(1, 36.963, 1.0);
+        box.fuzzyObserveDoubleOutput(2, 19.21, 1.0);
+        box.fuzzyObserveDoubleOutput(3, 443.556, 1.0);
 
         BayesNet testNet = new BayesNet(box.getConnectedGraph());
         ArrayList<Vertex> fromVertices = new ArrayList<>();
         fromVertices.addAll(doubleInputs);
         fromVertices.addAll(integerInputs);
 
-        NetworkSamples testMet = MetropolisHastings.getPosteriorSamples(testNet, fromVertices, 10000);
+        NetworkSamples testMet = MetropolisHastings.getPosteriorSamples(testNet, fromVertices, 1000000).drop(10000);
 
-        List<Integer> integerOne = testMet.get(integerInputs.get(0)).asList();
-        List<Integer> integerTwo = testMet.get(integerInputs.get(1)).asList();
-        List<Double> doubleOne = testMet.get(doubleInputs.get(0)).asList();
-        List<Double> doubleTwo = testMet.get(doubleInputs.get(1)).asList();
-
-        for (int i=0; i<integerOne.size(); i++) {
-            System.out.println(integerOne.get(i) + " " + integerTwo.get(i) + " " + (integerOne.get(i) + integerTwo.get(i)) + " " + (integerOne.get(i) * integerTwo.get(i)) + " || " +
-                doubleOne.get(i) + " " + doubleTwo.get(i) + " " + (doubleOne.get(i) + doubleTwo.get(i)) + " " + (doubleOne.get(i) * doubleTwo.get(i))
-
-            );
-        }
+//        List<Integer> integerOne = testMet.get(integerInputs.get(0)).asList();
+//        List<Integer> integerTwo = testMet.get(integerInputs.get(1)).asList();
+//        List<Double> doubleOne = testMet.get(doubleInputs.get(0)).asList();
+//        List<Double> doubleTwo = testMet.get(doubleInputs.get(1)).asList();
+//
+//        for (int i=0; i<integerOne.size(); i++) {
+//            System.out.println(integerOne.get(i) + " " + integerTwo.get(i) + " " + (integerOne.get(i) + integerTwo.get(i)) + " " + (integerOne.get(i) * integerTwo.get(i)) + " || " +
+//                doubleOne.get(i) + " " + doubleTwo.get(i) + " " + (doubleOne.get(i) + doubleTwo.get(i)) + " " + (doubleOne.get(i) * doubleTwo.get(i))
+//
+//            );
+//        }
     }
 }
