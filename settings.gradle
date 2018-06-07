@@ -2,3 +2,5 @@ include 'keanu-project',
         'keanu-docs:code',
         'keanu-examples:coalMiningDisasters',
         'keanu-examples:starter'
+include 'halo'
+

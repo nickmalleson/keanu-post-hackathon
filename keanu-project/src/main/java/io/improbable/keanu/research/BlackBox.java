@@ -18,6 +18,8 @@ public class BlackBox {
 
     public BlackBox(ArrayList<DoubleVertex> doubleInputs,
                     BiFunction<Double[], RandomFactory<Double>, Double[]> model,
+                    Integer expectedNumberOfGaussians,
+                    Integer expectedNumberOfUniforms,
                     Integer expectedNumberOfOutputs) {
         this.model = model;
         this.doubleInputs = doubleInputs;
@@ -31,16 +33,20 @@ public class BlackBox {
             return out;
         });
 
-        // TODO this isn't brilliant...
-        int numberOfGaussians = 10;
-        int numberOfUniforms = 10;
-
-        random = new VertexBackedRandomFactory(numberOfGaussians, numberOfUniforms);
+        random = new VertexBackedRandomFactory(expectedNumberOfGaussians, expectedNumberOfUniforms);
         DoubleListLambdaVertex lambdaVertex = new DoubleListLambdaVertex(inputVertex, model, random);
 
         for (int i=0; i<expectedNumberOfOutputs; i++) {
             doubleOutputs.add(new DoubleArrayIndexingVertex(lambdaVertex, i));
         }
+    }
+
+    public BlackBox(ArrayList<DoubleVertex> doubleInputs,
+                    BiFunction<Double[], RandomFactory<Double>, Double[]> model,
+                    Integer expectedNumberOfOutputs) {
+        this(doubleInputs, model,
+            expectedNumberOfOutputs*5, expectedNumberOfOutputs*5,
+            expectedNumberOfOutputs);
     }
 
     public GaussianVertex fuzzyObserve(Integer outputIndex, Double observation, Double error) {
@@ -56,8 +62,3 @@ public class BlackBox {
         return vertices;
     }
 }
-
-
-
-// how many gaussian calls,
-// how many uniform calls

@@ -8,7 +8,6 @@ import io.improbable.keanu.vertices.dbl.DoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class BlackBoxTest {
 
@@ -21,23 +20,18 @@ public class BlackBoxTest {
 
     public static void main (String[] args) {
         ArrayList<DoubleVertex> inputs = new ArrayList<>(2);
-        inputs.add(new GaussianVertex(5.5, 3.0));
-        inputs.add(new GaussianVertex(6.1, 2.0));
+        inputs.add(new GaussianVertex(5.0, 3.0));
+        inputs.add(new GaussianVertex(6.0, 3.0));
 
         BlackBox box = new BlackBox(inputs, BlackBoxTest::model, 2);
 
-        box.fuzzyObserve(1, 14.0, 0.5);
+        box.fuzzyObserve(1, 14.0, 0.1);
 
         BayesNet testNet = new BayesNet(box.getConnectedGraph());
 
-        NetworkSamples testMet = MetropolisHastings.getPosteriorSamples(testNet, inputs, 100);
+        NetworkSamples testMet = MetropolisHastings.getPosteriorSamples(testNet, inputs, 500000).drop(1000);
+        Double answer = testMet.probability( sample -> sample.get(inputs.get(0)) + sample.get(inputs.get(1)) > 14.0 );
 
-        List<Double> inOne = testMet.get(inputs.get(0)).asList();
-        List<Double> inTwo = testMet.get(inputs.get(1)).asList();
-
-        for (int i=0; i<inOne.size(); i++) {
-            System.out.println(inOne.get(i) + " " + inTwo.get(i) + " " + (inOne.get(i) + inTwo.get(i)));
-        }
-
+        System.out.println(answer);
     }
 }

@@ -8,34 +8,29 @@ import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.intgr.IntegerVertex;
 import org.apache.commons.math3.util.Pair;
 
-
 import java.util.ArrayList;
 import java.util.Set;
 
 public class MixedInputOutputBlackBox {
     
-    private final TriFunction<Integer [], Double [], RandomFactory<Double>, Pair<Integer [], Double []> > model;
     public ArrayList<DoubleVertex> doubleInputs;
     public ArrayList<DoubleVertex> doubleOutputs;
     public ArrayList<IntegerVertex> integerInputs;
     public ArrayList<IntegerVertex> integerOutputs;
     protected final VertexBackedRandomFactory random;
 
-
     public MixedInputOutputBlackBox(ArrayList<IntegerVertex> integerInputs,
                                     ArrayList<DoubleVertex> doubleInputs,
                                     TriFunction<Integer [], Double [], RandomFactory<Double>, Pair<Integer [], Double []> > model,
+                                    Integer expectedNumberOfGaussians,
+                                    Integer expectedNumberOfUniforms,
                                     Integer expectedNumberOfIntegersOut,
                                     Integer expectedNumberOfDoublesOut) {
-        this.model = model;
+
         this.integerInputs = integerInputs;
         this.doubleInputs = doubleInputs;
         this.integerOutputs = new ArrayList<>(expectedNumberOfIntegersOut);
         this.doubleOutputs = new ArrayList<>(expectedNumberOfDoublesOut);
-
-        // TODO this isn't brilliant...
-        int numberOfGaussians = 10;
-        int numberOfUniforms = 10;
 
         Vertex<Integer[]> integersInputVertex = new ReduceVertex<>(integerInputs, (ArrayList<Integer> in) -> {
             Integer[] out = new Integer[integerInputs.size()];
@@ -46,7 +41,7 @@ public class MixedInputOutputBlackBox {
             for (int i=0; i<doubleInputs.size(); i++) { out[i] = in.get(i); }
             return out; });
 
-        random = new VertexBackedRandomFactory(numberOfGaussians, numberOfUniforms);
+        random = new VertexBackedRandomFactory(expectedNumberOfGaussians, expectedNumberOfUniforms);
         MixedListLambdaVertex lambdaVertex = new MixedListLambdaVertex(integersInputVertex, doublesInputVertex, model, random);
         PairVertexGetFirst<Integer[], Double[]> integersVertex = new PairVertexGetFirst<>(lambdaVertex);
         PairVertexGetSecond<Integer[], Double[]> doublesVertex = new PairVertexGetSecond<>(lambdaVertex);
@@ -57,6 +52,17 @@ public class MixedInputOutputBlackBox {
         for (int i=0; i<expectedNumberOfDoublesOut; i++) {
             doubleOutputs.add(new DoubleArrayIndexingVertex(doublesVertex, i));
         }
+    }
+
+    public MixedInputOutputBlackBox(ArrayList<IntegerVertex> integerInputs,
+                                    ArrayList<DoubleVertex> doubleInputs,
+                                    TriFunction<Integer [], Double [], RandomFactory<Double>, Pair<Integer [], Double []> > model,
+                                    Integer expectedNumberOfIntegersOut,
+                                    Integer expectedNumberOfDoublesOut) {
+        this(integerInputs, doubleInputs, model,
+            (expectedNumberOfDoublesOut+expectedNumberOfIntegersOut)*5,
+            (expectedNumberOfDoublesOut+expectedNumberOfIntegersOut)*5,
+            expectedNumberOfIntegersOut, expectedNumberOfDoublesOut);
     }
 
     public GaussianVertex fuzzyObserveDoubleInput(Integer inputIndex, Double observation, Double error) {
@@ -82,8 +88,6 @@ public class MixedInputOutputBlackBox {
         vertex.observe(observation);
         return vertex;
     }
-
-
 
     public Set<? extends Vertex> getConnectedGraph() {
         Set<Vertex> vertices = integerOutputs.get(0).getConnectedGraph();
