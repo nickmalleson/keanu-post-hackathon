@@ -4,6 +4,7 @@ import io.improbable.keanu.algorithms.NetworkSamples;
 import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
 import io.improbable.keanu.network.BayesianNetwork;
 import io.improbable.keanu.randomfactory.RandomFactory;
+import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 
@@ -11,10 +12,17 @@ import java.util.ArrayList;
 
 public class BlackBoxTest {
 
-    public static Double[] model(Double[] inputs, RandomFactory<Double> random) {
-        Double[] output = new Double[2];
-        output[0] = inputs[0] * inputs[1];
-        output[1] = inputs[0] + inputs[1];
+    public static DoubleTensor[] model(DoubleTensor[] inputs, RandomFactory<Double> random) {
+        DoubleTensor[] output = new DoubleTensor[2];
+
+        double[] output0 = new double[1];
+        output0[0] = inputs[0].scalar() * inputs[1].scalar();
+        output[0] = DoubleTensor.create(output0);
+
+        double[] output1 = new double[1];
+        output1[0] = inputs[0].scalar() + inputs[1].scalar();
+        output[1] = DoubleTensor.create(output1);
+
         return output;
     }
 
