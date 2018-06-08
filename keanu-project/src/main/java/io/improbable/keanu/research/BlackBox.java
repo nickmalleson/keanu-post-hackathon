@@ -25,7 +25,7 @@ public class BlackBox {
         this.doubleInputs = doubleInputs;
         this.doubleOutputs = new ArrayList<>(expectedNumberOfOutputs);
 
-        Vertex<Double[]> inputVertex = new ReduceVertex<>(doubleInputs, (ArrayList<Double> in) -> {
+        Vertex<Double[]> inputVertex = new ReduceVertex<>(doubleInputs, (ArrayList<DoubleVertex> in) -> {
             Double[] out = new Double[doubleInputs.size()];
             for (int i = 0; i< doubleInputs.size(); i++) {
                 out[i] = in.get(i);
