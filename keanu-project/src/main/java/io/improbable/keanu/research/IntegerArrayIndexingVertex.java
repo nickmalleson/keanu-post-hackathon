@@ -1,15 +1,17 @@
 package io.improbable.keanu.research;
 
+import io.improbable.keanu.tensor.intgr.IntegerTensor;
 import io.improbable.keanu.vertices.Vertex;
+import io.improbable.keanu.vertices.intgr.IntegerVertex;
 import io.improbable.keanu.vertices.intgr.nonprobabilistic.ConstantIntegerVertex;
 
-public class IntegerArrayIndexingVertex extends IntegerBinaryOpLambda<Integer[], Integer> {
+public class IntegerArrayIndexingVertex extends IntegerBinaryOpLambda<IntegerTensor[], IntegerTensor> {
 
-    public IntegerArrayIndexingVertex(Vertex<Integer[]> input, Vertex<Integer> index) {
-        super(input, index, (Integer[] in, Integer i) -> in[i]);
+    public IntegerArrayIndexingVertex(Vertex<IntegerTensor[]> input, IntegerVertex index) {
+        super(input, index, (IntegerTensor[] in, IntegerTensor i) -> in[i.scalar()]);
     }
 
-    public IntegerArrayIndexingVertex(Vertex<Integer[]> input, Integer index) {
+    public IntegerArrayIndexingVertex(Vertex<IntegerTensor[]> input, Integer index) {
         this(input, new ConstantIntegerVertex(index));
     }
 }
