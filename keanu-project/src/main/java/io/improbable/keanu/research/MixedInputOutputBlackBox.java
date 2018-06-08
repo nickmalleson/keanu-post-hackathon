@@ -1,6 +1,8 @@
 package io.improbable.keanu.research;
 
 import io.improbable.keanu.randomfactory.RandomFactory;
+import io.improbable.keanu.tensor.dbl.DoubleTensor;
+import io.improbable.keanu.tensor.intgr.IntegerTensor;
 import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
 import io.improbable.keanu.vertices.dbl.nonprobabilistic.CastDoubleVertex;
@@ -21,7 +23,7 @@ public class MixedInputOutputBlackBox {
 
     public MixedInputOutputBlackBox(ArrayList<IntegerVertex> integerInputs,
                                     ArrayList<DoubleVertex> doubleInputs,
-                                    TriFunction<Integer [], Double [], RandomFactory<Double>, Pair<Integer [], Double []> > model,
+                                    TriFunction<IntegerTensor[], DoubleTensor[], RandomFactory<Double>, Pair<IntegerTensor[], DoubleTensor[]> > model,
                                     Integer expectedNumberOfGaussians,
                                     Integer expectedNumberOfUniforms,
                                     Integer expectedNumberOfIntegersOut,
@@ -32,19 +34,19 @@ public class MixedInputOutputBlackBox {
         this.integerOutputs = new ArrayList<>(expectedNumberOfIntegersOut);
         this.doubleOutputs = new ArrayList<>(expectedNumberOfDoublesOut);
 
-        Vertex<Integer[]> integersInputVertex = new ReduceVertex<>(integerInputs, (ArrayList<Integer> in) -> {
-            Integer[] out = new Integer[integerInputs.size()];
+        Vertex<IntegerTensor[]> integersInputVertex = new ReduceVertex<>(integerInputs, (ArrayList<IntegerTensor> in) -> {
+            IntegerTensor[] out = new IntegerTensor[integerInputs.size()];
             for (int i=0; i<integerInputs.size(); i++) { out[i] = in.get(i); }
             return out; });
-        Vertex<Double[]> doublesInputVertex = new ReduceVertex<>(doubleInputs, (ArrayList<Double> in) -> {
-            Double[] out = new Double[doubleInputs.size()];
+        Vertex<DoubleTensor[]> doublesInputVertex = new ReduceVertex<>(doubleInputs, (ArrayList<DoubleTensor> in) -> {
+            DoubleTensor[] out = new DoubleTensor[doubleInputs.size()];
             for (int i=0; i<doubleInputs.size(); i++) { out[i] = in.get(i); }
             return out; });
 
         random = new VertexBackedRandomFactory(expectedNumberOfGaussians, expectedNumberOfUniforms);
         MixedListLambdaVertex lambdaVertex = new MixedListLambdaVertex(integersInputVertex, doublesInputVertex, model, random);
-        PairVertexGetFirst<Integer[], Double[]> integersVertex = new PairVertexGetFirst<>(lambdaVertex);
-        PairVertexGetSecond<Integer[], Double[]> doublesVertex = new PairVertexGetSecond<>(lambdaVertex);
+        PairVertexGetFirst<IntegerTensor[], DoubleTensor[]> integersVertex = new PairVertexGetFirst<>(lambdaVertex);
+        PairVertexGetSecond<IntegerTensor[], DoubleTensor[]> doublesVertex = new PairVertexGetSecond<>(lambdaVertex);
 
         for (int i=0; i<expectedNumberOfIntegersOut; i++) {
             integerOutputs.add(new IntegerArrayIndexingVertex(integersVertex, i));
@@ -56,7 +58,8 @@ public class MixedInputOutputBlackBox {
 
     public MixedInputOutputBlackBox(ArrayList<IntegerVertex> integerInputs,
                                     ArrayList<DoubleVertex> doubleInputs,
-                                    TriFunction<Integer [], Double [], RandomFactory<Double>, Pair<Integer [], Double []> > model,
+                                    TriFunction<IntegerTensor[], DoubleTensor[], RandomFactory<Double>,
+                                                Pair<IntegerTensor[], DoubleTensor[]>> model,
                                     Integer expectedNumberOfIntegersOut,
                                     Integer expectedNumberOfDoublesOut) {
         this(integerInputs, doubleInputs, model,

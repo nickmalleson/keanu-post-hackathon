@@ -1,6 +1,7 @@
 package io.improbable.keanu.research;
 
 import io.improbable.keanu.randomfactory.RandomFactory;
+import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
@@ -11,13 +12,13 @@ import java.util.function.BiFunction;
 
 public class BlackBox {
 
-    protected final BiFunction<Double[], RandomFactory<Double>, Double[]> model;
+    protected final BiFunction<DoubleTensor[], RandomFactory<Double>, DoubleTensor[]> model;
     protected final ArrayList<DoubleVertex> doubleInputs;
     protected final ArrayList<DoubleVertex> doubleOutputs;
     protected final VertexBackedRandomFactory random;
 
     public BlackBox(ArrayList<DoubleVertex> doubleInputs,
-                    BiFunction<Double[], RandomFactory<Double>, Double[]> model,
+                    BiFunction<DoubleTensor[], RandomFactory<Double>, DoubleTensor[]> model,
                     Integer expectedNumberOfGaussians,
                     Integer expectedNumberOfUniforms,
                     Integer expectedNumberOfOutputs) {
@@ -25,8 +26,8 @@ public class BlackBox {
         this.doubleInputs = doubleInputs;
         this.doubleOutputs = new ArrayList<>(expectedNumberOfOutputs);
 
-        Vertex<Double[]> inputVertex = new ReduceVertex<>(doubleInputs, (ArrayList<DoubleVertex> in) -> {
-            Double[] out = new Double[doubleInputs.size()];
+        Vertex<DoubleTensor[]> inputVertex = new ReduceVertex<>(doubleInputs, (ArrayList<DoubleTensor> in) -> {
+            DoubleTensor[] out = new DoubleTensor[doubleInputs.size()];
             for (int i = 0; i< doubleInputs.size(); i++) {
                 out[i] = in.get(i);
             }
@@ -42,7 +43,7 @@ public class BlackBox {
     }
 
     public BlackBox(ArrayList<DoubleVertex> doubleInputs,
-                    BiFunction<Double[], RandomFactory<Double>, Double[]> model,
+                    BiFunction<DoubleTensor[], RandomFactory<Double>, DoubleTensor[]> model,
                     Integer expectedNumberOfOutputs) {
         this(doubleInputs, model,
             expectedNumberOfOutputs*5, expectedNumberOfOutputs*5,
@@ -62,3 +63,5 @@ public class BlackBox {
         return vertices;
     }
 }
+
+
