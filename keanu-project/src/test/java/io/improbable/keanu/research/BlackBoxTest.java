@@ -52,6 +52,14 @@ public class BlackBoxTest {
 
         BayesianNetwork testNet = new BayesianNetwork(box.getConnectedGraph());
 
+        NonGradientOptimizer daveTest = new NonGradientOptimizer(testNet);
+        daveTest.maxAPosteriori(100000, 14.0);
+
+        System.out.println("Input 0: " + inputs.get(0).getValue().scalar() + " Input 1: " + inputs.get(1).getValue().scalar());
+        Double MAPInputOne = inputs.get(0).getValue().scalar();
+        Double MAPInputTwo = inputs.get(1).getValue().scalar();
+        System.out.println("MAP Error One: " + (MAPInputOne*MAPInputTwo-49.0) + " MAP Error Two: " + (MAPInputOne+MAPInputTwo-14.0));
+
         NetworkSamples testMet = MetropolisHastings.getPosteriorSamples(testNet, inputs, 1000000).drop(10000).downSample(100);
 
         Double answer = testMet.probability( sample -> {
@@ -61,14 +69,6 @@ public class BlackBoxTest {
             Double product = input0 * input1;
             return (13.5 < sum && sum < 14.5 && 48.5 < product && product < 49.5);
         } );
-
-        NonGradientOptimizer daveTest = new NonGradientOptimizer(testNet);
-        daveTest.maxAPosteriori(100000, 14.0);
-
-        System.out.println("Input 0: " + inputs.get(0).getValue().scalar() + " Input 1: " + inputs.get(1).getValue().scalar());
-        Double MAPInputOne = inputs.get(0).getValue().scalar();
-        Double MAPInputTwo = inputs.get(1).getValue().scalar();
-        System.out.println("MAP Error One: " + (MAPInputOne*MAPInputTwo-49.0) + " MAP Error Two: " + (MAPInputOne+MAPInputTwo-14.0));
 
         VertexSamples<ScalarDoubleTensor> samples0 = testMet.get(inputs.get(0).getId());
         VertexSamples<ScalarDoubleTensor> samples1 = testMet.get(inputs.get(1).getId());
@@ -93,3 +93,5 @@ public class BlackBoxTest {
         Vizer.histogram(test);
     }
 }
+
+// Pass in x and ys, pass out m and c and error, fuzzy observe error to be 0
