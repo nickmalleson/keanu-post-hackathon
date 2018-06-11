@@ -1,12 +1,16 @@
 package io.improbable.keanu.research;
 
 import io.improbable.keanu.algorithms.NetworkSamples;
+import io.improbable.keanu.algorithms.VertexSamples;
 import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
+import io.improbable.keanu.algorithms.variational.NonGradientOptimizer;
 import io.improbable.keanu.network.BayesianNetwork;
 import io.improbable.keanu.randomfactory.RandomFactory;
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
+import io.improbable.keanu.tensor.dbl.ScalarDoubleTensor;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
+import io.improbable.vis.Vizer;
 
 import java.util.ArrayList;
 
@@ -26,6 +30,16 @@ public class BlackBoxTest {
         return output;
     }
 
+    public void test (Double desiredSum, Double desiredProduct, Double observationUncertainty) {
+
+        ArrayList<DoubleVertex> inputs = new ArrayList<>(2);
+        inputs.add(new GaussianVertex(desiredSum/2.0, desiredSum/3.0));
+        inputs.add(new GaussianVertex(desiredSum/2.0, desiredSum/3.0));
+
+        BlackBox box = new BlackBox(inputs, BlackBoxTest::model, 2);
+
+    }
+
     public static void main (String[] args) {
         ArrayList<DoubleVertex> inputs = new ArrayList<>(2);
         inputs.add(new GaussianVertex(5.0, 3.0));
@@ -38,12 +52,44 @@ public class BlackBoxTest {
 
         BayesianNetwork testNet = new BayesianNetwork(box.getConnectedGraph());
 
-        // TODO convert into test, given observations, both inputs should converge to ~ 7.0
-        // TODO Maybe test observation of the inputs gives convergence to expected outputs
+        NetworkSamples testMet = MetropolisHastings.getPosteriorSamples(testNet, inputs, 1000000).drop(10000).downSample(100);
 
-        NetworkSamples testMet = MetropolisHastings.getPosteriorSamples(testNet, inputs, 500000).drop(1000);
+        Double answer = testMet.probability( sample -> {
+            Double input0 = sample.get(inputs.get(0)).scalar();
+            Double input1 = sample.get(inputs.get(1)).scalar();
+            Double sum = input0 + input1;
+            Double product = input0 * input1;
+            return (13.5 < sum && sum < 14.5 && 48.5 < product && product < 49.5);
+        } );
 
-        Double answer = testMet.probability( sample -> sample.get(inputs.get(0)).scalar() + sample.get(inputs.get(1)).scalar() > 14.0 );
+        NonGradientOptimizer daveTest = new NonGradientOptimizer(testNet);
+        daveTest.maxAPosteriori(100000, 14.0);
+
+        System.out.println("Input 0: " + inputs.get(0).getValue().scalar() + " Input 1: " + inputs.get(1).getValue().scalar());
+        Double MAPInputOne = inputs.get(0).getValue().scalar();
+        Double MAPInputTwo = inputs.get(1).getValue().scalar();
+        System.out.println("MAP Error One: " + (MAPInputOne*MAPInputTwo-49.0) + " MAP Error Two: " + (MAPInputOne+MAPInputTwo-14.0));
+
+        VertexSamples<ScalarDoubleTensor> samples0 = testMet.get(inputs.get(0).getId());
+        VertexSamples<ScalarDoubleTensor> samples1 = testMet.get(inputs.get(1).getId());
+
+        ArrayList<Double> test = new ArrayList<>();
+        Double Onetotal = 0.0;
+        Double Zerototal = 0.0;
+        for (int i=0; i<samples1.asList().size(); i++) {
+            test.add(samples1.asList().get(i).scalar() + samples0.asList().get(i).scalar());
+            Onetotal += samples1.asList().get(i).scalar();
+            Zerototal += samples0.asList().get(i).scalar();
+        }
+        Double OneMean = Onetotal/samples1.asList().size();
+        Double TwoMean = Zerototal/samples1.asList().size();
+
+        System.out.println("Input One Mean: " + OneMean + " Input Two Mean: " + TwoMean);
+        System.out.println("Error One: " + (OneMean*TwoMean-49.0) + " Error Two: " + (TwoMean+OneMean-14.0));
+
+
         System.out.println(answer);
+
+        Vizer.histogram(test);
     }
 }

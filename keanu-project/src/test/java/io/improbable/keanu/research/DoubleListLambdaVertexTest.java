@@ -10,7 +10,6 @@ import io.improbable.keanu.vertices.dbl.DoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 
 import java.util.ArrayList;
-import java.util.List;
 
 public class DoubleListLambdaVertexTest {
 
