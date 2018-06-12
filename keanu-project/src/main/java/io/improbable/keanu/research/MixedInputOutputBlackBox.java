@@ -11,6 +11,7 @@ import io.improbable.keanu.vertices.intgr.IntegerVertex;
 import org.apache.commons.math3.util.Pair;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 public class MixedInputOutputBlackBox {
@@ -34,11 +35,11 @@ public class MixedInputOutputBlackBox {
         this.integerOutputs = new ArrayList<>(expectedNumberOfIntegersOut);
         this.doubleOutputs = new ArrayList<>(expectedNumberOfDoublesOut);
 
-        Vertex<IntegerTensor[]> integersInputVertex = new ReduceVertex<>(integerInputs, (ArrayList<IntegerTensor> in) -> {
+        Vertex<IntegerTensor[]> integersInputVertex = new ReduceVertex<>(integerInputs, (List<IntegerTensor> in) -> {
             IntegerTensor[] out = new IntegerTensor[integerInputs.size()];
             for (int i=0; i<integerInputs.size(); i++) { out[i] = in.get(i); }
             return out; });
-        Vertex<DoubleTensor[]> doublesInputVertex = new ReduceVertex<>(doubleInputs, (ArrayList<DoubleTensor> in) -> {
+        Vertex<DoubleTensor[]> doublesInputVertex = new ReduceVertex<>(doubleInputs, (List<DoubleTensor> in) -> {
             DoubleTensor[] out = new DoubleTensor[doubleInputs.size()];
             for (int i=0; i<doubleInputs.size(); i++) { out[i] = in.get(i); }
             return out; });

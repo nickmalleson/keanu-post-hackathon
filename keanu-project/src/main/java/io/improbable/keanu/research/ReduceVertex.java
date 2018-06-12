@@ -7,14 +7,15 @@ import io.improbable.keanu.vertices.generic.nonprobabilistic.NonProbabilistic;
 
 import java.util.*;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 public class ReduceVertex<INPUT, OUTPUT> extends NonProbabilistic<OUTPUT> {
 
     protected final List<? extends Vertex<INPUT>> inputs;
-    protected final Function<ArrayList<INPUT>, OUTPUT> f;
+    protected final Function<List<INPUT>, OUTPUT> f;
 
     public ReduceVertex(Collection<? extends Vertex<INPUT>> inputs,
-                        Function<ArrayList<INPUT>, OUTPUT> f) {
+                        Function<List<INPUT>, OUTPUT> f) {
         this.inputs = new ArrayList<>(inputs);
         this.f = f;
         setParents(inputs);
@@ -24,7 +25,7 @@ public class ReduceVertex<INPUT, OUTPUT> extends NonProbabilistic<OUTPUT> {
         }
     }
 
-    public ReduceVertex(Function<ArrayList<INPUT>, OUTPUT> f,
+    public ReduceVertex(Function<List<INPUT>, OUTPUT> f,
                         Vertex<INPUT>... input) {
         this(Arrays.asList(input), f);
     }
@@ -39,13 +40,17 @@ public class ReduceVertex<INPUT, OUTPUT> extends NonProbabilistic<OUTPUT> {
         return applyReduce(Vertex::getValue);
     }
 
-    private OUTPUT applyReduce(Function<Vertex<OUTPUT>, OUTPUT> mapper) {
-        Iterator<? extends Vertex<INPUT>> samples = inputs.iterator();
-        ArrayList<INPUT> functionInputs = new ArrayList<>(inputs.size());
-        while (samples.hasNext()) {
-            functionInputs.add(samples.next().getValue());
-        }
-        return f.apply(functionInputs);
+    private OUTPUT applyReduce(Function<Vertex<INPUT>, INPUT> getValueFromInput) {
+        List<INPUT> inputValues = inputs.stream().map(getValueFromInput::apply).collect(Collectors.toList());
+
+
+//        Iterator<? extends Vertex<INPUT>> samples = inputs.iterator();
+//        ArrayList<INPUT> functionInputs = new ArrayList<>(inputs.size());
+//        while (samples.hasNext()) {
+//            functionInputs.add(samples.next().getValue());
+//        }
+
+        return f.apply(inputValues);
     }
 
     @Override

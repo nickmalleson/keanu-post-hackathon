@@ -122,10 +122,7 @@ public class BlackBoxInferenceTest {
         NonGradientOptimizer optimizer = new NonGradientOptimizer(testNet);
         optimizer.maxAPosteriori(1000000, 10.0);
 
-        List<DoubleVertex> fromVertices = Arrays.asList(m, c);
-
-//        NetworkSamples postSamples = MetropolisHastings.getPosteriorSamples(testNet, fromVertices, 11000).drop(1000).downSample(3);
-//        postSamples.
+        System.out.println("BlackBox output1: " + box.doubleOutputs.get(0).getValue().scalar());
 
         System.out.println("Size " + box.getConnectedGraph().size());
         System.out.println("M: " + m.getValue().scalar());
@@ -144,18 +141,18 @@ public class BlackBoxInferenceTest {
         DoubleTensor yData = DoubleTensor.create(ys);
 
         // Linear Regression
-        DoubleVertex m = new GaussianVertex(0.0, 10.0);
-        DoubleVertex b = new GaussianVertex(0.0, 10.0);
+        DoubleVertex m = new SmoothUniformVertex(-10.0, 10.0);
+        DoubleVertex c = new SmoothUniformVertex(-10.0, 10.0);
         DoubleVertex x = ConstantVertex.of(xData);
-        DoubleVertex y = new GaussianVertex(x.multiply(m).plus(b), 5.0);
+        DoubleVertex y = new GaussianVertex(x.multiply(m).plus(c), 5.0);
         y.observe(yData);
 
         BayesianNetwork bayesNet = new BayesianNetwork(m.getConnectedGraph());
-        NonGradientOptimizer optimizer2 = new NonGradientOptimizer(bayesNet);
-        optimizer2.maxAPosteriori(1000000, 10.0);
+        NonGradientOptimizer optimizer = new NonGradientOptimizer(bayesNet);
+        optimizer.maxAPosteriori(1000000, 10.0);
 
         System.out.println(m.getValue().scalar());
-        System.out.println(b.getValue().scalar());
+        System.out.println(c.getValue().scalar());
     }
 
     public static void regressWithBOBYQA() {
@@ -193,8 +190,8 @@ public class BlackBoxInferenceTest {
         Double cTarget = -3.0;
         List<Double> xPoints = Arrays.asList(3.5, 4.2, 9.8, 3.6, 6.3, 9.8, -2.5, -5.7);
 
-        regressWithBlackBox(mTarget, cTarget, xPoints);
-//        regressWithKeanuNative(mTarget, cTarget, xPoints);
+//        regressWithBlackBox(mTarget, cTarget, xPoints);
+        regressWithKeanuNative(mTarget, cTarget, xPoints);
 //        regressWithBOBYQA();
 
     }
