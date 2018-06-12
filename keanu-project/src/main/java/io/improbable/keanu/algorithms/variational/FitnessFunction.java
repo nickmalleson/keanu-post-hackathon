@@ -39,6 +39,7 @@ public class FitnessFunction {
                 onFitnessCalculation.accept(point, logOfTotalProbability);
             }
 
+            System.out.println("FitnessFunction: fitness() = " + logOfTotalProbability + " point.length = " + point.length);
             return logOfTotalProbability;
         };
     }

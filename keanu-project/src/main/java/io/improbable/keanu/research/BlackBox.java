@@ -60,6 +60,9 @@ public class BlackBox {
         Set<Vertex> vertices = doubleOutputs.get(0).getConnectedGraph();
         vertices.addAll(random.listOfGaussians);
         vertices.addAll(random.listOfUniforms);
+
+        System.out.println("BlackBox.getConnectedGraph(): BN vertices = " + vertices.size() +
+            ", random.listOfGaussians = " + random.listOfGaussians.size() + ", random.listOfUniforms = " + random.listOfUniforms.size());
         return vertices;
     }
 }

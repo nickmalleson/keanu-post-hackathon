@@ -1,22 +1,16 @@
 package io.improbable.keanu.research;
 
 import io.improbable.keanu.algorithms.NetworkSamples;
-import io.improbable.keanu.algorithms.VertexSamples;
 import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
-import io.improbable.keanu.algorithms.variational.FitnessFunction;
-import io.improbable.keanu.algorithms.variational.GradientOptimizer;
 import io.improbable.keanu.algorithms.variational.NonGradientOptimizer;
 import io.improbable.keanu.network.BayesianNetwork;
 import io.improbable.keanu.randomfactory.RandomFactory;
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
-import io.improbable.keanu.tensor.dbl.ScalarDoubleTensor;
 import io.improbable.keanu.vertices.ConstantVertex;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
 import io.improbable.keanu.vertices.dbl.nonprobabilistic.ConstantDoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.SmoothUniformVertex;
-import io.improbable.keanu.vertices.dbl.probabilistic.UniformVertex;
-import io.improbable.vis.Vizer;
 import org.apache.commons.math3.analysis.MultivariateFunction;
 import org.apache.commons.math3.optim.InitialGuess;
 import org.apache.commons.math3.optim.MaxEval;
@@ -34,7 +28,10 @@ import static org.apache.commons.math3.optim.nonlinear.scalar.GoalType.MINIMIZE;
 
 public class BlackBoxInferenceTest {
 
+    private static int count = 0;
+
     public static DoubleTensor[] model(DoubleTensor[] inputs, RandomFactory<Double> random) {
+        System.out.println("\nBlackBox iteration");
         DoubleTensor[] output = new DoubleTensor[1];
         ArrayList<Double> inputArray = new ArrayList<>(inputs.length);
         for (DoubleTensor input : inputs) {
@@ -43,18 +40,23 @@ public class BlackBoxInferenceTest {
         Iterator<Double> it = inputArray.iterator();
         Double m = it.next();
         Double c = it.next();
+        System.out.println("m = " + m + ", c = " + c);
         ArrayList<Double> xPoints = new ArrayList<>();
         ArrayList<Double> yPoints = new ArrayList<>();
         while (it.hasNext()) {
-            xPoints.add(it.next());
-            yPoints.add(it.next());
+            double x = it.next();
+            double y = it.next();
+            xPoints.add(x);
+            yPoints.add(y);
         }
 
         Double SumOfSquaredError = 0.0;
 
         for (int i = 0; i < yPoints.size(); i++) {
-            Double yModelled = m * xPoints.get(i) + c;
-            Double error = yPoints.get(i) - yModelled;
+            Double yActual = m * xPoints.get(i) + c;
+            Double yExpected = yPoints.get(i);
+            Double error = yActual - yExpected;
+            System.out.println("Y expected = " + yExpected + ", actual = " + yActual + " (error = " + error + ")");
             SumOfSquaredError += error * error;
         }
 
@@ -62,7 +64,11 @@ public class BlackBoxInferenceTest {
         double[] RMSE = new double[1];
         RMSE[0] = Math.sqrt(MSE);
 
+        System.out.println("MSE = " + MSE + ", RMSE = " + RMSE[0]);
+
         output[0] = DoubleTensor.create(RMSE);
+
+        count++;
 
         return output;
     }
@@ -86,41 +92,53 @@ public class BlackBoxInferenceTest {
         return MSE;
     }
 
-    public static void main(String[] args) {
-        Double mTarget = 4.5;
-        Double cTarget = -3.0;
-        List<Double> xPoints = Arrays.asList(3.5, 4.2, 9.8, 3.6, 6.3, 9.8, -2.5, -5.7);
-
+    public static void regressWithBlackBox(Double mTarget, Double cTarget, List<Double> xPoints) {
         ArrayList<DoubleVertex> inputs = new ArrayList<>(xPoints.size() + 2);
         // Priors on gradient and intercept
-        inputs.add(new SmoothUniformVertex(-10.0, 10.0));
-        inputs.add(new SmoothUniformVertex(-10.0, 10.0));
-        inputs.get(0).setAndCascade(0.0);
-        inputs.get(1).setAndCascade(0.0);
+
+        DoubleVertex m = new SmoothUniformVertex(-10.0, 10.0);
+        DoubleVertex c = new SmoothUniformVertex(-10.0, 10.0);
+        m.setAndCascade(0.0);
+        c.setAndCascade(0.0);
+
+        inputs.add(m);
+        inputs.add(c);
         // alternating 'x' and 'y' values
         for (Double xPoint : xPoints) {
             inputs.add(new ConstantDoubleVertex(xPoint));
             inputs.add(new ConstantDoubleVertex(mTarget * xPoint + cTarget));
         }
 
-        BlackBox box = new BlackBox(inputs, BlackBoxInferenceTest::model, 1);
+//        BlackBox box = new BlackBox(inputs, BlackBoxInferenceTest::model, 1);
+        BlackBox box = new BlackBox(inputs, BlackBoxInferenceTest::model, 0, 0, 1);
         box.fuzzyObserve(0, 0.0, 0.5);
+
+        DoubleVertex rmse = box.doubleInputs.get(0);
+        DoubleVertex obs = new GaussianVertex(rmse, 0.5);
+        obs.observe(0.0);
+
         BayesianNetwork testNet = new BayesianNetwork(box.getConnectedGraph());
 
         NonGradientOptimizer optimizer = new NonGradientOptimizer(testNet);
         optimizer.maxAPosteriori(1000000, 10.0);
 
-        System.out.println("size " + box.getConnectedGraph().size());
-        System.out.println(inputs.get(0).getValue().scalar());
-        System.out.println(inputs.get(1).getValue().scalar());
+        List<DoubleVertex> fromVertices = Arrays.asList(m, c);
 
-        // OOOOOKKKK SO LET'S TRY IT USING KEANU PROPERLY //
+//        NetworkSamples postSamples = MetropolisHastings.getPosteriorSamples(testNet, fromVertices, 11000).drop(1000).downSample(3);
+//        postSamples.
 
+        System.out.println("Size " + box.getConnectedGraph().size());
+        System.out.println("M: " + m.getValue().scalar());
+        System.out.println("C: " + c.getValue().scalar());
+        System.out.println("Count = " + count);
+    }
+
+    public static void regressWithKeanuNative(Double mTarget, Double cTarget, List<Double> xPoints) {
         double[] xs = new double[xPoints.size()];
         double[] ys = new double[xPoints.size()];
-        for (int i=0; i<xPoints.size(); i++) {
+        for (int i = 0; i < xPoints.size(); i++) {
             xs[i] = xPoints.get(i);
-            ys[i] = xPoints.get(i)*mTarget + cTarget;
+            ys[i] = xPoints.get(i) * mTarget + cTarget;
         }
         DoubleTensor xData = DoubleTensor.create(xs);
         DoubleTensor yData = DoubleTensor.create(ys);
@@ -138,9 +156,9 @@ public class BlackBoxInferenceTest {
 
         System.out.println(m.getValue().scalar());
         System.out.println(b.getValue().scalar());
+    }
 
-        // ONCE MORE BUT USING BOBYQA DIRECTLY //
-
+    public static void regressWithBOBYQA() {
         MultivariateFunction testFunction = new MultivariateFunction() {
             @Override
             public double value(double[] doubles) {
@@ -170,11 +188,16 @@ public class BlackBoxInferenceTest {
         System.out.println(pvp.getPoint()[1]);
     }
 
+    public static void main(String[] args) {
+        Double mTarget = 4.5;
+        Double cTarget = -3.0;
+        List<Double> xPoints = Arrays.asList(3.5, 4.2, 9.8, 3.6, 6.3, 9.8, -2.5, -5.7);
 
+        regressWithBlackBox(mTarget, cTarget, xPoints);
+//        regressWithKeanuNative(mTarget, cTarget, xPoints);
+//        regressWithBOBYQA();
 
-
-
-
+    }
 
 
 //        VertexSamples<ScalarDoubleTensor> samples0 = testMet.get(inputs.get(0).getId());
