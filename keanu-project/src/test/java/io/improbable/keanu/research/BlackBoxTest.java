@@ -18,7 +18,6 @@ public class BlackBoxTest {
 
     public static DoubleTensor[] model(DoubleTensor[] inputs, RandomFactory<Double> random) {
         DoubleTensor[] output = new DoubleTensor[2];
-
         double[] output0 = new double[1];
         output0[0] = inputs[0].scalar() * inputs[1].scalar();
         output[0] = DoubleTensor.create(output0);
@@ -38,6 +37,7 @@ public class BlackBoxTest {
 
         BlackBox box = new BlackBox(inputs, BlackBoxTest::model, 2);
 
+        GaussianVertex g = new DoubleTensor()
     }
 
     public static void main (String[] args) {
