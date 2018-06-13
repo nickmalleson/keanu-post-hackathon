@@ -6,7 +6,11 @@ import io.improbable.keanu.vertices.bool.BoolVertex;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
 import io.improbable.keanu.vertices.intgr.IntegerVertex;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Function;
+import java.util.function.IntFunction;
+import java.util.stream.Collectors;
 
 public class BlackBoxBase {
     public DoubleVertex     doubleInputs;
@@ -24,9 +28,10 @@ public class BlackBoxBase {
 
 
 
-    <TIN, TOUT> GenericTensor<TOUT> tensorMap(Tensor<TIN> T, Function<TIN,TOUT> mapFunction) {
+    <TIN, TOUT> GenericTensor<TOUT> tensorMap(Tensor<TIN> T, Function<TIN,TOUT> mapFunction, IntFunction<TOUT []> arrayConstructor) {
         return new GenericTensor<>(
-            T.asFlatList().stream().map(mapFunction).toArray((int i) -> (TOUT [])new Object[i]), T.getShape()
+            T.asFlatList().stream().map(mapFunction).toArray(arrayConstructor),
+            T.getShape()
         );
     }
 
