@@ -10,6 +10,7 @@ import io.improbable.keanu.vertices.dbl.DoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 
 import java.util.ArrayList;
+import java.util.List;
 
 public class DoubleListLambdaVertexTest {
 
@@ -25,7 +26,7 @@ public class DoubleListLambdaVertexTest {
         inputs.add(new GaussianVertex(5.5, 3.0));
         inputs.add(new GaussianVertex(6.1, 2.0));
 
-        Vertex<DoubleTensor[]> inputVertex = new ReduceVertex<>(inputs, (ArrayList<DoubleTensor> in) -> {
+        Vertex<DoubleTensor[]> inputVertex = new ReduceVertex<>(inputs, (List<DoubleTensor> in) -> {
             DoubleTensor[] out = new DoubleTensor[inputs.size()];
             out[0] = in.get(0);
             out[1] = in.get(1);
