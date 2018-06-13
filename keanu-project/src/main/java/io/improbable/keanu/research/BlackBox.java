@@ -41,15 +41,13 @@ public class BlackBox {
         for (int i = 0; i < expectedNumberOfOutputs; i++) {
             doubleOutputs.add(new DoubleArrayIndexingVertex(lambdaVertex, i));
         }
-
-        System.out.println("BlackBox output1: " + doubleOutputs.get(0).getValue().scalar());
     }
 
     public BlackBox(ArrayList<DoubleVertex> doubleInputs,
                     BiFunction<DoubleTensor[], RandomFactory<Double>, DoubleTensor[]> model,
                     Integer expectedNumberOfOutputs) {
         this(doubleInputs, model,
-            expectedNumberOfOutputs * 5, expectedNumberOfOutputs * 5,
+            0, 0,
             expectedNumberOfOutputs);
     }
 
@@ -63,9 +61,6 @@ public class BlackBox {
         Set<Vertex> vertices = doubleOutputs.get(0).getConnectedGraph();
         vertices.addAll(random.listOfGaussians);
         vertices.addAll(random.listOfUniforms);
-
-        System.out.println("BlackBox.getConnectedGraph(): BN vertices = " + vertices.size() +
-            ", random.listOfGaussians = " + random.listOfGaussians.size() + ", random.listOfUniforms = " + random.listOfUniforms.size());
         return vertices;
     }
 }
