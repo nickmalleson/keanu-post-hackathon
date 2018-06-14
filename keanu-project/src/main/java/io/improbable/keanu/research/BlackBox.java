@@ -8,6 +8,7 @@ import io.improbable.keanu.vertices.dbl.DoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
 
@@ -15,7 +16,7 @@ public class BlackBox {
 
     protected final BiFunction<DoubleTensor[], RandomFactory, DoubleTensor[]> model;
     protected final ArrayList<DoubleVertex> doubleInputs;
-    protected final ArrayList<DoubleVertex> doubleOutputs;
+    public final ArrayList<DoubleVertex> doubleOutputs;
     protected final VertexBackedRandomFactory random;
 
     public BlackBox(ArrayList<DoubleVertex> doubleInputs,
@@ -26,9 +27,9 @@ public class BlackBox {
         this.doubleInputs = doubleInputs;
         this.doubleOutputs = new ArrayList<>(expectedNumberOfOutputs);
 
-        Vertex<DoubleTensor[]> inputVertex = new ReduceVertex<>(doubleInputs, (ArrayList<DoubleTensor> in) -> {
+        Vertex<DoubleTensor[]> inputVertex = new ReduceVertex<>(doubleInputs, (List<DoubleTensor> in) -> {
             DoubleTensor[] out = new DoubleTensor[doubleInputs.size()];
-            for (int i = 0; i< doubleInputs.size(); i++) {
+            for (int i = 0; i < doubleInputs.size(); i++) {
                 out[i] = in.get(i);
             }
             return out;
@@ -37,7 +38,7 @@ public class BlackBox {
         random = new VertexBackedRandomFactory(expectedNumberOfDoubleDraws, 0 , 0);
         DoubleListLambdaVertex lambdaVertex = new DoubleListLambdaVertex(inputVertex, model, random);
 
-        for (int i=0; i<expectedNumberOfOutputs; i++) {
+        for (int i = 0; i < expectedNumberOfOutputs; i++) {
             doubleOutputs.add(new DoubleArrayIndexingVertex(lambdaVertex, i));
         }
     }
