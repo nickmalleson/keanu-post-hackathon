@@ -6,7 +6,7 @@ import io.improbable.keanu.kotlin.ArithmeticInteger;
 
 import java.util.Random;
 
-public class ArithmeticFactory implements RandomFactory<ArithmeticDouble, ArithmeticInteger, ArithmeticBoolean> {
+public class ArithmeticFactory implements GenericRandomFactory<ArithmeticDouble, ArithmeticInteger, ArithmeticBoolean> {
     Random rand = new Random();
 
     @Override

@@ -1,6 +1,7 @@
 package io.improbable.keanu.research;
 
-import io.improbable.keanu.randomfactory.RandomFactory;
+import io.improbable.keanu.research.randomfactory.RandomFactory;
+import io.improbable.keanu.research.randomfactory.VertexBackedRandomFactory;
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.tensor.intgr.IntegerTensor;
 import io.improbable.keanu.vertices.Vertex;
@@ -11,7 +12,7 @@ public class MixedListLambdaVertex extends BinaryOpLambda<IntegerTensor[], Doubl
 
     public MixedListLambdaVertex(Vertex<IntegerTensor[]> integerInputs,
                                  Vertex<DoubleTensor[]> doubleInputs,
-                                 TriFunction<IntegerTensor[], DoubleTensor[], RandomFactory<Double>, Pair<IntegerTensor[], DoubleTensor[]>> lambda,
+                                 TriFunction<IntegerTensor[], DoubleTensor[], RandomFactory, Pair<IntegerTensor[], DoubleTensor[]>> lambda,
                                  VertexBackedRandomFactory random) {
         super(integerInputs, doubleInputs, (IntegerTensor[] integersIn, DoubleTensor[] doublesIn)
             -> lambda.apply(integersIn, doublesIn, random));

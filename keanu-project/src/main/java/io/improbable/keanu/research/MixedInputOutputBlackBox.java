@@ -1,6 +1,8 @@
 package io.improbable.keanu.research;
 
-import io.improbable.keanu.randomfactory.RandomFactory;
+import io.improbable.keanu.kotlin.IntegerOperators;
+import io.improbable.keanu.research.randomfactory.RandomFactory;
+import io.improbable.keanu.research.randomfactory.VertexBackedRandomFactory;
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.tensor.intgr.IntegerTensor;
 import io.improbable.keanu.vertices.Vertex;
@@ -23,9 +25,9 @@ public class MixedInputOutputBlackBox {
 
     public MixedInputOutputBlackBox(ArrayList<IntegerVertex> integerInputs,
                                     ArrayList<DoubleVertex> doubleInputs,
-                                    TriFunction<IntegerTensor[], DoubleTensor[], RandomFactory<Double>, Pair<IntegerTensor[], DoubleTensor[]> > model,
-                                    Integer expectedNumberOfGaussians,
-                                    Integer expectedNumberOfUniforms,
+                                    TriFunction<IntegerTensor[], DoubleTensor[], RandomFactory, Pair<IntegerTensor[], DoubleTensor[]> > model,
+                                    Integer expectedNumberOfDoubleDraws,
+                                    Integer expectedNumberOfIntegerDraws,
                                     Integer expectedNumberOfIntegersOut,
                                     Integer expectedNumberOfDoublesOut) {
 
@@ -43,7 +45,7 @@ public class MixedInputOutputBlackBox {
             for (int i=0; i<doubleInputs.size(); i++) { out[i] = in.get(i); }
             return out; });
 
-        random = new VertexBackedRandomFactory(expectedNumberOfGaussians, expectedNumberOfUniforms);
+        random = new VertexBackedRandomFactory(expectedNumberOfDoubleDraws, expectedNumberOfIntegerDraws, 0);
         MixedListLambdaVertex lambdaVertex = new MixedListLambdaVertex(integersInputVertex, doublesInputVertex, model, random);
         PairVertexGetFirst<IntegerTensor[], DoubleTensor[]> integersVertex = new PairVertexGetFirst<>(lambdaVertex);
         PairVertexGetSecond<IntegerTensor[], DoubleTensor[]> doublesVertex = new PairVertexGetSecond<>(lambdaVertex);
@@ -58,7 +60,7 @@ public class MixedInputOutputBlackBox {
 
     public MixedInputOutputBlackBox(ArrayList<IntegerVertex> integerInputs,
                                     ArrayList<DoubleVertex> doubleInputs,
-                                    TriFunction<IntegerTensor[], DoubleTensor[], RandomFactory<Double>,
+                                    TriFunction<IntegerTensor[], DoubleTensor[], RandomFactory,
                                                 Pair<IntegerTensor[], DoubleTensor[]>> model,
                                     Integer expectedNumberOfIntegersOut,
                                     Integer expectedNumberOfDoublesOut) {

@@ -9,7 +9,7 @@ import io.improbable.keanu.vertices.dbl.probabilistic.UniformVertex;
 import io.improbable.keanu.vertices.intgr.IntegerVertex;
 import io.improbable.keanu.vertices.intgr.probabilistic.UniformIntVertex;
 
-public class VertexFactory implements RandomFactory<DoubleVertex, IntegerVertex, BoolVertex> {
+public class VertexFactory implements GenericRandomFactory<DoubleVertex, IntegerVertex, BoolVertex> {
     @Override
     public UniformVertex nextDouble(double min, double max) {
         UniformVertex uniformVertex = new UniformVertex(min, max);

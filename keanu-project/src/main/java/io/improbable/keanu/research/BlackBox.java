@@ -1,6 +1,7 @@
 package io.improbable.keanu.research;
 
-import io.improbable.keanu.randomfactory.RandomFactory;
+import io.improbable.keanu.research.randomfactory.RandomFactory;
+import io.improbable.keanu.research.randomfactory.VertexBackedRandomFactory;
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
@@ -12,15 +13,14 @@ import java.util.function.BiFunction;
 
 public class BlackBox {
 
-    protected final BiFunction<DoubleTensor[], RandomFactory<Double>, DoubleTensor[]> model;
+    protected final BiFunction<DoubleTensor[], RandomFactory, DoubleTensor[]> model;
     protected final ArrayList<DoubleVertex> doubleInputs;
     protected final ArrayList<DoubleVertex> doubleOutputs;
     protected final VertexBackedRandomFactory random;
 
     public BlackBox(ArrayList<DoubleVertex> doubleInputs,
-                    BiFunction<DoubleTensor[], RandomFactory<Double>, DoubleTensor[]> model,
-                    Integer expectedNumberOfGaussians,
-                    Integer expectedNumberOfUniforms,
+                    BiFunction<DoubleTensor[], RandomFactory, DoubleTensor[]> model,
+                    Integer expectedNumberOfDoubleDraws,
                     Integer expectedNumberOfOutputs) {
         this.model = model;
         this.doubleInputs = doubleInputs;
@@ -34,7 +34,7 @@ public class BlackBox {
             return out;
         });
 
-        random = new VertexBackedRandomFactory(expectedNumberOfGaussians, expectedNumberOfUniforms);
+        random = new VertexBackedRandomFactory(expectedNumberOfDoubleDraws, 0 , 0);
         DoubleListLambdaVertex lambdaVertex = new DoubleListLambdaVertex(inputVertex, model, random);
 
         for (int i=0; i<expectedNumberOfOutputs; i++) {
@@ -43,10 +43,10 @@ public class BlackBox {
     }
 
     public BlackBox(ArrayList<DoubleVertex> doubleInputs,
-                    BiFunction<DoubleTensor[], RandomFactory<Double>, DoubleTensor[]> model,
+                    BiFunction<DoubleTensor[], RandomFactory, DoubleTensor[]> model,
                     Integer expectedNumberOfOutputs) {
         this(doubleInputs, model,
-            expectedNumberOfOutputs*5, expectedNumberOfOutputs*5,
+            expectedNumberOfOutputs*10,
             expectedNumberOfOutputs);
     }
 
