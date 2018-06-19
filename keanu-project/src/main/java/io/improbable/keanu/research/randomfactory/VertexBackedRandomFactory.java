@@ -8,31 +8,33 @@ import org.apache.commons.math3.special.Erf;
 import java.util.ArrayList;
 
 public class VertexBackedRandomFactory implements RandomFactory {
-    public ArrayList<GaussianVertex>    listOfGaussians;
-    public ArrayList<UniformVertex>     listOfUniforms;
-    public ArrayList<Flip>              listOfFlips;
+    public ArrayList<GaussianVertex>    randDoubleSource;    // used for all doubles
+    public ArrayList<UniformVertex>     randIntSource;     // used for integers
+    public ArrayList<Flip>              randBoolSource;        // used for booleans
 
     private int gaussianCounter = 0;
     private int intCounter = 0;
     private int boolCounter = 0;
 
-    public VertexBackedRandomFactory(ArrayList<GaussianVertex> listOfGaussians, ArrayList<UniformVertex> listOfUniforms, ArrayList<Flip> listOfFlips) {
-        this.listOfGaussians = listOfGaussians;
-        this.listOfUniforms = listOfUniforms;
-        this.listOfFlips = listOfFlips;
+    public VertexBackedRandomFactory(ArrayList<GaussianVertex> randDoubleSource, ArrayList<UniformVertex> randIntSource, ArrayList<Flip> randBoolSource) {
+        this.randDoubleSource = randDoubleSource;
+        this.randIntSource = randIntSource;
+        this.randBoolSource = randBoolSource;
     }
 
     public VertexBackedRandomFactory(int numberOfDoubles, int numberOfInts, int numberOfBools) {
         int i;
-        listOfGaussians = new ArrayList<>(numberOfDoubles);
+        randDoubleSource = new ArrayList<>(numberOfDoubles);
+        randIntSource = new ArrayList<>(numberOfInts);
+        randBoolSource = new ArrayList<>(numberOfBools);
         for (i=0; i<numberOfDoubles; ++i) {
-            listOfGaussians.add(new GaussianVertex(0.0, 1.0));
+            randDoubleSource.add(new GaussianVertex(0.0, 1.0));
         }
         for (i=0; i<numberOfInts; ++i) {
-            listOfUniforms.add(new UniformVertex(0.0,1.0));
+            randIntSource.add(new UniformVertex(0.0,1.0));
         }
         for(i=0; i<numberOfBools; ++i) {
-            listOfFlips.add(new Flip(0.5));
+            randBoolSource.add(new Flip(0.5));
         }
     }
 
@@ -42,9 +44,24 @@ public class VertexBackedRandomFactory implements RandomFactory {
     }
 
     @Override
+    public Double nextDouble(Double min, Double max) {
+        return nextDouble(min.doubleValue(), max.doubleValue());
+    }
+
+    @Override
+    public Double nextDouble(double min, Double max) {
+        return nextDouble(min,max.doubleValue());
+    }
+
+    @Override
+    public Double nextDouble(Double min, double max) {
+        return nextDouble(min.doubleValue(),max);
+    }
+
+    @Override
     public Double nextDouble() {
-        Double sample = (Erf.erf(listOfGaussians.get(gaussianCounter).getValue().scalar()) + 1.0)/2.0;
-        gaussianCounter = (gaussianCounter+1)%listOfGaussians.size();
+        Double sample = (Erf.erf(randDoubleSource.get(gaussianCounter).getValue().scalar()) + 1.0)/2.0;
+        gaussianCounter = (gaussianCounter+1)% randDoubleSource.size();
         return sample;
     }
 
@@ -70,33 +87,38 @@ public class VertexBackedRandomFactory implements RandomFactory {
 
     @Override
     public Double nextGaussian(double mu, double sigma) {
-        Double sample = listOfGaussians.get(gaussianCounter).getValue().scalar() * sigma + mu;
-        gaussianCounter = (gaussianCounter+1)%listOfGaussians.size();
+        Double sample = randDoubleSource.get(gaussianCounter).getValue().scalar() * sigma + mu;
+        gaussianCounter = (gaussianCounter+1)% randDoubleSource.size();
         return sample;
     }
 
     public VertexBackedRandomFactory nextRandomFactory() {
-        return new VertexBackedRandomFactory(listOfGaussians, listOfUniforms, listOfFlips);
+        return new VertexBackedRandomFactory(randDoubleSource, randIntSource, randBoolSource);
     }
 
     @Override
     public Boolean nextBoolean() {
-        Boolean sample = listOfFlips.get(boolCounter).getValue().scalar();
-        boolCounter = (boolCounter+1)%listOfFlips.size();
+        Boolean sample = randBoolSource.get(boolCounter).getValue().scalar();
+        boolCounter = (boolCounter+1)% randBoolSource.size();
         return sample;
     }
 
     @Override
     public Integer nextInt() {
-        Integer sample = (int)(1.0*Integer.MIN_VALUE + listOfUniforms.get(intCounter).getValue().scalar()*(1.0*Integer.MAX_VALUE - 1.0*Integer.MIN_VALUE + 1.0));
-        intCounter = (intCounter+1)% listOfUniforms.size();
+        Integer sample = (int)(1.0*Integer.MIN_VALUE + randIntSource.get(intCounter).getValue().scalar()*(1.0*Integer.MAX_VALUE - 1.0*Integer.MIN_VALUE + 1.0));
+        intCounter = (intCounter+1)% randIntSource.size();
         return sample;
     }
 
     @Override
     public Integer nextInt(int i) {
-        Integer sample = (int)(listOfUniforms.get(intCounter).getValue().scalar()*i);
-        intCounter = (intCounter+1)% listOfUniforms.size();
+        Integer sample = (int)(randIntSource.get(intCounter).getValue().scalar()*i);
+        intCounter = (intCounter+1)% randIntSource.size();
         return sample;
+    }
+
+    @Override
+    public Integer nextInt(Integer i) {
+        return nextInt(i.intValue());
     }
 }

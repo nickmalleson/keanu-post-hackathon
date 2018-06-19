@@ -15,6 +15,21 @@ public class ArithmeticFactory implements GenericRandomFactory<ArithmeticDouble,
     }
 
     @Override
+    public ArithmeticDouble nextDouble(ArithmeticDouble min, ArithmeticDouble max) {
+        return nextDouble(min.getValue(), max.getValue());
+    }
+
+    @Override
+    public ArithmeticDouble nextDouble(double min, ArithmeticDouble max) {
+        return nextDouble(min, max.getValue());
+    }
+
+    @Override
+    public ArithmeticDouble nextDouble(ArithmeticDouble min, double max) {
+        return nextDouble(min.getValue(), max);
+    }
+
+    @Override
     public ArithmeticDouble nextDouble() {
         return new ArithmeticDouble(rand.nextDouble());
     }
@@ -51,11 +66,16 @@ public class ArithmeticFactory implements GenericRandomFactory<ArithmeticDouble,
 
     @Override
     public ArithmeticInteger nextInt() {
-        return null;
+        return new ArithmeticInteger(rand.nextInt());
     }
 
     @Override
     public ArithmeticInteger nextInt(int i) {
-        return null;
+        return new ArithmeticInteger(rand.nextInt(i));
+    }
+
+    @Override
+    public ArithmeticInteger nextInt(ArithmeticInteger i) {
+        return nextInt(i.getValue());
     }
 }

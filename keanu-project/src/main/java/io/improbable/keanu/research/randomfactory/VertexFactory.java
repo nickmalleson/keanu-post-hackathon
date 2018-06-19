@@ -1,5 +1,6 @@
 package io.improbable.keanu.research.randomfactory;
 
+import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.bool.BoolVertex;
 import io.improbable.keanu.vertices.bool.probabilistic.Flip;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
@@ -7,19 +8,43 @@ import io.improbable.keanu.vertices.dbl.nonprobabilistic.ConstantDoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.UniformVertex;
 import io.improbable.keanu.vertices.intgr.IntegerVertex;
+import io.improbable.keanu.vertices.intgr.nonprobabilistic.ConstantIntegerVertex;
 import io.improbable.keanu.vertices.intgr.probabilistic.UniformIntVertex;
 
+import java.util.HashSet;
+import java.util.Set;
+
 public class VertexFactory implements GenericRandomFactory<DoubleVertex, IntegerVertex, BoolVertex> {
-    @Override
-    public UniformVertex nextDouble(double min, double max) {
-        UniformVertex uniformVertex = new UniformVertex(min, max);
-//        uniformVertex.setValue(uniformVertex.sample(random));
-        return uniformVertex;
+    Set<Vertex> allCreatedVertices = new HashSet<>();
+
+
+    public Set<Vertex> getAllCreatedVertices() {
+        return allCreatedVertices;
     }
 
     @Override
-    public DoubleVertex nextDouble() {
-        return new UniformVertex(0.0,1.0);
+    public UniformVertex nextDouble(double min, double max) {
+        return nextDouble(new ConstantDoubleVertex(min), new ConstantDoubleVertex(max));
+    }
+
+    @Override
+    public UniformVertex nextDouble(DoubleVertex min, double max) {
+        return nextDouble(min, new ConstantDoubleVertex(max));
+    }
+
+    @Override
+    public UniformVertex nextDouble(double min, DoubleVertex max) {
+        return nextDouble(new ConstantDoubleVertex(min), max);
+    }
+
+    @Override
+    public UniformVertex nextDouble(DoubleVertex min, DoubleVertex max) {
+        return nextUniformVertex(min, max);
+    }
+
+    @Override
+    public UniformVertex nextDouble() {
+        return nextDouble(0.0,1.0);
     }
 
     @Override
@@ -29,45 +54,72 @@ public class VertexFactory implements GenericRandomFactory<DoubleVertex, Integer
 
     @Override
     public GaussianVertex nextGaussian(double mu, double sigma) {
-        GaussianVertex gaussianVertex = new GaussianVertex(mu, sigma);
-//        gaussianVertex.setValue(gaussianVertex.sample(random));
-        return gaussianVertex;
+        return nextGaussianVertex(new ConstantDoubleVertex(mu), new ConstantDoubleVertex(sigma));
     }
 
     @Override
     public GaussianVertex nextGaussian(DoubleVertex mu, double sigma) {
-        GaussianVertex gaussianVertex = new GaussianVertex(mu, sigma);
-//        gaussianVertex.setValue(gaussianVertex.sample(random));
-        return gaussianVertex;
+        return nextGaussianVertex(mu, new ConstantDoubleVertex(sigma));
     }
 
     @Override
     public GaussianVertex nextGaussian(DoubleVertex mu, DoubleVertex sigma) {
-        GaussianVertex gaussianVertex = new GaussianVertex(mu, sigma);
-//        gaussianVertex.setValue(gaussianVertex.sample(random));
-        return gaussianVertex;
+        return nextGaussianVertex(mu, sigma);
     }
 
     @Override
-    public DoubleVertex nextGaussian(double mu, DoubleVertex sigma) {
-        GaussianVertex gaussianVertex = new GaussianVertex(mu, sigma);
-//        gaussianVertex.setValue(gaussianVertex.sample(random));
-        return gaussianVertex;
+    public GaussianVertex nextGaussian(double mu, DoubleVertex sigma) {
+        return nextGaussianVertex(new ConstantDoubleVertex(mu), sigma);
     }
 
     @Override
-    public BoolVertex nextBoolean() {
-        return new Flip(0.5);
+    public Flip nextBoolean() {
+        return nextFlipVertex(new ConstantDoubleVertex(0.5));
     }
 
     @Override
-    public IntegerVertex nextInt() {
-        return new UniformIntVertex(Integer.MIN_VALUE, Integer.MAX_VALUE);
+    public UniformIntVertex nextInt() {
+        // TODO: This will never return Integer.MAX_VALUE
+        // TODO: which is a bug
+        return nextUniformIntVertex(
+            new ConstantIntegerVertex(Integer.MIN_VALUE),
+            new ConstantIntegerVertex(Integer.MAX_VALUE)
+        );
     }
 
     @Override
-    public IntegerVertex nextInt(int i) {
-        return new UniformIntVertex(0, i);
+    public UniformIntVertex nextInt(int i) {
+        return nextInt(new ConstantIntegerVertex(i));
+    }
+
+    @Override
+    public UniformIntVertex nextInt(IntegerVertex i) {
+        return nextUniformIntVertex(new ConstantIntegerVertex(0), i);
+    }
+
+
+    protected UniformIntVertex nextUniformIntVertex(IntegerVertex min, IntegerVertex max) {
+        UniformIntVertex vertex = new UniformIntVertex(min, max);
+        allCreatedVertices.add(vertex);
+        return vertex;
+    }
+
+    protected UniformVertex nextUniformVertex(DoubleVertex min, DoubleVertex max) {
+        UniformVertex vertex = new UniformVertex(min, max);
+        allCreatedVertices.add(vertex);
+        return vertex;
+    }
+
+    protected GaussianVertex nextGaussianVertex(DoubleVertex mu, DoubleVertex sigma) {
+        GaussianVertex vertex = new GaussianVertex(mu, sigma);
+        allCreatedVertices.add(vertex);
+        return vertex;
+    }
+
+    protected Flip nextFlipVertex(DoubleVertex p) {
+        Flip vertex = new Flip(p);
+        allCreatedVertices.add(vertex);
+        return vertex;
     }
 
 }

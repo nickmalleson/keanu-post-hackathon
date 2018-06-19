@@ -1,6 +1,5 @@
 package io.improbable.keanu.research;
 
-import io.improbable.keanu.kotlin.IntegerOperators;
 import io.improbable.keanu.research.randomfactory.RandomFactory;
 import io.improbable.keanu.research.randomfactory.VertexBackedRandomFactory;
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
@@ -97,8 +96,8 @@ public class MixedInputOutputBlackBox {
 
     public Set<? extends Vertex> getConnectedGraph() {
         Set<Vertex> vertices = integerOutputs.get(0).getConnectedGraph();
-        vertices.addAll(random.listOfUniforms);
-        vertices.addAll(random.listOfGaussians);
+        vertices.addAll(random.randIntSource);
+        vertices.addAll(random.randDoubleSource);
         return vertices;
     }
 }
