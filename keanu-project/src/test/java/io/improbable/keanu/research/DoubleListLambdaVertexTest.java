@@ -3,8 +3,10 @@ package io.improbable.keanu.research;
 import io.improbable.keanu.algorithms.NetworkSamples;
 import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
 import io.improbable.keanu.network.BayesianNetwork;
-import io.improbable.keanu.randomfactory.RandomFactory;
+import io.improbable.keanu.research.randomfactory.RandomFactory;
 import io.improbable.keanu.research.randomfactory.VertexBackedRandomFactory;
+import io.improbable.keanu.research.vertices.DoubleArrayIndexingVertex;
+import io.improbable.keanu.research.vertices.ReduceVertex;
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
@@ -15,7 +17,7 @@ import java.util.List;
 
 public class DoubleListLambdaVertexTest {
 
-    public static DoubleTensor[] model(DoubleTensor[] inputs, RandomFactory<Double> random) {
+    public static DoubleTensor[] model(DoubleTensor[] inputs, RandomFactory random) {
         DoubleTensor[] output = new DoubleTensor[2];
         output[0] = DoubleTensor.create(inputs[0].scalar() * inputs[1].scalar(), new int[0]);
         output[1] = DoubleTensor.create(inputs[0].scalar() + inputs[1].scalar(), new int[0]);
@@ -33,7 +35,7 @@ public class DoubleListLambdaVertexTest {
             out[1] = in.get(1);
             return out; });
 
-        VertexBackedRandomFactory random = new VertexBackedRandomFactory(0, 1);
+        VertexBackedRandomFactory random = new VertexBackedRandomFactory(0, 0,0);
         DoubleListLambdaVertex vert = new DoubleListLambdaVertex(inputVertex,  DoubleListLambdaVertexTest::model, random);
 
         DoubleArrayIndexingVertex outputOne = new DoubleArrayIndexingVertex(vert, 0);

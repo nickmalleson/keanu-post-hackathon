@@ -1,4 +1,4 @@
-package io.improbable.keanu.research;
+package io.improbable.keanu.research.vertices;
 
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.tensor.intgr.IntegerTensor;

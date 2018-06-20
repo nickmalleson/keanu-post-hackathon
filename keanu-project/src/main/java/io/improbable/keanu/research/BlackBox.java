@@ -2,6 +2,8 @@ package io.improbable.keanu.research;
 
 import io.improbable.keanu.research.randomfactory.RandomFactory;
 import io.improbable.keanu.research.randomfactory.VertexBackedRandomFactory;
+import io.improbable.keanu.research.vertices.DoubleArrayIndexingVertex;
+import io.improbable.keanu.research.vertices.ReduceVertex;
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;

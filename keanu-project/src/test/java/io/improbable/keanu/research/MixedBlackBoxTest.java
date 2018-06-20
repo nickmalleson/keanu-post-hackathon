@@ -4,7 +4,7 @@ import io.improbable.keanu.algorithms.NetworkSamples;
 import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
 import io.improbable.keanu.algorithms.variational.NonGradientOptimizer;
 import io.improbable.keanu.network.BayesianNetwork;
-import io.improbable.keanu.randomfactory.RandomFactory;
+import io.improbable.keanu.research.randomfactory.RandomFactory;
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.tensor.intgr.IntegerTensor;
 import io.improbable.keanu.vertices.Vertex;
@@ -20,7 +20,7 @@ public class MixedBlackBoxTest {
 
     public static Pair<IntegerTensor[], DoubleTensor[]> model(IntegerTensor[] integerInputs,
                                                   DoubleTensor[] doubleInputs,
-                                                  RandomFactory<Double> random) {
+                                                  RandomFactory random) {
 
         IntegerTensor[] integersOut = new IntegerTensor[2];
         DoubleTensor[] doublesOut = new DoubleTensor[4];

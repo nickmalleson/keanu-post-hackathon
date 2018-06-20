@@ -5,7 +5,7 @@ import io.improbable.keanu.algorithms.VertexSamples;
 import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
 import io.improbable.keanu.algorithms.variational.NonGradientOptimizer;
 import io.improbable.keanu.network.BayesianNetwork;
-import io.improbable.keanu.randomfactory.RandomFactory;
+import io.improbable.keanu.research.randomfactory.RandomFactory;
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.tensor.dbl.ScalarDoubleTensor;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
@@ -16,7 +16,7 @@ import java.util.ArrayList;
 
 public class BlackBoxTest {
 
-    public static DoubleTensor[] model(DoubleTensor[] inputs, RandomFactory<Double> random) {
+    public static DoubleTensor[] model(DoubleTensor[] inputs, RandomFactory random) {
         DoubleTensor[] output = new DoubleTensor[2];
         double[] output0 = new double[1];
         output0[0] = inputs[0].scalar() * inputs[1].scalar();
@@ -36,8 +36,6 @@ public class BlackBoxTest {
         inputs.add(new GaussianVertex(desiredSum/2.0, desiredSum/3.0));
 
         BlackBox box = new BlackBox(inputs, BlackBoxTest::model, 2);
-
-        GaussianVertex g = new DoubleTensor()
     }
 
     public static void main (String[] args) {

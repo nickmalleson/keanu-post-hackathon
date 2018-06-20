@@ -2,7 +2,7 @@ package io.improbable.keanu.research;
 
 import io.improbable.keanu.algorithms.variational.NonGradientOptimizer;
 import io.improbable.keanu.network.BayesianNetwork;
-import io.improbable.keanu.randomfactory.RandomFactory;
+import io.improbable.keanu.research.randomfactory.RandomFactory;
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.vertices.ConstantVertex;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
@@ -149,7 +149,7 @@ public class BlackBoxLinearRegressionTest {
         return new Pair<>(m.getValue().scalar(), c.getValue().scalar());
     }
 
-    private DoubleTensor[] blackBoxModel(DoubleTensor[] inputs, RandomFactory<Double> random) {
+    private DoubleTensor[] blackBoxModel(DoubleTensor[] inputs, RandomFactory random) {
         DoubleTensor[] output = new DoubleTensor[1];
         ArrayList<Double> inputArray = new ArrayList<>(inputs.length);
         for (DoubleTensor input : inputs) {

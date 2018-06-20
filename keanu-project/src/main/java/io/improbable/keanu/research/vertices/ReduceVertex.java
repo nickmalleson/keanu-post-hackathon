@@ -1,4 +1,4 @@
-package io.improbable.keanu.research;
+package io.improbable.keanu.research.vertices;
 
 import io.improbable.keanu.vertices.NonProbabilisticObservationException;
 import io.improbable.keanu.vertices.Vertex;

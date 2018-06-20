@@ -2,6 +2,7 @@ package io.improbable.keanu.research;
 
 import io.improbable.keanu.research.randomfactory.RandomFactory;
 import io.improbable.keanu.research.randomfactory.VertexBackedRandomFactory;
+import io.improbable.keanu.research.vertices.*;
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.tensor.intgr.IntegerTensor;
 import io.improbable.keanu.vertices.Vertex;
@@ -47,8 +48,8 @@ public class MixedInputOutputBlackBox {
 
         random = new VertexBackedRandomFactory(expectedNumberOfDoubleDraws, expectedNumberOfIntegerDraws, 0);
         MixedListLambdaVertex lambdaVertex = new MixedListLambdaVertex(integersInputVertex, doublesInputVertex, model, random);
-        PairVertexGetFirst<IntegerTensor[], DoubleTensor[]> integersVertex = new PairVertexGetFirst<>(lambdaVertex);
-        PairVertexGetSecond<IntegerTensor[], DoubleTensor[]> doublesVertex = new PairVertexGetSecond<>(lambdaVertex);
+        PairGetFirstVertex<IntegerTensor[], DoubleTensor[]> integersVertex = new PairGetFirstVertex<>(lambdaVertex);
+        PairGetSecondVertex<IntegerTensor[], DoubleTensor[]> doublesVertex = new PairGetSecondVertex<>(lambdaVertex);
 
         for (int i=0; i<expectedNumberOfIntegersOut; i++) {
             integerOutputs.add(new IntegerArrayIndexingVertex(integersVertex, i));
