@@ -61,8 +61,8 @@ public class BlackBox {
 
     public Set<? extends Vertex> getConnectedGraph() {
         Set<Vertex> vertices = doubleOutputs.get(0).getConnectedGraph();
-        vertices.addAll(random.randDoubleSource);
-        vertices.addAll(random.randIntSource);
+        vertices.add(random.randDoubleSource);
+        vertices.add(random.randIntSource);
         return vertices;
     }
 }

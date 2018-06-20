@@ -97,8 +97,8 @@ public class MixedInputOutputBlackBox {
 
     public Set<? extends Vertex> getConnectedGraph() {
         Set<Vertex> vertices = integerOutputs.get(0).getConnectedGraph();
-        vertices.addAll(random.randIntSource);
-        vertices.addAll(random.randDoubleSource);
+        vertices.add(random.randIntSource);
+        vertices.add(random.randDoubleSource);
         return vertices;
     }
 }

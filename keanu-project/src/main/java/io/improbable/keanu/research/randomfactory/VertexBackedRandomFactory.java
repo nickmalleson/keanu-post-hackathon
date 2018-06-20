@@ -5,37 +5,26 @@ import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.UniformVertex;
 import org.apache.commons.math3.special.Erf;
 
-import java.util.ArrayList;
 
 public class VertexBackedRandomFactory implements RandomFactory {
-    public ArrayList<GaussianVertex>    randDoubleSource;    // used for all doubles
-    public ArrayList<UniformVertex>     randIntSource;     // used for integers
-    public ArrayList<Flip>              randBoolSource;        // used for booleans
+    public GaussianVertex       randDoubleSource;    // used for all doubles
+    public UniformVertex        randIntSource;     // used for integers
+    public Flip                 randBoolSource;        // used for booleans
 
     private int gaussianCounter = 0;
     private int intCounter = 0;
     private int boolCounter = 0;
 
-    public VertexBackedRandomFactory(ArrayList<GaussianVertex> randDoubleSource, ArrayList<UniformVertex> randIntSource, ArrayList<Flip> randBoolSource) {
+    public VertexBackedRandomFactory(GaussianVertex randDoubleSource, UniformVertex randIntSource, Flip randBoolSource) {
         this.randDoubleSource = randDoubleSource;
         this.randIntSource = randIntSource;
         this.randBoolSource = randBoolSource;
     }
 
     public VertexBackedRandomFactory(int numberOfDoubles, int numberOfInts, int numberOfBools) {
-        int i;
-        randDoubleSource = new ArrayList<>(numberOfDoubles);
-        randIntSource = new ArrayList<>(numberOfInts);
-        randBoolSource = new ArrayList<>(numberOfBools);
-        for (i=0; i<numberOfDoubles; ++i) {
-            randDoubleSource.add(new GaussianVertex(0.0, 1.0));
-        }
-        for (i=0; i<numberOfInts; ++i) {
-            randIntSource.add(new UniformVertex(0.0,1.0));
-        }
-        for(i=0; i<numberOfBools; ++i) {
-            randBoolSource.add(new Flip(0.5));
-        }
+        randDoubleSource = new GaussianVertex(new int []{numberOfDoubles}, 0.0, 1.0);
+        randIntSource = new UniformVertex(new int[]{numberOfInts}, 0.0, 1.0);
+        randBoolSource = new Flip(new int[]{numberOfBools}, 0.5);
     }
 
     @Override
@@ -60,8 +49,8 @@ public class VertexBackedRandomFactory implements RandomFactory {
 
     @Override
     public Double nextDouble() {
-        Double sample = (Erf.erf(randDoubleSource.get(gaussianCounter).getValue().scalar()) + 1.0)/2.0;
-        gaussianCounter = (gaussianCounter+1)% randDoubleSource.size();
+        Double sample = (Erf.erf(randDoubleSource.getValue().getValue(gaussianCounter)) + 1.0)/2.0;
+        gaussianCounter = (gaussianCounter+1)% randDoubleSource.getShape()[0];
         return sample;
     }
 
@@ -87,8 +76,8 @@ public class VertexBackedRandomFactory implements RandomFactory {
 
     @Override
     public Double nextGaussian(double mu, double sigma) {
-        Double sample = randDoubleSource.get(gaussianCounter).getValue().scalar() * sigma + mu;
-        gaussianCounter = (gaussianCounter+1)% randDoubleSource.size();
+        Double sample = randDoubleSource.getValue().getValue(gaussianCounter) * sigma + mu;
+        gaussianCounter = (gaussianCounter+1)% randDoubleSource.getShape()[0];
         return sample;
     }
 
@@ -98,22 +87,22 @@ public class VertexBackedRandomFactory implements RandomFactory {
 
     @Override
     public Boolean nextBoolean() {
-        Boolean sample = randBoolSource.get(boolCounter).getValue().scalar();
-        boolCounter = (boolCounter+1)% randBoolSource.size();
+        Boolean sample = randBoolSource.getValue().getValue(boolCounter);
+        boolCounter = (boolCounter+1)% randBoolSource.getShape()[0];
         return sample;
     }
 
     @Override
     public Integer nextInt() {
-        Integer sample = (int)(1.0*Integer.MIN_VALUE + randIntSource.get(intCounter).getValue().scalar()*(1.0*Integer.MAX_VALUE - 1.0*Integer.MIN_VALUE + 1.0));
-        intCounter = (intCounter+1)% randIntSource.size();
+        Integer sample = (int)(1.0*Integer.MIN_VALUE + randIntSource.getValue().getValue(intCounter)*(1.0*Integer.MAX_VALUE - 1.0*Integer.MIN_VALUE + 1.0));
+        intCounter = (intCounter+1)% randIntSource.getShape()[0];
         return sample;
     }
 
     @Override
     public Integer nextInt(int i) {
-        Integer sample = (int)(randIntSource.get(intCounter).getValue().scalar()*i);
-        intCounter = (intCounter+1)% randIntSource.size();
+        Integer sample = (int)(randIntSource.getValue().getValue(intCounter)*i);
+        intCounter = (intCounter+1)% randIntSource.getShape()[0];
         return sample;
     }
 
