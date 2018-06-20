@@ -37,7 +37,7 @@ public class BlackBoxTest {
 
         BlackBox box = new BlackBox(inputs, BlackBoxTest::model, 2);
 
-        GaussianVertex g = new DoubleTensor()
+//        GaussianVertex g = new DoubleTensor()
     }
 
     public static void main (String[] args) {
