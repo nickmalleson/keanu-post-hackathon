@@ -11,16 +11,17 @@ public class RandomFactoryVertex extends NonProbabilistic<VertexBackedRandomFact
 
     public RandomFactoryVertex(GaussianVertex randDoubleSource, UniformVertex randIntSource, Flip randBoolSource) {
         setValue(new VertexBackedRandomFactory(randDoubleSource, randIntSource, randBoolSource));
-        addParent(randDoubleSource);
-        addParent(randIntSource);
-        addParent(randBoolSource);
+        if(randDoubleSource != null) addParent(randDoubleSource);
+        if(randIntSource != null) addParent(randIntSource);
+        if(randBoolSource != null) addParent(randBoolSource);
     }
+
 
     public RandomFactoryVertex(int numberOfDoubles, int numberOfInts, int numberOfBools) {
         setValue(new VertexBackedRandomFactory(numberOfDoubles, numberOfInts, numberOfBools));
-        addParent(getValue().randDoubleSource);
-        addParent(getValue().randIntSource);
-        addParent(getValue().randBoolSource);
+        if(getValue().randDoubleSource != null) addParent(getValue().randDoubleSource);
+        if(getValue().randDoubleSource != null) addParent(getValue().randIntSource);
+        if(getValue().randBoolSource != null) addParent(getValue().randBoolSource);
     }
 
 

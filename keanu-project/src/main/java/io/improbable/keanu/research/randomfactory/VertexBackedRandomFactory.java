@@ -1,32 +1,31 @@
 package io.improbable.keanu.research.randomfactory;
 
 import io.improbable.keanu.vertices.bool.probabilistic.Flip;
+import io.improbable.keanu.vertices.dbl.DoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.UniformVertex;
 import org.apache.commons.math3.special.Erf;
 
 
 public class VertexBackedRandomFactory implements RandomFactory {
-    public GaussianVertex       randDoubleSource;    // used for all doubles
+    public DoubleVertex randDoubleSource;    // used for all doubles
     public UniformVertex        randIntSource;     // used for integers
     public Flip                 randBoolSource;        // used for booleans
 
-    public int gaussianCounter = 0;
+    private int gaussianCounter = 0;
     private int intCounter = 0;
     private int boolCounter = 0;
 
-    public VertexBackedRandomFactory(GaussianVertex randDoubleSource, UniformVertex randIntSource, Flip randBoolSource) {
+    public VertexBackedRandomFactory(DoubleVertex randDoubleSource, UniformVertex randIntSource, Flip randBoolSource) {
         this.randDoubleSource = randDoubleSource;
         this.randIntSource = randIntSource;
         this.randBoolSource = randBoolSource;
     }
 
     public VertexBackedRandomFactory(int numberOfDoubles, int numberOfInts, int numberOfBools) {
-        randDoubleSource = new GaussianVertex(new int []{numberOfDoubles,1}, 0.0, 1.0);
-        randDoubleSource.sampleUsingDefaultRandom();
-        //System.out.println(randDoubleSource.getShape()[0]);
-        randIntSource = new UniformVertex(new int[]{numberOfInts}, 0.0, 1.0);
-        randBoolSource = new Flip(new int[]{numberOfBools}, 0.5);
+        if(numberOfDoubles > 0) randDoubleSource = new GaussianVertex(new int []{numberOfDoubles,1}, 0.0, 1.0);
+        if(numberOfInts > 0) randIntSource = new UniformVertex(new int[]{numberOfInts,1}, 0.0, 1.0);
+        if(numberOfBools > 0) randBoolSource = new Flip(new int[]{numberOfBools,1}, 0.5);
     }
 
     @Override
@@ -53,9 +52,6 @@ public class VertexBackedRandomFactory implements RandomFactory {
     public Double nextDouble() {
         Double sample = (Erf.erf(randDoubleSource.getValue().getValue(gaussianCounter)) + 1.0)/2.0;
         gaussianCounter = (gaussianCounter+1)% randDoubleSource.getShape()[0];
-        //System.out.println(gaussianCounter);
-        //System.out.println("hi");
-        //System.out.println(randDoubleSource.getShape()[0]);
         return sample;
     }
 
