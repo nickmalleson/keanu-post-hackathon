@@ -2,6 +2,7 @@ package io.improbable.keanu.research.vertices;
 
 import io.improbable.keanu.research.randomfactory.VertexBackedRandomFactory;
 import io.improbable.keanu.vertices.bool.probabilistic.Flip;
+import io.improbable.keanu.vertices.dbl.DoubleVertex;
 import io.improbable.keanu.vertices.dbl.KeanuRandom;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.UniformVertex;
@@ -9,7 +10,7 @@ import io.improbable.keanu.vertices.generic.nonprobabilistic.NonProbabilistic;
 
 public class RandomFactoryVertex extends NonProbabilistic<VertexBackedRandomFactory> {
 
-    public RandomFactoryVertex(GaussianVertex randDoubleSource, UniformVertex randIntSource, Flip randBoolSource) {
+    public RandomFactoryVertex(DoubleVertex randDoubleSource, UniformVertex randIntSource, Flip randBoolSource) {
         setValue(new VertexBackedRandomFactory(randDoubleSource, randIntSource, randBoolSource));
         if(randDoubleSource != null) addParent(randDoubleSource);
         if(randIntSource != null) addParent(randIntSource);

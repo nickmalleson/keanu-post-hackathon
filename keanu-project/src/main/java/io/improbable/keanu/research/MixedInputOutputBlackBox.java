@@ -52,7 +52,7 @@ public class MixedInputOutputBlackBox {
         PairGetSecondVertex<IntegerTensor[], DoubleTensor[]> doublesVertex = new PairGetSecondVertex<>(lambdaVertex);
 
         for (int i=0; i<expectedNumberOfIntegersOut; i++) {
-            integerOutputs.add(new IntegerArrayIndexingVertex(integersVertex, i));
+            integerOutputs.add(new IntegerTensorSplitVertex(integersVertex, i));
         }
         for (int i=0; i<expectedNumberOfDoublesOut; i++) {
             doubleOutputs.add(new DoubleArrayIndexingVertex(doublesVertex, i));
