@@ -22,7 +22,7 @@ public class VertexBackedRandomFactory implements RandomFactory {
     }
 
     public VertexBackedRandomFactory(int numberOfDoubles, int numberOfInts, int numberOfBools) {
-        randDoubleSource = new GaussianVertex(new int []{numberOfDoubles}, 0.0, 1.0);
+        randDoubleSource = new GaussianVertex(new int []{numberOfDoubles,1}, 0.0, 1.0);
         randDoubleSource.sampleUsingDefaultRandom();
         //System.out.println(randDoubleSource.getShape()[0]);
         randIntSource = new UniformVertex(new int[]{numberOfInts}, 0.0, 1.0);
