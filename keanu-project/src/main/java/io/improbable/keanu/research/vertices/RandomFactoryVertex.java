@@ -20,7 +20,7 @@ public class RandomFactoryVertex extends NonProbabilistic<VertexBackedRandomFact
     public RandomFactoryVertex(int numberOfDoubles, int numberOfInts, int numberOfBools) {
         setValue(new VertexBackedRandomFactory(numberOfDoubles, numberOfInts, numberOfBools));
         if(getValue().randDoubleSource != null) addParent(getValue().randDoubleSource);
-        if(getValue().randDoubleSource != null) addParent(getValue().randIntSource);
+        if(getValue().randIntSource != null) addParent(getValue().randIntSource);
         if(getValue().randBoolSource != null) addParent(getValue().randBoolSource);
     }
 
