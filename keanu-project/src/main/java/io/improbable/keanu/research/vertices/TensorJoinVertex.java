@@ -9,11 +9,14 @@ import java.util.Collection;
 import java.util.List;
 import java.util.function.Function;
 
-public class TensorJoinVertex {}//extends ReduceVertex<Tensor<Double>, Tensor<Double>> {
-//    TensorJoinVertex(Collection<? extends Vertex<Tensor<Double>>> inputs) {
-//        super(inputs, (List<Tensor<Double>> ins) -> {
-//            Tensor<Double> joined = new Nd4jDoubleTensor(new int []{ins.size(), 1});
-//
-//        });
-//    }
-//}
+public class TensorJoinVertex extends ReduceVertex<Tensor<Double>, Tensor<Double>> {
+    TensorJoinVertex(Collection<? extends Vertex<Tensor<Double>>> inputs) {
+        super(inputs, (List<Tensor<Double>> ins) -> {
+            Tensor<Double> joined = new Nd4jDoubleTensor(new int []{ins.size(), 1});
+            for(int i=0; i<ins.size(); ++i) {
+                joined.setValue(ins.get(i).getValue(0),i);
+            }
+            return joined;
+        });
+    }
+}
