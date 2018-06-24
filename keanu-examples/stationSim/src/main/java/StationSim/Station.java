@@ -42,7 +42,7 @@ public class Station extends SimState{
     public Continuous2D walls = new Continuous2D(1.0, areaWidth, areaHeight);
 
     // Default values for parameters
-    private int numPeople = 10;
+    private int numPeople = 3;
     private int numEntrances = 3;
     private int numExits = 2;
     public double[][] exitProbs = {{0.2, 0.8},
