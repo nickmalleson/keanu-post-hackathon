@@ -16,6 +16,7 @@
 package StationSim;
 
 import io.improbable.keanu.research.randomfactory.RandomFactory;
+import io.improbable.keanu.research.randomfactory.VertexBackedRandomFactory;
 import sim.engine.SimState;
 import sim.field.continuous.Continuous2D;
 import sim.util.Bag;
@@ -50,9 +51,9 @@ public class Station extends SimState{
                                     {0.3, 0.7},
                                     {0.9, 0.1}};
     private int exitInterval = 30;
-    private int entranceInterval = 5;
+    private int entranceInterval = 2;
     private int entranceSize = 5;
-    private int exitSize = 5;
+    private int exitSize = 10;
     private int personSize = 1; // sort bug here
     public int addedCount;
     private boolean writeResults = false;
@@ -284,7 +285,9 @@ public class Station extends SimState{
         writeResults = write;
     }
 
-    /** Cleans up everything left from previous simulation and sets up new one.
+    /**
+     * Start a simulation. This is the version that is called directly from the Wrapper and uses the
+     * random factory supplied as a parameter.
      */
     public void start(RandomFactory rand) {
         System.out.println("Model "+Station.modelCount++ +" starting");
@@ -308,6 +311,36 @@ public class Station extends SimState{
         // Analysis and outputs from the model are contained in this agent
         analysis = new Analysis(this);
         schedule.scheduleRepeating(analysis, 3, 1.0);
+    }
+
+    /**
+     * Start the simulation. This is the version that is called from the GUI or Station.main() methods. It needs to
+     * create its own random factory
+     */
+    @Override
+    public void start() {
+        super.start();
+        area.clear();
+        doorways.clear();
+        walls.clear();
+        addedCount = 0;
+        random = new VertexBackedRandomFactory(Wrapper.numRandomDoubles, 0, 0);
+
+        createWalls();
+        createExits();
+        createEntrances();
+
+        // This changes when number of exits of size of exits do
+        wallHeight = (areaHeight / (numExits + 1)) - (exitSize * 2.0  * personSize / 2.0);
+
+        // The sequencer will contain all the person objects on the schedule and order them in distance to exit.
+        Sequencer sequencer = new Sequencer(this);
+        schedule.scheduleRepeating(sequencer, 1, 1.0);
+
+        // Analysis and outputs from the model are contained in this agent
+        analysis = new Analysis(this);
+        schedule.scheduleRepeating(analysis, 3, 1.0);
+
     }
 
     /** Call appropriate analysis methods and cleans up

@@ -26,7 +26,8 @@ import java.util.List;
 public class Wrapper {
 
     static Station stationSim = new Station(System.currentTimeMillis());
-    private static int numTimeSteps = 500;
+    private static int numTimeSteps = 1000;
+    public static int numRandomDoubles = 200;
 
 
     static ArrayList<List<IntegerTensor>> results = new ArrayList<List<IntegerTensor>>();
@@ -60,12 +61,16 @@ public class Wrapper {
 
     public static void main(String[] args) {
 
-        // Make truth data
-        IntegerTensor[] truth = Wrapper.run(new VertexBackedRandomFactory(200, 0, 0));
+        System.out.println("Starting. Number of iterations: "+numTimeSteps);
 
+        // Make truth data
+        System.out.println("Making truth data");
+        IntegerTensor[] truth = Wrapper.run(new VertexBackedRandomFactory(numRandomDoubles, 0, 0));
+
+        System.out.println("Initialising random number stream");
         Wrapper wrap = new Wrapper();
-        //VertexBackedRandomFactory random = new VertexBackedRandomFactory(200, 0, 0);
-        RandomFactoryVertex random = new RandomFactoryVertex (200, 0, 0);
+        //VertexBackedRandomFactory random = new VertexBackedRandomFactory(numRandomDoubles,, 0, 0);
+        RandomFactoryVertex random = new RandomFactoryVertex (numRandomDoubles, 0, 0);
 
         ArrayList<DoubleVertex> inputs = new ArrayList<>(0);
 
