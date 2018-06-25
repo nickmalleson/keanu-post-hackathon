@@ -5,7 +5,7 @@ import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
 import io.improbable.keanu.network.BayesianNetwork;
 import io.improbable.keanu.research.randomfactory.RandomFactory;
 import io.improbable.keanu.research.randomfactory.VertexBackedRandomFactory;
-import io.improbable.keanu.research.vertices.DoubleArrayIndexingVertex;
+import io.improbable.keanu.research.vertices.DoubleTensorSplitVertex;
 import io.improbable.keanu.research.vertices.ReduceVertex;
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.vertices.Vertex;
@@ -38,8 +38,8 @@ public class DoubleListLambdaVertexTest {
         VertexBackedRandomFactory random = new VertexBackedRandomFactory(0, 0,0);
         DoubleListLambdaVertex vert = new DoubleListLambdaVertex(inputVertex,  DoubleListLambdaVertexTest::model, random);
 
-        DoubleArrayIndexingVertex outputOne = new DoubleArrayIndexingVertex(vert, 0);
-        DoubleArrayIndexingVertex outputTwo = new DoubleArrayIndexingVertex(vert, 1);
+        DoubleTensorSplitVertex outputOne = new DoubleTensorSplitVertex(vert, 0);
+        DoubleTensorSplitVertex outputTwo = new DoubleTensorSplitVertex(vert, 1);
 
         GaussianVertex observedOutput = new GaussianVertex(outputTwo, 0.5);
         observedOutput.observe(15.0);

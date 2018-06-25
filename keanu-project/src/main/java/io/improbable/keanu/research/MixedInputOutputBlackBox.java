@@ -55,7 +55,7 @@ public class MixedInputOutputBlackBox {
             integerOutputs.add(new IntegerTensorSplitVertex(integersVertex, i));
         }
         for (int i=0; i<expectedNumberOfDoublesOut; i++) {
-            doubleOutputs.add(new DoubleArrayIndexingVertex(doublesVertex, i));
+            doubleOutputs.add(new DoubleTensorSplitVertex(doublesVertex, i));
         }
     }
 

@@ -1,5 +1,6 @@
 package io.improbable.keanu.research.randomfactory;
 
+import io.improbable.keanu.distributions.continuous.Gaussian;
 import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.bool.probabilistic.Flip;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
@@ -33,19 +34,25 @@ public class VertexBackedRandomFactory implements RandomFactory {
         if(numberOfDoubles > 0) {
             randDoubleSource = new ArrayList<>(numberOfDoubles);
             for (i=0; i<numberOfDoubles; ++i) {
-                randDoubleSource.add(new GaussianVertex(0.0, 1.0));
+                GaussianVertex v = new GaussianVertex(0.0, 1.0);
+                v.sampleUsingDefaultRandom();
+                randDoubleSource.add(v);
             }
         }
         if(numberOfInts > 0) {
             randIntSource = new ArrayList<>(numberOfInts);
             for (i=0; i<numberOfInts; ++i) {
-                randIntSource.add(new UniformVertex(0.0,1.0));
+                UniformVertex v = new UniformVertex(0.0, 1.0);
+                v.sampleUsingDefaultRandom();
+                randIntSource.add(v);
             }
         }
         if(numberOfBools > 0) {
             randBoolSource = new ArrayList<>(numberOfBools);
             for(i=0; i<numberOfBools; ++i) {
-                randBoolSource.add(new Flip(0.5));
+                Flip v = new Flip(0.5);
+                v.sampleUsingDefaultRandom();
+                randBoolSource.add(v);
             }
         }
     }

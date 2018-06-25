@@ -70,7 +70,7 @@ public class Wrapper {
 
         System.out.println("Initialising random number stream");
         Wrapper wrap = new Wrapper();
-        //VertexBackedRandomFactory random = new VertexBackedRandomFactory(numRandomDoubles,, 0, 0);
+        //VertexBackedRandomFactory random = new VertexBackedRandomFactory(numInputs,, 0, 0);
         RandomFactoryVertex random = new RandomFactoryVertex (numRandomDoubles, 0, 0);
 
         ArrayList<DoubleVertex> inputs = new ArrayList<>(0);
@@ -94,17 +94,20 @@ public class Wrapper {
             // output is the ith element of the model output (from box)
             IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
             // output with a bit of noise
-            GaussianVertex noiseyOutput = new GaussianVertex(new CastDoubleVertex(output), 1.0);
+            GaussianVertex noisyOutput = new GaussianVertex(new CastDoubleVertex(output), 1.0);
             // Observe the output
-            noiseyOutput.observe(truth[i].doubleValue()); //.toDouble().scalar());
+            noisyOutput.observe(truth[i].doubleValue()); //.toDouble().scalar());
         }
 
         System.out.println("Creating BayesNet");
         BayesianNetwork testNet = new BayesianNetwork(box.getConnectedGraph());
 
+        // Workaround for too many evaluations during sample startup
+        random.setAndCascade(random.getValue());
+
         // Sample: feed each randomNumber in and run the model
         System.out.println("Sampling");
-        NetworkSamples sampler = MetropolisHastings.getPosteriorSamples( testNet, Arrays.asList(box), 10 );
+        NetworkSamples sampler = MetropolisHastings.getPosteriorSamples( testNet, Arrays.asList(box), 20 );
 
         // Interrogate the samples
 
