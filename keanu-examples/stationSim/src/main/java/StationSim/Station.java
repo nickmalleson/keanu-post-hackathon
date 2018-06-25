@@ -31,6 +31,7 @@ import java.util.ArrayList;
 public class Station extends SimState{
 
     private static final long serialVersionUID = 1;
+    public static int modelCount = 0 ; // Record the total number of models created.
 
     // Representations of simulation space
     private double areaWidth = 200.0;
@@ -286,6 +287,7 @@ public class Station extends SimState{
     /** Cleans up everything left from previous simulation and sets up new one.
      */
     public void start(RandomFactory rand) {
+        System.out.println("Model "+Station.modelCount++ +" starting");
         super.start();
         random = rand;
         area.clear();
@@ -323,7 +325,7 @@ public class Station extends SimState{
      */
     private void createEntrances() {
         double interval, y;
-        System.out.println("Creating Entrances");
+        //System.out.println("Creating Entrances");
         entrances = new ArrayList<>();
         // Calculate even spacing of entrances
         interval = areaHeight / (numEntrances + 1);

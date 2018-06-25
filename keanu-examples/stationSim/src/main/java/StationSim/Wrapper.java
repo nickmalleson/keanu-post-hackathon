@@ -3,6 +3,7 @@ package StationSim;
 
 
 import io.improbable.keanu.algorithms.NetworkSamples;
+import io.improbable.keanu.algorithms.VertexSamples;
 import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
 import io.improbable.keanu.network.BayesianNetwork;
 import io.improbable.keanu.research.randomfactory.RandomFactory;
@@ -111,9 +112,23 @@ public class Wrapper {
         //    System.out.println(sampler.get(box).asList().get(i)[0].scalar());
         //}
 
-        // Number of people at each iteration in first sample
-        for (int i=0; i<sampler.get(box).asList().get(0).length ; i++) {
-            System.out.println(sampler.get(box).asList().get(0)[i].scalar());
+        // Interrogate the samples
+
+        // Get the number of people per iteration (an array of IntegerTensors) for each sample
+        List<IntegerTensor[]> l = sampler.get(box).asList();
+
+        // Print Number of people at each iteration in every sample
+
+        for (int i=0; i<l.size(); i++) {
+            System.out.print("Sample "+i+": ");
+
+            IntegerTensor[] peoplePerIter = l.get(i);
+
+            for (int j=0; j<peoplePerIter.length ; j++) {
+                System.out.print(peoplePerIter[j].scalar()+",");
+            }
+
+            System.out.println("");
         }
 
 
