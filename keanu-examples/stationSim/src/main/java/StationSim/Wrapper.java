@@ -28,6 +28,7 @@ public class Wrapper {
     static Station stationSim = new Station(System.currentTimeMillis());
     private static int numTimeSteps = 500;
 
+
     static ArrayList<List<IntegerTensor>> results = new ArrayList<List<IntegerTensor>>();
 
     public Wrapper() {
@@ -73,6 +74,7 @@ public class Wrapper {
         // output is a list of Integer(tensor)s (the number of agents in the model at each iteration).
         //BlackBox box = new BlackBox(inputs, wrap::run, Wrapper.numTimeSteps);
         //UnaryOpVertex<RandomFactory,Integer[]> box = new Unar<>( random, wrap::run )
+        System.out.println("Initialising black box model");
         UnaryOpLambda<VertexBackedRandomFactory,IntegerTensor[]> box = new UnaryOpLambda<>( random, Wrapper::run);
 
         // This is the list of random numbers that are fed into model (similar to drawing from a distribution,
@@ -81,6 +83,7 @@ public class Wrapper {
 
 
         // Observe the truth data plus some noise
+        System.out.println("Observing truth data");
         for (int i = 0; i< numTimeSteps; i++) {
             // output is the ith element of the model output (from box)
             IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
@@ -90,27 +93,18 @@ public class Wrapper {
             noiseyOutput.observe(truth[i].scalar().doubleValue()); //.toDouble().scalar());
         }
 
+        System.out.println("Creating BayesNet");
         BayesianNetwork testNet = new BayesianNetwork(box.getConnectedGraph());
 
         // Sample: feed each randomNumber in and run the model
+        System.out.println("Sampling");
         NetworkSamples sampler = MetropolisHastings.getPosteriorSamples( testNet, Arrays.asList(randSource, box), 10 );
-
-        //System.out.println(testNet.getLatentVertices().size());
-
-        // XXXX To get the num agents at each iteration now: feed the random numbers back in to the model
-        System.out.println(results.size());
-        System.out.println(results.get(0).size());
-
 
         // print the first random draw of the first sample
         System.out.println(sampler.get(randSource).asList().get(0).getValue(0));
 
         // Number of people in zeroth iteration of zeroth sample
         System.out.println(sampler.get(box).asList().get(0)[0].scalar());
-
-        //for (int i=0; i<sampler.get(box).asList().size() ; i++) {
-        //    System.out.println(sampler.get(box).asList().get(i)[0].scalar());
-        //}
 
         // Interrogate the samples
 
