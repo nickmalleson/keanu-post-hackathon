@@ -26,7 +26,7 @@ import java.util.List;
 public class Wrapper {
 
     static Station stationSim = new Station(System.currentTimeMillis());
-    private static int numTimeSteps = 1000;
+    private static int numTimeSteps = 3000;
     public static int numRandomDoubles = 200;
 
 

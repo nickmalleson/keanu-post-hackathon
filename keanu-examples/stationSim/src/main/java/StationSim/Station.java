@@ -44,7 +44,7 @@ public class Station extends SimState{
     public Continuous2D walls = new Continuous2D(1.0, areaWidth, areaHeight);
 
     // Default values for parameters
-    private int numPeople = 100;
+    private int numPeople = 700;
     private int numEntrances = 3;
     private int numExits = 2;
     public double[][] exitProbs = {{0.2, 0.8},
@@ -52,7 +52,7 @@ public class Station extends SimState{
                                     {0.9, 0.1}};
     private int exitInterval = 30;
     private int entranceInterval = 2;
-    private int entranceSize = 5;
+    private int entranceSize = 10;
     private int exitSize = 10;
     private int personSize = 1; // sort bug here
     public int addedCount;
@@ -319,6 +319,7 @@ public class Station extends SimState{
      */
     @Override
     public void start() {
+        System.out.println("WARNING! This should not be called unless using the GUI.");
         super.start();
         area.clear();
         doorways.clear();
