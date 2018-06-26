@@ -26,22 +26,23 @@ import java.util.List;
 public class Wrapper {
 
     static Station stationSim = new Station(System.currentTimeMillis());
-    private static int numTimeSteps = 3000;
+    private static int numTimeSteps = 1000;
     public static int numRandomDoubles = 200;
 
 
-    static ArrayList<List<IntegerTensor>> results = new ArrayList<List<IntegerTensor>>();
+//    static ArrayList<List<IntegerTensor>> results = new ArrayList<List<IntegerTensor>>();
 
     public Wrapper() {
 
     }
 
-    public static IntegerTensor[] run(RandomFactory rand) {
+    public static Integer[] run(RandomFactory rand) {
+        System.out.println("Model "+Station.modelCount++ +" starting");
         stationSim.start(rand);
 
-        IntegerTensor[] numPeople = new IntegerTensor[numTimeSteps];
+        Integer[] numPeople = new Integer[numTimeSteps];
         for (int i = 0; i < numTimeSteps; i++) {
-            numPeople[i] = IntegerTensor.scalar(0);
+            numPeople[i] = 0;
         }
 
         int i = 0;
@@ -50,11 +51,11 @@ public class Wrapper {
             if (!stationSim.schedule.step(stationSim)) {
                 break;
             }
-            numPeople[i].setValue(stationSim.area.getAllObjects().size());
+            numPeople[i] = stationSim.area.getAllObjects().size();
             i++;
         } while (stationSim.area.getAllObjects().size() > 0 && i < numTimeSteps);
 
-        results.add(Arrays.asList(numPeople));
+  //      results.add(Arrays.asList(numPeople));
 
         return numPeople;
     }
@@ -65,11 +66,11 @@ public class Wrapper {
 
         // Make truth data
         System.out.println("Making truth data");
-        IntegerTensor[] truth = Wrapper.run(new VertexBackedRandomFactory(numRandomDoubles, 0, 0));
+        Integer[] truth = Wrapper.run(new VertexBackedRandomFactory(0, 0, 0));
 
         System.out.println("Initialising random number stream");
         Wrapper wrap = new Wrapper();
-        //VertexBackedRandomFactory random = new VertexBackedRandomFactory(numRandomDoubles,, 0, 0);
+        //VertexBackedRandomFactory random = new VertexBackedRandomFactory(numInputs,, 0, 0);
         RandomFactoryVertex random = new RandomFactoryVertex (numRandomDoubles, 0, 0);
 
         ArrayList<DoubleVertex> inputs = new ArrayList<>(0);
@@ -80,51 +81,48 @@ public class Wrapper {
         //BlackBox box = new BlackBox(inputs, wrap::run, Wrapper.numTimeSteps);
         //UnaryOpVertex<RandomFactory,Integer[]> box = new Unar<>( random, wrap::run )
         System.out.println("Initialising black box model");
-        UnaryOpLambda<VertexBackedRandomFactory,IntegerTensor[]> box = new UnaryOpLambda<>( random, Wrapper::run);
+        UnaryOpLambda<VertexBackedRandomFactory,Integer[]> box = new UnaryOpLambda<>( random, Wrapper::run);
 
         // This is the list of random numbers that are fed into model (similar to drawing from a distribution,
         // but they're pre-defined in randSource)
-        DoubleVertex randSource  = random.getValue().randDoubleSource;
+        List<GaussianVertex> randSource  = random.getValue().randDoubleSource;
 
 
         // Observe the truth data plus some noise
         System.out.println("Observing truth data");
-        for (int i = 0; i< numTimeSteps; i++) {
+        for (Integer i = 0; i< numTimeSteps; i++) {
             // output is the ith element of the model output (from box)
             IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
             // output with a bit of noise
-            GaussianVertex noiseyOutput = new GaussianVertex(new CastDoubleVertex(output), 1.0);
+            GaussianVertex noisyOutput = new GaussianVertex(new CastDoubleVertex(output), 1.0);
             // Observe the output
-            noiseyOutput.observe(truth[i].scalar().doubleValue()); //.toDouble().scalar());
+            noisyOutput.observe(truth[i].doubleValue()); //.toDouble().scalar());
         }
 
         System.out.println("Creating BayesNet");
         BayesianNetwork testNet = new BayesianNetwork(box.getConnectedGraph());
 
+        // Workaround for too many evaluations during sample startup
+        random.setAndCascade(random.getValue());
+
         // Sample: feed each randomNumber in and run the model
         System.out.println("Sampling");
-        NetworkSamples sampler = MetropolisHastings.getPosteriorSamples( testNet, Arrays.asList(randSource, box), 100 );
-
-        // print the first random draw of the first sample
-        System.out.println(sampler.get(randSource).asList().get(0).getValue(0));
-
-        // Number of people in zeroth iteration of zeroth sample
-        System.out.println(sampler.get(box).asList().get(0)[0].scalar());
+        NetworkSamples sampler = MetropolisHastings.getPosteriorSamples( testNet, Arrays.asList(box), 20 );
 
         // Interrogate the samples
 
         // Get the number of people per iteration (an array of IntegerTensors) for each sample
-        List<IntegerTensor[]> l = sampler.get(box).asList();
+        List<Integer[]> l = sampler.get(box).asList();
 
         // Print Number of people at each iteration in every sample
 
         for (int i=0; i<l.size(); i++) {
             System.out.print("Sample "+i+": ");
 
-            IntegerTensor[] peoplePerIter = l.get(i);
+            Integer[] peoplePerIter = l.get(i);
 
             for (int j=0; j<peoplePerIter.length ; j++) {
-                System.out.print(peoplePerIter[j].scalar()+",");
+                System.out.print(peoplePerIter[j]+",");
             }
 
             System.out.println("");

@@ -2,26 +2,32 @@ package io.improbable.keanu.research.vertices;
 
 import io.improbable.keanu.research.randomfactory.VertexBackedRandomFactory;
 import io.improbable.keanu.vertices.bool.probabilistic.Flip;
+import io.improbable.keanu.vertices.dbl.DoubleVertex;
 import io.improbable.keanu.vertices.dbl.KeanuRandom;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.UniformVertex;
 import io.improbable.keanu.vertices.generic.nonprobabilistic.NonProbabilistic;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class RandomFactoryVertex extends NonProbabilistic<VertexBackedRandomFactory> {
 
-    public RandomFactoryVertex(GaussianVertex randDoubleSource, UniformVertex randIntSource, Flip randBoolSource) {
+    public RandomFactoryVertex(List<GaussianVertex> randDoubleSource, List<UniformVertex> randIntSource, List<Flip> randBoolSource) {
         setValue(new VertexBackedRandomFactory(randDoubleSource, randIntSource, randBoolSource));
-        if(randDoubleSource != null) addParent(randDoubleSource);
-        if(randIntSource != null) addParent(randIntSource);
-        if(randBoolSource != null) addParent(randBoolSource);
+        addAllParents();
     }
 
 
     public RandomFactoryVertex(int numberOfDoubles, int numberOfInts, int numberOfBools) {
         setValue(new VertexBackedRandomFactory(numberOfDoubles, numberOfInts, numberOfBools));
-        if(getValue().randDoubleSource != null) addParent(getValue().randDoubleSource);
-        if(getValue().randIntSource != null) addParent(getValue().randIntSource);
-        if(getValue().randBoolSource != null) addParent(getValue().randBoolSource);
+        addAllParents();
+    }
+
+    private void addAllParents() {
+        if(getValue().randDoubleSource != null) addParents(getValue().randDoubleSource);
+        if(getValue().randIntSource != null) addParents(getValue().randIntSource);
+        if(getValue().randBoolSource != null) addParents(getValue().randBoolSource);
     }
 
 

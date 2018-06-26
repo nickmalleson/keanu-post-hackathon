@@ -52,10 +52,10 @@ public class MixedInputOutputBlackBox {
         PairGetSecondVertex<IntegerTensor[], DoubleTensor[]> doublesVertex = new PairGetSecondVertex<>(lambdaVertex);
 
         for (int i=0; i<expectedNumberOfIntegersOut; i++) {
-            integerOutputs.add(new IntegerArrayIndexingVertex(integersVertex, i));
+            integerOutputs.add(new IntegerTensorSplitVertex(integersVertex, i));
         }
         for (int i=0; i<expectedNumberOfDoublesOut; i++) {
-            doubleOutputs.add(new DoubleArrayIndexingVertex(doublesVertex, i));
+            doubleOutputs.add(new DoubleTensorSplitVertex(doublesVertex, i));
         }
     }
 
@@ -97,8 +97,7 @@ public class MixedInputOutputBlackBox {
 
     public Set<? extends Vertex> getConnectedGraph() {
         Set<Vertex> vertices = integerOutputs.get(0).getConnectedGraph();
-        vertices.add(random.randIntSource);
-        vertices.add(random.randDoubleSource);
+        vertices.addAll(random.getAllVertices());
         return vertices;
     }
 }

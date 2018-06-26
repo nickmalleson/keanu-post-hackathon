@@ -2,7 +2,7 @@ package io.improbable.keanu.research;
 
 import io.improbable.keanu.research.randomfactory.RandomFactory;
 import io.improbable.keanu.research.randomfactory.VertexBackedRandomFactory;
-import io.improbable.keanu.research.vertices.DoubleArrayIndexingVertex;
+import io.improbable.keanu.research.vertices.DoubleTensorSplitVertex;
 import io.improbable.keanu.research.vertices.ReduceVertex;
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.vertices.Vertex;
@@ -41,7 +41,7 @@ public class BlackBox {
         DoubleListLambdaVertex lambdaVertex = new DoubleListLambdaVertex(inputVertex, model, random);
 
         for (int i = 0; i < expectedNumberOfOutputs; i++) {
-            doubleOutputs.add(new DoubleArrayIndexingVertex(lambdaVertex, i));
+            doubleOutputs.add(new DoubleTensorSplitVertex(lambdaVertex, i));
         }
     }
 
@@ -61,8 +61,7 @@ public class BlackBox {
 
     public Set<? extends Vertex> getConnectedGraph() {
         Set<Vertex> vertices = doubleOutputs.get(0).getConnectedGraph();
-        vertices.add(random.randDoubleSource);
-        vertices.add(random.randIntSource);
+        vertices.addAll(random.getAllVertices());
         return vertices;
     }
 }
