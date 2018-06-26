@@ -26,8 +26,9 @@ import java.util.List;
 public class Wrapper {
 
     static Station stationSim = new Station(System.currentTimeMillis());
-    private static int numTimeSteps = 1000;
+    private static int numTimeSteps = 4000;
     public static int numRandomDoubles = 200;
+    private static int numSamples = 50;
 
 
 //    static ArrayList<List<IntegerTensor>> results = new ArrayList<List<IntegerTensor>>();
@@ -66,7 +67,7 @@ public class Wrapper {
 
         // Make truth data
         System.out.println("Making truth data");
-        Integer[] truth = Wrapper.run(new VertexBackedRandomFactory(0, 0, 0));
+        Integer[] truth = Wrapper.run(new VertexBackedRandomFactory(numRandomDoubles, 0, 0));
 
         System.out.println("Initialising random number stream");
         Wrapper wrap = new Wrapper();
@@ -107,7 +108,7 @@ public class Wrapper {
 
         // Sample: feed each randomNumber in and run the model
         System.out.println("Sampling");
-        NetworkSamples sampler = MetropolisHastings.getPosteriorSamples( testNet, Arrays.asList(box), 20 );
+        NetworkSamples sampler = MetropolisHastings.getPosteriorSamples( testNet, Arrays.asList(box), numSamples );
 
         // Interrogate the samples
 
