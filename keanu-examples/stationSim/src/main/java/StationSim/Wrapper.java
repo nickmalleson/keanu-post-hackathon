@@ -103,7 +103,7 @@ public class Wrapper {
 
         // Sample: feed each randomNumber in and run the model
         System.out.println("Sampling");
-        NetworkSamples sampler = MetropolisHastings.getPosteriorSamples( testNet, Arrays.asList(randSource, box), 10 );
+        NetworkSamples sampler = MetropolisHastings.getPosteriorSamples( testNet, Arrays.asList(randSource, box), 100 );
 
         // print the first random draw of the first sample
         System.out.println(sampler.get(randSource).asList().get(0).getValue(0));
