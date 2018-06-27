@@ -4,6 +4,8 @@
 
 You describe your problem as a directed acyclic graph using vertices to either deterministically define computations on downstream values or to probabilistically state your belief of a value at a point in the network. This is called a Bayesian Network.
 
+Mark down sucks
+
 ## Your Bayesian Network is a Directed Acyclic Graph
 
 Your model needs to be described to Keanu as a Bayesian network. This network contains
