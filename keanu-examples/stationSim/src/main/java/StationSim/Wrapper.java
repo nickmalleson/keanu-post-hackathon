@@ -126,7 +126,7 @@ public class Wrapper {
         // Print Number of people at each iteration in every sample
 
         for (int i=0; i<l.size(); i++) {
-            System.out.print("Sample "+i+": ");
+            System.out.print("Sample "+i+", ");
 
             Integer[] peoplePerIter = l.get(i);
 
