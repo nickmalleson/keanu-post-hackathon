@@ -26,8 +26,8 @@ import java.util.List;
 public class Wrapper {
 
     static Station stationSim = new Station(System.currentTimeMillis());
-    private static int numTimeSteps = 4000;
-    public static int numRandomDoubles = 200;
+    private static int numTimeSteps = 1000;
+    public static int numRandomDoubles = 1;
     private static int numSamples = 50;
 
 
@@ -67,7 +67,8 @@ public class Wrapper {
 
         // Make truth data
         System.out.println("Making truth data");
-        Integer[] truth = Wrapper.run(new VertexBackedRandomFactory(numRandomDoubles, 0, 0));
+        VertexBackedRandomFactory truthRandom = new VertexBackedRandomFactory(numRandomDoubles, 0, 0);
+        Integer[] truth = Wrapper.run(truthRandom);
 
         System.out.println("Initialising random number stream");
         Wrapper wrap = new Wrapper();
@@ -84,9 +85,11 @@ public class Wrapper {
         System.out.println("Initialising black box model");
         UnaryOpLambda<VertexBackedRandomFactory,Integer[]> box = new UnaryOpLambda<>( random, Wrapper::run);
 
+        // HERE TEST VERY SIMPLE MODEL (e.g. just adds number)
+
         // This is the list of random numbers that are fed into model (similar to drawing from a distribution,
         // but they're pre-defined in randSource)
-        List<GaussianVertex> randSource  = random.getValue().randDoubleSource;
+        //List<GaussianVertex> randSource  = random.getValue().randDoubleSource;
 
 
         // Observe the truth data plus some noise
@@ -94,8 +97,8 @@ public class Wrapper {
         for (Integer i = 0; i< numTimeSteps; i++) {
             // output is the ith element of the model output (from box)
             IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
-            // output with a bit of noise
-            GaussianVertex noisyOutput = new GaussianVertex(new CastDoubleVertex(output), 1.0);
+            // output with a bit of noise. Lower sigma makes it more constrained.
+            GaussianVertex noisyOutput = new GaussianVertex(new CastDoubleVertex(output), 0.1);
             // Observe the output
             noisyOutput.observe(truth[i].doubleValue()); //.toDouble().scalar());
         }

@@ -31,6 +31,8 @@ import java.util.ArrayList;
  */
 public class Station extends SimState{
 
+    public int numRandoms = 0;
+
     private static final long serialVersionUID = 1;
     public static int modelCount = 0 ; // Record the total number of models created.
 
@@ -349,6 +351,7 @@ public class Station extends SimState{
     @Override
     public void finish() {
         super.finish();
+        System.out.println("Number of random draws: " + numRandoms);
     }
 
     /** Creates entrance agents based on the number of entrances and size of entrances set in GUI.

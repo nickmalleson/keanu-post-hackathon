@@ -42,9 +42,12 @@ public class Person extends Agent {
         this.entrance = entrance;
         radius = size / 2.0;
         desiredSpeed = (Math.abs(station.random.nextGaussian()) + minSpeed) * speedMultilpler;
+        station.numRandoms++;
         currentSpeed = 0.0;
 
         double randDouble = station.random.nextDouble();
+        station.numRandoms++;
+        System.out.println(randDouble);
         double cumulativeProb = 0.0;
         for (int i = 0; i < exitProbs.length; i++) {
             if(randDouble < exitProbs[i] + cumulativeProb) {
@@ -103,6 +106,7 @@ public class Person extends Agent {
         while (collision(newLocation) &&  i < attempts) {
             newLocation = new Double2D(getLocation().getX(),
                     getLocation().getY() + (station.random.nextDouble() - 0.5) * desiredSpeed);
+            station.numRandoms++;
             i++;
         }
 
