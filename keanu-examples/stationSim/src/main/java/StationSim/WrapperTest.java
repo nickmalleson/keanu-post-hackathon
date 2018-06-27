@@ -20,6 +20,7 @@ import java.util.List;
 
 public class WrapperTest {
 
+/*
     private static int iterations = 100;
 
     public static Double[] model(RandomFactory rand) {
@@ -107,5 +108,6 @@ public class WrapperTest {
             System.out.println("");
         }
     }
+*/
 }
 

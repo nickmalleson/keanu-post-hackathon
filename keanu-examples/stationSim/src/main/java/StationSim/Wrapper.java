@@ -28,7 +28,7 @@ public class Wrapper {
 
     static Station stationSim = new Station(System.currentTimeMillis());
     private static int numTimeSteps = 1200;
-    public static int numRandomDoubles = 1000;
+    public static int numRandomDoubles = 100;
     private static int numSamples = 500;
     private static int dropSamples = 200;
     private static int downSample = 3;
@@ -197,6 +197,8 @@ public class Wrapper {
 
             System.out.println("");
         }
+
+
 
 
 
