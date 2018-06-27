@@ -7,3 +7,6 @@ nbproject
 build
 /out
 classes/
+.Rproj.user
+results/*.csv
+

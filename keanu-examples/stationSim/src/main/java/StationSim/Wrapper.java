@@ -27,12 +27,14 @@ import java.util.List;
 public class Wrapper {
 
     static Station stationSim = new Station(System.currentTimeMillis());
-    private static int numTimeSteps = 1500;
-    public static int numRandomDoubles = 10;
-    private static int numSamples = 50;
-    private static boolean OBSERVE = false;
+    private static int numTimeSteps = 1200;
+    public static int numRandomDoubles = 1000;
+    private static int numSamples = 500;
+    private static int dropSamples = 200;
+    private static int downSample = 3;
+    private static boolean OBSERVE = true;
     private static double sigmaNoise = 0.1 ; // The amount of noise to be added to the truth
-    
+
 
 //    static ArrayList<List<IntegerTensor>> results = new ArrayList<List<IntegerTensor>>();
 
@@ -40,12 +42,18 @@ public class Wrapper {
 
     }
 
-    public static void writeResults(List<Integer[]> samples, String fileName) {
+    public static void writeResults(List<Integer[]> samples, Integer[] truth) {
         Writer writer = null;
+        Station tempStation = new Station(System.currentTimeMillis());
+        int totalNumPeople = tempStation.getNumPeople();
 
+        String dirName = "results/";
+        String params = "OBSERVE" + OBSERVE + "_numSamples" + numSamples + "_numTimeSteps" + numTimeSteps + "_numRandomDoubles" + numRandomDoubles + "_totalNumPeople" + totalNumPeople + "_dropSamples" + dropSamples + "_downSample" + "_sigmaNoise" + sigmaNoise + downSample + "_timeStamp" + System.currentTimeMillis();
+
+        // Write out samples
         try {
             writer = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(fileName),
+                new FileOutputStream(dirName + "Samples_" + params + ".csv"),
                 "utf-8"));
             for (int i = 0; i < samples.size(); i++) {
                 Integer[] peoplePerIter = samples.get(i);
@@ -57,6 +65,29 @@ public class Wrapper {
                 }
                 writer.write(System.lineSeparator());
             }
+        } catch (IOException ex) {
+            System.out.println("Error writing to file");
+        } finally {
+            try {
+                writer.close();
+            } catch (Exception ex) {
+                System.out.println("Error closing file");
+            }
+        }
+
+        // Write out Truth
+        try {
+            writer = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(dirName + "Truth_" + params + ".csv"),
+                "utf-8"));
+            for (int i = 0; i < truth.length ; i++) {
+                writer.write(truth[i] + "");
+                if (i != truth.length - 1) {
+                    writer.write(",");
+                }
+            }
+            writer.write(System.lineSeparator());
+
         } catch (IOException ex) {
             System.out.println("Error writing to file");
         } finally {
@@ -109,7 +140,7 @@ public class Wrapper {
         ArrayList<DoubleVertex> inputs = new ArrayList<>(0);
 
 
-        // This is the 'black box' vertext that runs the model. It's input is the random numbers and
+        // This is the 'black box' vertex that runs the model. It's input is the random numbers and
         // output is a list of Integer(tensor)s (the number of agents in the model at each iteration).
         //BlackBox box = new BlackBox(inputs, wrap::run, Wrapper.numTimeSteps);
         //UnaryOpVertex<RandomFactory,Integer[]> box = new Unar<>( random, wrap::run )
@@ -150,15 +181,15 @@ public class Wrapper {
         // Interrogate the samples
 
         // Get the number of people per iteration (an array of IntegerTensors) for each sample
-        List<Integer[]> l = sampler.get(box).asList();
+        List<Integer[]> samples = sampler.drop(dropSamples).downSample(downSample).get(box).asList();
 
         // Print Number of people at each iteration in every sample
 
-        writeResults(l,  "withObs_" + OBSERVE + "numSamples" + numSamples + "_numTimeSteps" + numTimeSteps + "_numRandomDoubles" + numRandomDoubles + "_numPeople" + 700 + "_timeStamp" + System.currentTimeMillis() + ".csv");
-        for (int i=0; i<l.size(); i++) {
+        writeResults(samples, truth);
+        for (int i=0; i<samples.size(); i++) {
             System.out.print("Sample "+i+", ");
 
-            Integer[] peoplePerIter = l.get(i);
+            Integer[] peoplePerIter = samples.get(i);
 
             for (int j=0; j<peoplePerIter.length ; j++) {
                 System.out.print(peoplePerIter[j]+",");
