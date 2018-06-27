@@ -27,8 +27,10 @@ public class Wrapper {
 
     static Station stationSim = new Station(System.currentTimeMillis());
     private static int numTimeSteps = 1000;
-    public static int numRandomDoubles = 1;
+    public static int numRandomDoubles = 10;
     private static int numSamples = 50;
+    private static boolean OBSERVE = false;
+    private static double sigmaNoise = 0.1 ; // The amount of noise to be added to the truth
 
 
 //    static ArrayList<List<IntegerTensor>> results = new ArrayList<List<IntegerTensor>>();
@@ -85,22 +87,25 @@ public class Wrapper {
         System.out.println("Initialising black box model");
         UnaryOpLambda<VertexBackedRandomFactory,Integer[]> box = new UnaryOpLambda<>( random, Wrapper::run);
 
-        // HERE TEST VERY SIMPLE MODEL (e.g. just adds number)
-
         // This is the list of random numbers that are fed into model (similar to drawing from a distribution,
         // but they're pre-defined in randSource)
         //List<GaussianVertex> randSource  = random.getValue().randDoubleSource;
 
 
-        // Observe the truth data plus some noise
-        System.out.println("Observing truth data");
-        for (Integer i = 0; i< numTimeSteps; i++) {
-            // output is the ith element of the model output (from box)
-            IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
-            // output with a bit of noise. Lower sigma makes it more constrained.
-            GaussianVertex noisyOutput = new GaussianVertex(new CastDoubleVertex(output), 0.1);
-            // Observe the output
-            noisyOutput.observe(truth[i].doubleValue()); //.toDouble().scalar());
+        // Observe the truth data plus some noise?
+        if (OBSERVE) {
+            System.out.println("Observing truth data. Adding noise with standard dev: "+sigmaNoise);
+            for (Integer i = 0; i< numTimeSteps; i++) {
+                // output is the ith element of the model output (from box)
+                IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
+                // output with a bit of noise. Lower sigma makes it more constrained.
+                GaussianVertex noisyOutput = new GaussianVertex(new CastDoubleVertex(output), sigmaNoise);
+                // Observe the output
+                noisyOutput.observe(truth[i].doubleValue()); //.toDouble().scalar());
+            }
+        }
+        else {
+            System.out.println("Not observing truth data");
         }
 
         System.out.println("Creating BayesNet");

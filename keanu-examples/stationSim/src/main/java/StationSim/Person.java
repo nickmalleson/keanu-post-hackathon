@@ -47,7 +47,6 @@ public class Person extends Agent {
 
         double randDouble = station.random.nextDouble();
         station.numRandoms++;
-        System.out.println(randDouble);
         double cumulativeProb = 0.0;
         for (int i = 0; i < exitProbs.length; i++) {
             if(randDouble < exitProbs[i] + cumulativeProb) {
