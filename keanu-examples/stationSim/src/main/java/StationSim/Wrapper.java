@@ -16,6 +16,7 @@ import io.improbable.keanu.vertices.dbl.nonprobabilistic.CastDoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.unary.UnaryOpLambda;
 
+import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -26,12 +27,12 @@ import java.util.List;
 public class Wrapper {
 
     static Station stationSim = new Station(System.currentTimeMillis());
-    private static int numTimeSteps = 1000;
+    private static int numTimeSteps = 1500;
     public static int numRandomDoubles = 10;
     private static int numSamples = 50;
     private static boolean OBSERVE = false;
     private static double sigmaNoise = 0.1 ; // The amount of noise to be added to the truth
-
+    
 
 //    static ArrayList<List<IntegerTensor>> results = new ArrayList<List<IntegerTensor>>();
 
@@ -39,8 +40,36 @@ public class Wrapper {
 
     }
 
+    public static void writeResults(List<Integer[]> samples, String fileName) {
+        Writer writer = null;
+
+        try {
+            writer = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(fileName),
+                "utf-8"));
+            for (int i = 0; i < samples.size(); i++) {
+                Integer[] peoplePerIter = samples.get(i);
+                for (int j = 0; j <  peoplePerIter.length ; j++) {
+                    writer.write(peoplePerIter[j] + "");
+                    if (j != peoplePerIter.length - 1) {
+                        writer.write(",");
+                    }
+                }
+                writer.write(System.lineSeparator());
+            }
+        } catch (IOException ex) {
+            System.out.println("Error writing to file");
+        } finally {
+            try {
+                writer.close();
+            } catch (Exception ex) {
+                System.out.println("Error closing file");
+            }
+        }
+    }
+
     public static Integer[] run(RandomFactory rand) {
-        System.out.println("Model "+Station.modelCount++ +" starting");
+        System.out.println("Model "+ Station.modelCount++ +" starting");
         stationSim.start(rand);
 
         Integer[] numPeople = new Integer[numTimeSteps];
@@ -65,7 +94,7 @@ public class Wrapper {
 
     public static void main(String[] args) {
 
-        System.out.println("Starting. Number of iterations: "+numTimeSteps);
+        System.out.println("Starting. Number of iterations: " + numTimeSteps);
 
         // Make truth data
         System.out.println("Making truth data");
@@ -94,7 +123,7 @@ public class Wrapper {
 
         // Observe the truth data plus some noise?
         if (OBSERVE) {
-            System.out.println("Observing truth data. Adding noise with standard dev: "+sigmaNoise);
+            System.out.println("Observing truth data. Adding noise with standard dev: " + sigmaNoise);
             for (Integer i = 0; i< numTimeSteps; i++) {
                 // output is the ith element of the model output (from box)
                 IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
@@ -116,7 +145,7 @@ public class Wrapper {
 
         // Sample: feed each randomNumber in and run the model
         System.out.println("Sampling");
-        NetworkSamples sampler = MetropolisHastings.getPosteriorSamples( testNet, Arrays.asList(box), numSamples );
+        NetworkSamples sampler = MetropolisHastings.getPosteriorSamples( testNet, Arrays.asList(box), numSamples);
 
         // Interrogate the samples
 
@@ -125,6 +154,7 @@ public class Wrapper {
 
         // Print Number of people at each iteration in every sample
 
+        writeResults(l,  "withObs_" + OBSERVE + "numSamples" + numSamples + "_numTimeSteps" + numTimeSteps + "_numRandomDoubles" + numRandomDoubles + "_numPeople" + 700 + "_timeStamp" + System.currentTimeMillis() + ".csv");
         for (int i=0; i<l.size(); i++) {
             System.out.print("Sample "+i+", ");
 
@@ -136,6 +166,8 @@ public class Wrapper {
 
             System.out.println("");
         }
+
+
 
 
 
