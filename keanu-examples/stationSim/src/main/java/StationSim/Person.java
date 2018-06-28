@@ -61,6 +61,10 @@ public class Person extends Agent {
         return currentSpeed;
     }
 
+    public double getDesiredSpeed() {
+        return desiredSpeed;
+    }
+
     public Exit getExit() {
         return exit;
     }
