@@ -45,7 +45,7 @@ public class Person extends Agent {
         station.numRandoms++;
         currentSpeed = 0.0;
 
-        double randDouble = station.random.nextDouble();
+        double randDouble = station.random.nextGaussian();
         station.numRandoms++;
         double cumulativeProb = 0.0;
         for (int i = 0; i < exitProbs.length; i++) {
