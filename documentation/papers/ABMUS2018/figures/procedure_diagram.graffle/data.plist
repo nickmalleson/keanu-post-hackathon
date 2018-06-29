@@ -151,7 +151,7 @@
 		</dict>
 		<dict>
 			<key>Bounds</key>
-			<string>{{581, 195.30658467354783}, {87, 14}}</string>
+			<string>{{597.77909067964458, 197.78618711595286}, {87, 14}}</string>
 			<key>Class</key>
 			<string>ShapedGraphic</string>
 			<key>FitText</key>
@@ -161,7 +161,7 @@
 			<key>ID</key>
 			<integer>69</integer>
 			<key>Rotation</key>
-			<real>320.25811767578125</real>
+			<real>299.84713745117188</real>
 			<key>Shape</key>
 			<string>Rectangle</string>
 			<key>Style</key>
@@ -202,7 +202,7 @@
 		</dict>
 		<dict>
 			<key>Bounds</key>
-			<string>{{566.28789277478506, 206.00956287775}, {120.24029541015625, 15}}</string>
+			<string>{{608.68957410132043, 209.61788249053262}, {89.10137939453125, 15}}</string>
 			<key>Class</key>
 			<string>ShapedGraphic</string>
 			<key>Head</key>
@@ -213,7 +213,7 @@
 			<key>ID</key>
 			<integer>68</integer>
 			<key>Rotation</key>
-			<real>144.1923828125</real>
+			<real>119.48015594482422</real>
 			<key>Shape</key>
 			<string>AdjustableArrow</string>
 			<key>ShapeData</key>
@@ -256,8 +256,8 @@
 						AgAAAG1udHJSR0IgWFlaIAfYAAEA
 						FQAOAA4AA2Fjc3BBUFBMAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAAAAD2
-						1gABAAAAANMtYXBwbHuBR48ySeTZ
-						c+utLOki444AAAAAAAAAAAAAAAAA
+						1gABAAAAANMtYXBwbAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAADnJY
 						WVoAAAEsAAAAFGdYWVoAAAFAAAAA
 						FGJYWVoAAAFUAAAAFHd0cHQAAAFo
@@ -444,7 +444,7 @@ reality ('truth')}</string>
 		</dict>
 		<dict>
 			<key>Bounds</key>
-			<string>{{697, 345.75}, {57, 17}}</string>
+			<string>{{460.76501109065038, 307.30692446317914}, {57, 17}}</string>
 			<key>Class</key>
 			<string>ShapedGraphic</string>
 			<key>FitText</key>
@@ -459,7 +459,9 @@ reality ('truth')}</string>
 				<real>12</real>
 			</dict>
 			<key>ID</key>
-			<integer>65</integer>
+			<integer>75</integer>
+			<key>Rotation</key>
+			<real>344.50051879882812</real>
 			<key>Shape</key>
 			<string>Rectangle</string>
 			<key>Style</key>
@@ -500,7 +502,7 @@ reality ('truth')}</string>
 		</dict>
 		<dict>
 			<key>Bounds</key>
-			<string>{{315.07245618584318, 336.46409826578633}, {144.59638977050781, 15}}</string>
+			<string>{{318.7338796421551, 337.98397774249634}, {222.59515380859375, 15}}</string>
 			<key>Class</key>
 			<string>ShapedGraphic</string>
 			<key>Head</key>
@@ -511,7 +513,7 @@ reality ('truth')}</string>
 			<key>ID</key>
 			<integer>64</integer>
 			<key>Rotation</key>
-			<real>157.56199645996094</real>
+			<real>165.08595275878906</real>
 			<key>Shape</key>
 			<string>AdjustableArrow</string>
 			<key>ShapeData</key>
@@ -554,8 +556,8 @@ reality ('truth')}</string>
 						AgAAAG1udHJSR0IgWFlaIAfYAAEA
 						FQAOAA4AA2Fjc3BBUFBMAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAAAAD2
-						1gABAAAAANMtYXBwbHuBR48ySeTZ
-						c+utLOki444AAAAAAAAAAAAAAAAA
+						1gABAAAAANMtYXBwbAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAADnJY
 						WVoAAAEsAAAAFGdYWVoAAAFAAAAA
 						FGJYWVoAAAFUAAAAFHd0cHQAAAFo
@@ -640,7 +642,7 @@ reality ('truth')}</string>
 		</dict>
 		<dict>
 			<key>Bounds</key>
-			<string>{{445.125, 235.49997329711914}, {156.75, 104.5}}</string>
+			<string>{{529, 246}, {156.75, 104.5}}</string>
 			<key>Class</key>
 			<string>ShapedGraphic</string>
 			<key>ID</key>
@@ -665,7 +667,7 @@ reality ('truth')}</string>
 		</dict>
 		<dict>
 			<key>Bounds</key>
-			<string>{{571.50634352076804, 344.52690769012975}, {111.59157562255859, 15}}</string>
+			<string>{{631.36389757650704, 353.08176886016031}, {53.334148406982422, 15}}</string>
 			<key>Class</key>
 			<string>ShapedGraphic</string>
 			<key>Head</key>
@@ -676,7 +678,7 @@ reality ('truth')}</string>
 			<key>ID</key>
 			<integer>62</integer>
 			<key>Rotation</key>
-			<real>211.766845703125</real>
+			<real>230.89982604980469</real>
 			<key>Shape</key>
 			<string>AdjustableArrow</string>
 			<key>ShapeData</key>
@@ -719,8 +721,8 @@ reality ('truth')}</string>
 						AgAAAG1udHJSR0IgWFlaIAfYAAEA
 						FQAOAA4AA2Fjc3BBUFBMAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAAAAD2
-						1gABAAAAANMtYXBwbHuBR48ySeTZ
-						c+utLOki444AAAAAAAAAAAAAAAAA
+						1gABAAAAANMtYXBwbAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAADnJY
 						WVoAAAEsAAAAFGdYWVoAAAFAAAAA
 						FGJYWVoAAAFUAAAAFHd0cHQAAAFo
@@ -966,8 +968,8 @@ Output}</string>
 						AgAAAG1udHJSR0IgWFlaIAfYAAEA
 						FQAOAA4AA2Fjc3BBUFBMAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAAAAD2
-						1gABAAAAANMtYXBwbHuBR48ySeTZ
-						c+utLOki444AAAAAAAAAAAAAAAAA
+						1gABAAAAANMtYXBwbAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAADnJY
 						WVoAAAEsAAAAFGdYWVoAAAFAAAAA
 						FGJYWVoAAAFUAAAAFHd0cHQAAAFo
@@ -1160,8 +1162,8 @@ Output}</string>
 						AgAAAG1udHJSR0IgWFlaIAfYAAEA
 						FQAOAA4AA2Fjc3BBUFBMAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAAAAD2
-						1gABAAAAANMtYXBwbHuBR48ySeTZ
-						c+utLOki444AAAAAAAAAAAAAAAAA
+						1gABAAAAANMtYXBwbAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAADnJY
 						WVoAAAEsAAAAFGdYWVoAAAFAAAAA
 						FGJYWVoAAAFUAAAAFHd0cHQAAAFo
@@ -1663,9 +1665,8 @@ numbers\
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\qc
 
 \f0\fs28 \cf0 Truth Data\
-\pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\qc
 
-\fs24 \cf0 (no. agents in system per iteration)}</string>
+\fs24 (no. agents in system per iteration)}</string>
 				<key>VerticalPad</key>
 				<integer>0</integer>
 			</dict>
@@ -1783,8 +1784,8 @@ Output}</string>
 						AgAAAG1udHJSR0IgWFlaIAfYAAEA
 						FQAOAA4AA2Fjc3BBUFBMAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAAAAD2
-						1gABAAAAANMtYXBwbHuBR48ySeTZ
-						c+utLOki444AAAAAAAAAAAAAAAAA
+						1gABAAAAANMtYXBwbAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAADnJY
 						WVoAAAEsAAAAFGdYWVoAAAFAAAAA
 						FGJYWVoAAAFUAAAAFHd0cHQAAAFo
@@ -1978,8 +1979,8 @@ Input}</string>
 						AgAAAG1udHJSR0IgWFlaIAfYAAEA
 						FQAOAA4AA2Fjc3BBUFBMAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAAAAD2
-						1gABAAAAANMtYXBwbHuBR48ySeTZ
-						c+utLOki444AAAAAAAAAAAAAAAAA
+						1gABAAAAANMtYXBwbAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAADnJY
 						WVoAAAEsAAAAFGdYWVoAAAFAAAAA
 						FGJYWVoAAAFUAAAAFHd0cHQAAAFo
@@ -2526,7 +2527,7 @@ numbers}</string>
 	<key>MasterSheets</key>
 	<array/>
 	<key>ModificationDate</key>
-	<string>2018-06-28 14:50:21 +0000</string>
+	<string>2018-06-29 13:12:10 +0000</string>
 	<key>Modifier</key>
 	<string>Nick Malleson</string>
 	<key>NotesVisible</key>
