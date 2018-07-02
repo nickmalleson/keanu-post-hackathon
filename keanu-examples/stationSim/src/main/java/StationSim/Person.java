@@ -41,8 +41,8 @@ public class Person extends Agent {
         this.station = station;
         this.entrance = entrance;
         radius = size / 2.0;
-        //desiredSpeed = station.random.nextDouble() + minSpeed;
-        desiredSpeed = nextExponential(1.0) + minSpeed;
+        desiredSpeed = station.random.nextDouble() + minSpeed;
+        //desiredSpeed = nextExponential(1.0) + minSpeed;
         //System.out.println(desiredSpeed + ",");
         station.numRandoms++;
         currentSpeed = 0.0;
