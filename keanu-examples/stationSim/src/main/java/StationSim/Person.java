@@ -30,7 +30,7 @@ public class Person extends Agent {
     public Entrance entrance;
     public Exit exit;
     private double desiredSpeed;
-    private double minSpeed = 0.1;
+    private double minSpeed = 0.05;
     private double speedMultilpler = 1.0;
     private double radius;
     private double currentSpeed;
@@ -41,11 +41,13 @@ public class Person extends Agent {
         this.station = station;
         this.entrance = entrance;
         radius = size / 2.0;
-        desiredSpeed = (Math.abs(station.random.nextGaussian()) + minSpeed) * speedMultilpler;
+        //desiredSpeed = station.random.nextDouble() + minSpeed;
+        desiredSpeed = nextExponential(1.0) + minSpeed;
+        System.out.println(desiredSpeed + ",");
         station.numRandoms++;
         currentSpeed = 0.0;
 
-        double randDouble = station.random.nextGaussian();
+        double randDouble = station.random.nextDouble();
         station.numRandoms++;
         double cumulativeProb = 0.0;
         for (int i = 0; i < exitProbs.length; i++) {
@@ -187,5 +189,8 @@ public class Person extends Agent {
         return Math.hypot(a.getX() - b.getX(), a.getY() - b.getY());
     }
 
+    public double nextExponential(double lambda) {
+        return  Math.log(1 - station.random.nextDouble()) / (-lambda);
+    }
 
 }

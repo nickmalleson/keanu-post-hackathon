@@ -28,7 +28,7 @@ public class Wrapper {
 
     static Station stationSim = new Station(System.currentTimeMillis());
     private static int numTimeSteps = 1200;
-    public static int numRandomDoubles = 100;
+    public static int numRandomDoubles = 1000;
     private static int numSamples = 500;
     private static int dropSamples = 200;
     private static int downSample = 3;
@@ -99,6 +99,7 @@ public class Wrapper {
         }
     }
 
+
     public static Integer[] run(RandomFactory rand) {
         System.out.println("Model "+ Station.modelCount++ +" starting");
         stationSim.start(rand);
@@ -123,6 +124,10 @@ public class Wrapper {
         return numPeople;
     }
 
+    public static void keanu(Integer[] truth, boolean observe) {
+
+    }
+
     public static void main(String[] args) {
 
         System.out.println("Starting. Number of iterations: " + numTimeSteps);
@@ -138,7 +143,6 @@ public class Wrapper {
         RandomFactoryVertex random = new RandomFactoryVertex (numRandomDoubles, 0, 0);
 
         ArrayList<DoubleVertex> inputs = new ArrayList<>(0);
-
 
         // This is the 'black box' vertex that runs the model. It's input is the random numbers and
         // output is a list of Integer(tensor)s (the number of agents in the model at each iteration).

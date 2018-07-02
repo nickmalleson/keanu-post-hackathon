@@ -55,8 +55,8 @@ spag_plot(samples_no_obs, truth_no_obs, FALSE)
 
 
 # with obs
-samples_with_obs <- read_csv("Samples_OBSERVEfalse_numSamples500_numTimeSteps1200_numRandomDoubles100_totalNumPeople700_dropSamples200_downSample3_timeStamp1530113372100.csv", col_names = FALSE)
-truth_with_obs <- read_csv("Truth_OBSERVEtrue_numSamples50_numTimeSteps1000_numRandomDoubles10_totalNumPeople700_dropSamples10_downSample1_timeStamp1530109035388.csv.csv", col_names = FALSE)
+samples_with_obs <- read_csv("Samples_OBSERVEtrue_numSamples500_numTimeSteps1200_numRandomDoubles100_totalNumPeople700_dropSamples200_downSample3_timeStamp1530115116170.csv", col_names = FALSE)
+truth_with_obs <- read_csv("Truth_OBSERVEtrue_numSamples500_numTimeSteps1200_numRandomDoubles100_totalNumPeople700_dropSamples200_downSample3_timeStamp1530115116170.csv", col_names = FALSE)
 spag_plot(samples_with_obs, truth_with_obs, TRUE)
 
 
