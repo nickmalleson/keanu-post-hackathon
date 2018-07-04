@@ -1,7 +1,6 @@
 package io.improbable.keanu.research;
 
-import io.improbable.keanu.research.randomfactory.RandomFactory;
-import io.improbable.keanu.research.randomfactory.VertexBackedRandomFactory;
+import io.improbable.keanu.research.randomfactory.VertexBackedRandomGenerator;
 import io.improbable.keanu.research.vertices.*;
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.tensor.intgr.IntegerTensor;
@@ -10,6 +9,7 @@ import io.improbable.keanu.vertices.dbl.DoubleVertex;
 import io.improbable.keanu.vertices.dbl.nonprobabilistic.CastDoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.intgr.IntegerVertex;
+import org.apache.commons.math3.random.RandomGenerator;
 import org.apache.commons.math3.util.Pair;
 
 import java.util.ArrayList;
@@ -22,11 +22,11 @@ public class MixedInputOutputBlackBox {
     public ArrayList<DoubleVertex> doubleOutputs;
     public ArrayList<IntegerVertex> integerInputs;
     public ArrayList<IntegerVertex> integerOutputs;
-    protected final VertexBackedRandomFactory random;
+    protected final VertexBackedRandomGenerator random;
 
     public MixedInputOutputBlackBox(ArrayList<IntegerVertex> integerInputs,
                                     ArrayList<DoubleVertex> doubleInputs,
-                                    TriFunction<IntegerTensor[], DoubleTensor[], RandomFactory, Pair<IntegerTensor[], DoubleTensor[]> > model,
+                                    TriFunction<IntegerTensor[], DoubleTensor[], RandomGenerator, Pair<IntegerTensor[], DoubleTensor[]> > model,
                                     Integer expectedNumberOfDoubleDraws,
                                     Integer expectedNumberOfIntegerDraws,
                                     Integer expectedNumberOfIntegersOut,
@@ -46,7 +46,7 @@ public class MixedInputOutputBlackBox {
             for (int i=0; i<doubleInputs.size(); i++) { out[i] = in.get(i); }
             return out; });
 
-        random = new VertexBackedRandomFactory(expectedNumberOfDoubleDraws, expectedNumberOfIntegerDraws, 0);
+        random = new VertexBackedRandomGenerator(expectedNumberOfDoubleDraws, expectedNumberOfIntegerDraws, 0);
         MixedListLambdaVertex lambdaVertex = new MixedListLambdaVertex(integersInputVertex, doublesInputVertex, model, random);
         PairGetFirstVertex<IntegerTensor[], DoubleTensor[]> integersVertex = new PairGetFirstVertex<>(lambdaVertex);
         PairGetSecondVertex<IntegerTensor[], DoubleTensor[]> doublesVertex = new PairGetSecondVertex<>(lambdaVertex);
@@ -61,7 +61,7 @@ public class MixedInputOutputBlackBox {
 
     public MixedInputOutputBlackBox(ArrayList<IntegerVertex> integerInputs,
                                     ArrayList<DoubleVertex> doubleInputs,
-                                    TriFunction<IntegerTensor[], DoubleTensor[], RandomFactory,
+                                    TriFunction<IntegerTensor[], DoubleTensor[], RandomGenerator,
                                                 Pair<IntegerTensor[], DoubleTensor[]>> model,
                                     Integer expectedNumberOfIntegersOut,
                                     Integer expectedNumberOfDoublesOut) {

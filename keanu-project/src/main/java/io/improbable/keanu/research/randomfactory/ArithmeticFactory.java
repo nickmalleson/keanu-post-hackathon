@@ -3,10 +3,11 @@ package io.improbable.keanu.research.randomfactory;
 import io.improbable.keanu.kotlin.ArithmeticBoolean;
 import io.improbable.keanu.kotlin.ArithmeticDouble;
 import io.improbable.keanu.kotlin.ArithmeticInteger;
+import io.improbable.keanu.research.abstractinterpretation.ArithmeticInterpretation;
 
 import java.util.Random;
 
-public class ArithmeticFactory implements GenericRandomFactory<ArithmeticDouble, ArithmeticInteger, ArithmeticBoolean> {
+public class ArithmeticFactory extends ArithmeticInterpretation implements GenericRandomFactory<ArithmeticDouble, ArithmeticInteger, ArithmeticBoolean> {
     Random rand = new Random();
 
     @Override
@@ -32,11 +33,6 @@ public class ArithmeticFactory implements GenericRandomFactory<ArithmeticDouble,
     @Override
     public ArithmeticDouble nextDouble() {
         return new ArithmeticDouble(rand.nextDouble());
-    }
-
-    @Override
-    public ArithmeticDouble nextConstant(double value) {
-        return new ArithmeticDouble(value);
     }
 
     @Override

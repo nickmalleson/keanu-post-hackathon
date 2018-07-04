@@ -5,18 +5,18 @@ import io.improbable.keanu.algorithms.VertexSamples;
 import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
 import io.improbable.keanu.algorithms.variational.NonGradientOptimizer;
 import io.improbable.keanu.network.BayesianNetwork;
-import io.improbable.keanu.research.randomfactory.RandomFactory;
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.tensor.dbl.ScalarDoubleTensor;
 import io.improbable.keanu.vertices.dbl.DoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.vis.Vizer;
+import org.apache.commons.math3.random.RandomGenerator;
 
 import java.util.ArrayList;
 
 public class BlackBoxTest {
 
-    public static DoubleTensor[] model(DoubleTensor[] inputs, RandomFactory random) {
+    public static DoubleTensor[] model(DoubleTensor[] inputs, RandomGenerator random) {
         DoubleTensor[] output = new DoubleTensor[2];
         double[] output0 = new double[1];
         output0[0] = inputs[0].scalar() * inputs[1].scalar();
