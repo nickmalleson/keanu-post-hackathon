@@ -102,22 +102,44 @@ public class Person extends Agent {
         }
 
         // if new location collides with other agent, attempt to move around
-        int i = 0;
-        int attempts = 3;
-        while (collision(newLocation) &&  i < attempts) {
-            newLocation = new Double2D(getLocation().getX(),
-                    getLocation().getY() + (station.random.nextDouble() - 0.5) * desiredSpeed);
-            station.numRandoms++;
-            i++;
+        //int i = 0;
+        //int attempts = 3;
+        //while (collision(newLocation) &&  i < attempts) {
+        //    newLocation = new Double2D(getLocation().getX(),
+        //            getLocation().getY() + (station.random.nextDouble() - 0.5) * desiredSpeed);
+        //    station.numRandoms++;
+        //    i++;
+        //}
+
+        // if new location collides with other agent, attempt to move around
+        // Think of a more elegant way to code this
+        if(collision(newLocation)) {
+            double randNum = station.random.nextDouble();
+            if (randNum > 0.5) {
+                newLocation = new Double2D(getLocation().getX(),
+                    getLocation().getY() + randNum);
+                if(collision(newLocation)) {
+                    newLocation = new Double2D(getLocation().getX(),
+                        (getLocation().getY() - randNum));
+                }
+            }
+            else {
+                newLocation = new Double2D(getLocation().getX(),
+                    getLocation().getY() - randNum);
+                if(collision(newLocation)) {
+                    newLocation = new Double2D(getLocation().getX(),
+                        (getLocation().getY() + randNum));
+                }
+            }
         }
 
         // Update location (or not)
-        if (i < attempts) {
+        // Update location (or not)
+        if(!collision(newLocation)) {
             currentSpeed = getDistance(getLocation(), newLocation);
             location = newLocation;
-        } else {
-            currentSpeed = 0.0;
         }
+
         station.area.setObjectLocation(this, location);
     }
 
