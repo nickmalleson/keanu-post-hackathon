@@ -27,11 +27,11 @@ import java.util.List;
 public class Wrapper {
 
     static Station stationSim = new Station(System.currentTimeMillis());
-    private static int numTimeSteps = 1000;
-    public static int numRandomDoubles = 10;
-    private static int numSamples = 500;
-    private static int dropSamples = 200;
-    private static int downSample = 3;
+    private static int numTimeSteps = 200;
+    public static int numRandomDoubles = 5;
+    private static int numSamples = 50;
+    private static int dropSamples = 10;
+    private static int downSample = 1;
     //private static boolean OBSERVE = true;
     private static double sigmaNoise = 0.1 ; // The amount of noise to be added to the truth
 
@@ -42,13 +42,13 @@ public class Wrapper {
 
     }
 
-    public static void writeResults(List<Integer[]> samples, Integer[] truth, Boolean observed) {
+    public static void writeResults(List<Integer[]> samples, Integer[] truth, Boolean observed, int obInterval) {
         Writer writer = null;
         Station tempStation = new Station(System.currentTimeMillis());
         int totalNumPeople = tempStation.getNumPeople();
 
         String dirName = "results/";
-        String params = "OBSERVE" + observed + "_numSamples" + numSamples + "_numTimeSteps" + numTimeSteps + "_numRandomDoubles" + numRandomDoubles + "_totalNumPeople" + totalNumPeople + "_dropSamples" + dropSamples + "_downSample" + "_sigmaNoise" + sigmaNoise + downSample + "_timeStamp" + System.currentTimeMillis();
+        String params = "OBSERVE" + observed + "obInterval" + obInterval + "_numSamples" + numSamples + "_numTimeSteps" + numTimeSteps + "_numRandomDoubles" + numRandomDoubles + "_totalNumPeople" + totalNumPeople + "_dropSamples" + dropSamples + "_downSample" + "_sigmaNoise" + sigmaNoise + "_downsample" + downSample + "_timeStamp" + System.currentTimeMillis();
 
         // Write out samples
         try {
@@ -125,7 +125,7 @@ public class Wrapper {
         return numPeople;
     }
 
-    public static List<Integer[]> keanu(Integer[] truth, boolean observe) {
+    public static List<Integer[]> keanu(Integer[] truth, boolean observe, int obInterval) {
 
         System.out.println("Initialising random number stream");
         Wrapper wrap = new Wrapper();
@@ -159,12 +159,14 @@ public class Wrapper {
         if (observe) {
             System.out.println("Observing truth data. Adding noise with standard dev: " + sigmaNoise);
             for (Integer i = 0; i< numTimeSteps; i++) {
-                // output is the ith element of the model output (from box)
-                IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
-                // output with a bit of noise. Lower sigma makes it more constrained.
-                GaussianVertex noisyOutput = new GaussianVertex(new CastDoubleVertex(output), sigmaNoise);
-                // Observe the output
-                noisyOutput.observe(truth[i].doubleValue()); //.toDouble().scalar());
+                if(i % obInterval == 0) {
+                    // output is the ith element of the model output (from box)
+                    IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
+                    // output with a bit of noise. Lower sigma makes it more constrained.
+                    GaussianVertex noisyOutput = new GaussianVertex(new CastDoubleVertex(output), sigmaNoise);
+                    // Observe the output
+                    noisyOutput.observe(truth[i].doubleValue()); //.toDouble().scalar());
+                }
             }
         }
         else {
@@ -221,14 +223,19 @@ public class Wrapper {
             System.out.print(num.getSigma().getValue().scalar() + ",");
         }
 
-        // Results with observations of truth data
-        observe = true;
-        samples = keanu(truth, observe);
-        writeResults(samples, truth, observe);
-
         // Results without observations of truth data
         observe = false;
-        samples = keanu(truth, observe);
-        writeResults(samples, truth, observe);
+        samples = keanu(truth, observe, 0);
+        writeResults(samples, truth, observe, 0);
+
+        int[] obIntervals = {1,2,5,10,50,100,200,500};
+
+        for(int i = 0; i < obIntervals.length; i++) {
+            observe = true;
+            samples = keanu(truth, observe, obIntervals[i]);
+            writeResults(samples, truth, observe, obIntervals[i]);
+        }
     }
+
+    
 }
