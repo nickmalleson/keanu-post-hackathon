@@ -1,5 +1,6 @@
 package io.improbable.keanu.vertices.bool;
 
+import io.improbable.keanu.kotlin.BooleanOperators;
 import io.improbable.keanu.tensor.bool.BooleanTensor;
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.vertices.DiscreteVertex;
@@ -14,7 +15,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public abstract class BoolVertex extends DiscreteVertex<BooleanTensor> {
+public abstract class BoolVertex extends DiscreteVertex<BooleanTensor> implements BooleanOperators<BoolVertex> {
 
     @SafeVarargs
     public final io.improbable.keanu.vertices.bool.BoolVertex or(Vertex<BooleanTensor>... those) {

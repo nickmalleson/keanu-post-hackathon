@@ -1,4 +1,7 @@
 include 'keanu-project',
         'keanu-docs:code',
         'keanu-examples:coalMiningDisasters',
-        'keanu-examples:starter'
+        'keanu-examples:starter',
+        'keanu-examples:templateProject'
+include 'halo'
+
