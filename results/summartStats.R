@@ -33,11 +33,11 @@ samples <- map(samples_files, function(x) read_csv(x, col_names = FALSE))
 truth <- read_csv(truth_file[1], col_names = FALSE)
 
 # This should be greped instead
-obIntervals <- c(0,1,10,50)
+obIntervals <- c(0,1,5,10,50)
 
 
 # plot all
-par(mfrow=c(2,2))
+par(mfrow=c(3,2))
 map2(samples, obIntervals, function(x, obInterval) spag_plot(x, truth, obInterval))
 
 
@@ -54,6 +54,7 @@ samples_Summary <- function(df, obInterval) {
 }
 
 
-do.call("rbind",
-        map2(samples, obIntervals, samples_Summary))
+summaryStats <- do.call("rbind", map2(samples, obIntervals, samples_Summary))
+
+write_csv(summaryStats, "observation_intervals_summary.csv")
 
