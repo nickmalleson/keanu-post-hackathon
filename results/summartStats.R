@@ -15,7 +15,7 @@ spag_plot <- function(samples, truth, obs) {
   map(1:nrow(samples), function(x) lines(x_axis, samples[x,], type='l', col=sample_col))
   lines(x_axis, truth, type='l', lwd=2.5, col = truth_col)
 
-  #legend("bottomright", c("Samples", "Truth"), lty=c(1,1), lwd=c(2.5,2.5),col=c(sample_col, truth_col))
+  legend("bottomright", c("Samples", "Truth"), lty=c(1,1), lwd=c(2.5,2.5),col=c(sample_col, truth_col))
 }
 
 dataDir = "."
@@ -32,8 +32,9 @@ samples_files <- mixedsort(unlist(samples_files))
 samples <- map(samples_files, function(x) read_csv(x, col_names = FALSE))
 truth <- read_csv(truth_file[1], col_names = FALSE)
 
-obIntervals <- c(0,1,5,10,50,100)
-obIntervals <- c(0,1,5)
+# This should be greped instead
+obIntervals <- c(0,1,10,50)
+
 
 # plot all
 par(mfrow=c(2,2))
@@ -52,9 +53,7 @@ samples_Summary <- function(df, obInterval) {
 
 }
 
-a <- map2(samples, obIntervals, samples_Summary)
-a <- as.data.frame(rbind(a[[1]], a[[2]], a[[3]]))
-a
 
-a <- as.data.frame(map(a, rbind)
-)
+do.call("rbind",
+        map2(samples, obIntervals, samples_Summary))
+
