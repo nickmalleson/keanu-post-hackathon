@@ -27,11 +27,11 @@ import java.util.List;
 public class Wrapper {
 
     static Station stationSim = new Station(System.currentTimeMillis());
-    private static int numTimeSteps = 200;
-    public static int numRandomDoubles = 5;
-    private static int numSamples = 50;
-    private static int dropSamples = 10;
-    private static int downSample = 1;
+    private static int numTimeSteps = 1200;
+    public static int numRandomDoubles = 10;
+    private static int numSamples = 400;
+    private static int dropSamples = 100;
+    private static int downSample = 3;
     //private static boolean OBSERVE = true;
     private static double sigmaNoise = 0.1 ; // The amount of noise to be added to the truth
 
@@ -228,7 +228,8 @@ public class Wrapper {
         samples = keanu(truth, observe, 0);
         writeResults(samples, truth, observe, 0);
 
-        int[] obIntervals = {1,2,5,10,50,100,200,500};
+
+        int[] obIntervals = {1,5,10,50,100};
 
         for(int i = 0; i < obIntervals.length; i++) {
             observe = true;
@@ -237,5 +238,5 @@ public class Wrapper {
         }
     }
 
-    
+
 }

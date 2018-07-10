@@ -9,10 +9,13 @@ spag_plot <- function(samples, truth, obs) {
   truth_col <- "red"
 
   #create plot
-  plot(1, xlim=c(0, max(x_axis)), ylim=c(0, max(samples)), type='l', xlab="Number of iterations", ylab = "Number of agents")
+  plot(1, xlim=c(0, max(x_axis)), ylim=c(0, max(samples)), type='l',
+       xlab="Number of iterations", ylab = "Number of agents",
+       main = paste("Observation Interval =", obs, sep =' '))
   map(1:nrow(samples), function(x) lines(x_axis, samples[x,], type='l', col=sample_col))
   lines(x_axis, truth, type='l', lwd=2.5, col = truth_col)
-  #legend("bottomright", c("Samples", "Truth"), lty=c(1,1), lwd=c(2.5,2.5),col=c(sample_col, truth_col))
+
+  legend("bottomright", c("Samples", "Truth"), lty=c(1,1), lwd=c(2.5,2.5),col=c(sample_col, truth_col))
 }
 
 dataDir = "."
@@ -29,17 +32,28 @@ samples_files <- mixedsort(unlist(samples_files))
 samples <- map(samples_files, function(x) read_csv(x, col_names = FALSE))
 truth <- read_csv(truth_file[1], col_names = FALSE)
 
+# This should be greped instead
+obIntervals <- c(0,1,10,50)
+
+
 # plot all
-par(mfrow=c(3,3))
-map(samples, function(x) spag_plot(x, truth, FALSE))
+par(mfrow=c(2,2))
+map2(samples, obIntervals, function(x, obInterval) spag_plot(x, truth, obInterval))
 
 
 #Summary stats
-samples_Summary <- function(df) {
+samples_Summary <- function(df, obInterval) {
   df <- as.data.frame(df)
   mean_range <- mean(apply(df, 2, function(x) max(x) - min(x)))
-  #mean_IQR <- mean(apply(df, 2, function(x) IQR(x)))
+  median_range <-  median(apply(df, 2, function(x) max(x) - min(x)))
+  mean_IQR <- mean(apply(df, 2, function(x) IQR(x)))
+  median_IQR <- median(apply(df, 2, function(x) IQR(x)))
+  data.frame(observation_Interval=obInterval, mean_range=mean_range, median_range=median_range,
+             mean_IQR=mean_IQR, median_IQR=median_IQR)
+
 }
 
-map(samples, samples_Summary)
+
+do.call("rbind",
+        map2(samples, obIntervals, samples_Summary))
 
