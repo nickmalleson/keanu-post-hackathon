@@ -394,4 +394,19 @@ public class Analysis implements Steppable {
         return state;
     }
 
+    public Integer[] getNumPeopleInandOut() {
+
+        Integer[] output = new Integer[station.getNumEntrances() + station.getNumExits()];
+
+        for (int i = 0; i < station.getNumEntrances(); i++) {
+            output[i] = station.getEntrances().get(i).totalAdded;
+        }
+
+        for (int i = 0; i < station.getNumExits(); i++) {
+            output[i + station.getNumEntrances()] = station.getExits().get(i).totalRemoved;
+        }
+
+        return output;
+    }
+
 }

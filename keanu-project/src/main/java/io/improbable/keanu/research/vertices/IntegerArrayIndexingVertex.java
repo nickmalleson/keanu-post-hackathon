@@ -14,6 +14,4 @@ public class IntegerArrayIndexingVertex extends IntegerBinaryOpLambda<Integer []
     public IntegerArrayIndexingVertex(Vertex<Integer []> input, Integer index) {
         this(input, new ConstantIntegerVertex(index));
     }
-
-
 }

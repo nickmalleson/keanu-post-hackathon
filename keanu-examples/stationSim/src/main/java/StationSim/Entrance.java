@@ -33,6 +33,7 @@ public class Entrance extends Agent {
     // Exit for people agents to aim for
     public Exit exit;
     public double[] exitProbs;
+    public int totalAdded;
 
     public Entrance(int size, Double2D location, String name, int numPeople, double[] exitProbs, SimState state) {
         super(size, location, name);
@@ -42,6 +43,7 @@ public class Entrance extends Agent {
         this.size *= personSize;
         this.numPeople = numPeople;
         this.exitProbs = exitProbs;
+        this.totalAdded = 0;
     }
 
     public Exit getExit() {
@@ -79,6 +81,7 @@ public class Entrance extends Agent {
                 }
             }
             // Number of people left for further steps
+            totalAdded += addedCount;
             numPeople -= addedCount;
         }
     }

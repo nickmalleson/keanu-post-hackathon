@@ -1,113 +1,239 @@
-package StationSim;
-
-import io.improbable.keanu.algorithms.NetworkSamples;
-import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
-import io.improbable.keanu.network.BayesianNetwork;
-import io.improbable.keanu.research.randomfactory.RandomFactory;
-import io.improbable.keanu.research.randomfactory.VertexBackedRandomFactory;
-import io.improbable.keanu.research.vertices.IntegerArrayIndexingVertex;
-import io.improbable.keanu.research.vertices.RandomFactoryVertex;
-import io.improbable.keanu.vertices.dbl.DoubleVertex;
-import io.improbable.keanu.vertices.dbl.nonprobabilistic.CastDoubleVertex;
-import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
-import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.unary.UnaryOpLambda;
-
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-
-
-
-public class WrapperTest {
-
-/*
-    private static int iterations = 100;
-
-    public static Double[] model(RandomFactory rand) {
-        Double[] results = new Double[iterations];
-
-        for(int i = 0; i < iterations; i++) {
-            results[i] = rand.nextDouble() * rand.nextDouble();
-        }
-        return results;
-    }
-
-
-    public static void main(String[] args) {
-
-
-        System.out.println("Starting. Number of iterations: " + iterations);
-
-        // Make truth data
-        System.out.println("Making truth data");
-        VertexBackedRandomFactory truthRandom = new VertexBackedRandomFactory(iterations * 2, 0, 0);
-        Double[] truth = WrapperTest.model(truthRandom);
-
-        System.out.println("Initialising random number stream");
-        Wrapper wrap = new Wrapper();
-        //VertexBackedRandomFactory random = new VertexBackedRandomFactory(numInputs,, 0, 0);
-        RandomFactoryVertex random = new RandomFactoryVertex(iterations * 2, 0, 0);
-
-        ArrayList<DoubleVertex> inputs = new ArrayList<>(0);
-
-
-        // This is the 'black box' vertex that runs the model. It's input is the random numbers and
-        // output is a list of Integer(tensor)s (the number of agents in the model at each iteration).
-        //BlackBox box = new BlackBox(inputs, wrap::run, Wrapper.numTimeSteps);
-        //UnaryOpVertex<RandomFactory,Integer[]> box = new Unar<>( random, wrap::run )
-        System.out.println("Initialising black box model");
-        UnaryOpLambda<VertexBackedRandomFactory, Integer[]> box = new UnaryOpLambda<>(random, Wrapper::run);
-
-        // This is the list of random numbers that are fed into model (similar to drawing from a distribution,
-        // but they're pre-defined in randSource)
-        //List<GaussianVertex> randSource  = random.getValue().randDoubleSource;
-
-
-        // Observe the truth data plus some noise?
-        if (OBSERVE) {
-            System.out.println("Observing truth data. Adding noise with standard dev: " + sigmaNoise);
-            for (Integer i = 0; i < numTimeSteps; i++) {
-                // output is the ith element of the model output (from box)
-                IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
-                // output with a bit of noise. Lower sigma makes it more constrained.
-                GaussianVertex noisyOutput = new GaussianVertex(new CastDoubleVertex(output), sigmaNoise);
-                // Observe the output
-                noisyOutput.observe(truth[i].doubleValue()); //.toDouble().scalar());
-            }
-        } else {
-            System.out.println("Not observing truth data");
-        }
-
-        System.out.println("Creating BayesNet");
-        BayesianNetwork testNet = new BayesianNetwork(box.getConnectedGraph());
-
-        // Workaround for too many evaluations during sample startup
-        random.setAndCascade(random.getValue());
-
-        // Sample: feed each randomNumber in and run the model
-        System.out.println("Sampling");
-        NetworkSamples sampler = MetropolisHastings.getPosteriorSamples(testNet, Arrays.asList(box), numSamples);
-
-        // Interrogate the samples
-
-        // Get the number of people per iteration (an array of IntegerTensors) for each sample
-        List<Integer[]> samples = sampler.drop(dropSamples).downSample(downSample).get(box).asList();
-
-        // Print Number of people at each iteration in every sample
-
-        writeResults(samples, truth);
-        for (int i = 0; i < samples.size(); i++) {
-            System.out.print("Sample " + i + ", ");
-
-            Integer[] peoplePerIter = samples.get(i);
-
-            for (int j = 0; j < peoplePerIter.length; j++) {
-                System.out.print(peoplePerIter[j] + ",");
-            }
-
-            System.out.println("");
-        }
-    }
-*/
-}
-
+//package StationSim;
+//
+//import io.improbable.keanu.algorithms.NetworkSamples;
+//import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
+//import io.improbable.keanu.network.BayesianNetwork;
+//import io.improbable.keanu.research.randomfactory.RandomFactory;
+//import io.improbable.keanu.research.randomfactory.VertexBackedRandomFactory;
+//import io.improbable.keanu.research.vertices.IntegerArrayIndexingVertex;
+//import io.improbable.keanu.research.vertices.IntegerBinaryOpLambda;
+//import io.improbable.keanu.research.vertices.RandomFactoryVertex;
+//import io.improbable.keanu.tensor.intgr.IntegerTensor;
+//import io.improbable.keanu.vertices.dbl.nonprobabilistic.CastDoubleVertex;
+//import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
+//import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.unary.UnaryOpLambda;
+//
+//import java.io.*;
+//import java.util.Arrays;
+//import java.util.List;
+//
+///**
+// * Created by nick on 22/06/2018.
+// */
+//public class WrapperTest {
+//
+//    static Station stationSim = new Station(System.currentTimeMillis());
+//    private static int numTimeSteps = 100;
+//    public static int numRandomDoubles = 10;
+//    private static int numSamples = 20;
+//    private static int dropSamples = 2;
+//    private static int downSample = 1;
+//    //private static boolean OBSERVE = true;
+//    private static double sigmaNoise = 0.1 ; // The amount of noise to be added to the truth
+//
+//
+////    static ArrayList<List<IntegerTensor>> results = new ArrayList<List<IntegerTensor>>();
+//
+//    public WrapperTest() {
+//
+//    }
+//
+//    public static void writeResults(List<Integer[]> samples, Integer[] truth, Boolean observed, int obInterval) {
+//        Writer writer = null;
+//        Station tempStation = new Station(System.currentTimeMillis());
+//        int totalNumPeople = tempStation.getNumPeople();
+//
+//        String dirName = "results/";
+//        String params = "OBSERVE" + observed + "obInterval" + obInterval + "_numSamples" + numSamples + "_numTimeSteps" + numTimeSteps + "_numRandomDoubles" + numRandomDoubles + "_totalNumPeople" + totalNumPeople + "_dropSamples" + dropSamples + "_downSample" + "_sigmaNoise" + sigmaNoise + "_downsample" + downSample + "_timeStamp" + System.currentTimeMillis();
+//
+//        // Write out samples
+//        try {
+//            writer = new BufferedWriter(new OutputStreamWriter(
+//                new FileOutputStream(dirName + "Samples_" + params + ".csv"),
+//                "utf-8"));
+//            for (int i = 0; i < samples.size(); i++) {
+//                Integer[] peoplePerIter = samples.get(i);
+//                for (int j = 0; j <  peoplePerIter.length ; j++) {
+//                    writer.write(peoplePerIter[j] + "");
+//                    if (j != peoplePerIter.length - 1) {
+//                        writer.write(",");
+//                    }
+//                }
+//                writer.write(System.lineSeparator());
+//            }
+//        } catch (IOException ex) {
+//            System.out.println("Error writing to file");
+//        } finally {
+//            try {
+//                writer.close();
+//            } catch (Exception ex) {
+//                System.out.println("Error closing file");
+//            }
+//        }
+//
+//        // Write out Truth
+//        try {
+//            writer = new BufferedWriter(new OutputStreamWriter(
+//                new FileOutputStream(dirName + "Truth_" + params + ".csv"),
+//                "utf-8"));
+//            for (int i = 0; i < truth.length ; i++) {
+//                writer.write(truth[i] + "");
+//                if (i != truth.length - 1) {
+//                    writer.write(",");
+//                }
+//            }
+//            writer.write(System.lineSeparator());
+//
+//        } catch (IOException ex) {
+//            System.out.println("Error writing to file");
+//        } finally {
+//            try {
+//                writer.close();
+//            } catch (Exception ex) {
+//                System.out.println("Error closing file");
+//            }
+//        }
+//    }
+//
+//
+//    public static Integer[][] run(RandomFactory rand) {
+//        System.out.println("Model "+ Station.modelCount++ +" starting");
+//        stationSim.start(rand);
+//
+//        //Integer[] numPeople = new Integer[numTimeSteps];
+//        Integer[][] results = new Integer[numTimeSteps][stationSim.getNumEntrances() + stationSim.getNumExits()];
+//        for (int i = 0; i < results.length; i++) {
+//            for (int j = 0; j < results[i].length; j++) {
+//                results[i][j] = 0;
+//            }
+//        }
+//
+//        int i = 0;
+//        do {
+//            // Run a step of each simulation
+//            if (!stationSim.schedule.step(stationSim)) {
+//                break;
+//            }
+//            results[i] = stationSim.analysis.getNumPeopleInandOut();
+//            i++;
+//        } while (stationSim.area.getAllObjects().size() > 0 && i < numTimeSteps);
+//        stationSim.finish();
+//
+//        return results;
+//    }
+//
+//    public static List<Integer[]> keanu(Integer[] truth, boolean observe, int obInterval) {
+//
+//        System.out.println("Initialising random number stream");
+//        RandomFactoryVertex random = new RandomFactoryVertex (numRandomDoubles, 0, 0);
+//
+//
+//        // This is the 'black box' vertex that runs the model. It's input is the random numbers and
+//        // output is a list of Integer(tensor)s (the number of agents in the model at each iteration).
+//        //BlackBox box = new BlackBox(inputs, wrap::run, Wrapper.numTimeSteps);
+//        //UnaryOpVertex<RandomFactory,Integer[]> box = new Unar<>( random, wrap::run )
+//        System.out.println("Initialising black box model");
+//        UnaryOpLambda<VertexBackedRandomFactory,Integer[][]> box = new UnaryOpLambda<>(random, WrapperTest::run);
+//
+//        // This is the list of random numbers that are fed into model (similar to drawing from a distribution,
+//        // but they're pre-defined in randSource)
+//
+//        System.out.println("Before:\n Mu");
+//        List<GaussianVertex>  randSource = random.getValue().randDoubleSource;
+//        for (GaussianVertex num : randSource) {
+//            System.out.print(num.getMu().getValue().scalar() + ",");
+//        }
+//        System.out.println("Sigma");
+//        for (GaussianVertex num : randSource) {
+//            System.out.print(num.getSigma().getValue().scalar() + ",");
+//        }
+//
+//        // Observe the truth data plus some noise?
+//        if (observe) {
+//            System.out.println("Observing truth data. Adding noise with standard dev: " + sigmaNoise);
+//            for (Integer i = 0; i< numTimeSteps; i++) {
+//                if(i % obInterval == 0) {
+//                    // output is the ith element of the model output (from box)
+//                    IntegerBinaryOpLambda output = new IntegerBinaryOpLambda<Integer[][], IntegerTensor>(
+//                        box, i, (Integer[][] in, IntegerTensor t) -> in[t.scalar()]);
+//                    //IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
+//                    // output with a bit of noise. Lower sigma makes it more constrained.
+//                    GaussianVertex noisyOutput = new GaussianVertex(new CastDoubleVertex(output), sigmaNoise);
+//                    // Observe the output
+//                    noisyOutput.observe(truth[i].doubleValue()); //.toDouble().scalar());
+//                }
+//            }
+//        }
+//        else {
+//            System.out.println("Not observing truth data");
+//        }
+//
+//        System.out.println("Creating BayesNet");
+//        BayesianNetwork testNet = new BayesianNetwork(box.getConnectedGraph());
+//
+//        // Workaround for too many evaluations during sample startup
+//        random.setAndCascade(random.getValue());
+//
+//        // Sample: feed each randomNumber in and run the model
+//        System.out.println("Sampling");
+//        NetworkSamples sampler = MetropolisHastings.getPosteriorSamples(testNet, Arrays.asList(box, random), numSamples);
+//
+//        // Interrogate the samples
+//        List<VertexBackedRandomFactory> randSamples = sampler.drop(dropSamples).downSample(downSample).get(random).asList();
+//        for(int i = 0; i < randSamples.size(); i++) {
+//            System.out.println(randSamples.get(i).nextDouble());
+//        }
+//
+//        // Get the number of people per iteration (an array of IntegerTensors) for each sample
+//        List<Integer[][]> samples = sampler.drop(dropSamples).downSample(downSample).get(box).asList();
+//
+//        System.out.println("After:\nMu");
+//        randSource = random.getValue().randDoubleSource;
+//        for (GaussianVertex num : randSource) {
+//            System.out.print(num.getMu().getValue().scalar() + ",");
+//        }
+//        System.out.println("Sigma");
+//        for (GaussianVertex num : randSource) {
+//            System.out.print(num.getSigma().getValue().scalar() + ",");
+//        }
+//
+//        return samples;
+//    }
+//
+//    public static void main(String[] args) {
+//        List<Integer[]> samples;
+//        Boolean observe;
+//
+//        System.out.println("Starting. Number of iterations: " + numTimeSteps);
+//
+//        // Make truth data
+//        System.out.println("Making truth data");
+//        VertexBackedRandomFactory truthRandom = new VertexBackedRandomFactory(numRandomDoubles, 0, 0);
+//        Integer[][] truth = WrapperTest.run(truthRandom);
+//
+//        System.out.println("Random values - Truth:\nMu");
+//
+//        List<GaussianVertex>  randSource = truthRandom.randDoubleSource;
+//        for (GaussianVertex num : randSource) {
+//            System.out.print(num.getMu().getValue().scalar() + ",");
+//        }
+//        System.out.println("Sigma");
+//        for (GaussianVertex num : randSource) {
+//            System.out.print(num.getSigma().getValue().scalar() + ",");
+//        }
+//
+//        // Results without observations of truth data
+//        observe = false;
+//        samples = keanu(truth, observe, 0);
+//        writeResults(samples, truth, observe, 0);
+//
+//        //int[] obIntervals = {1,2,5,10,50,100,200,500};
+//        int[] obIntervals = {1};
+//
+//        for(int i = 0; i < obIntervals.length; i++) {
+//            observe = true;
+//            samples = keanu(truth, observe, obIntervals[i]);
+//            writeResults(samples, truth, observe, obIntervals[i]);
+//        }
+//    }
+//}

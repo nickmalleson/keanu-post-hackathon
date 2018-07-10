@@ -70,7 +70,7 @@ public class Station extends SimState{
     public ArrayList<Entrance> entrances;
 
     //Analysis agent
-    private Analysis analysis;
+    public Analysis analysis;
 
     // Run with default settings only
     private boolean hideParameters = false;
@@ -229,10 +229,11 @@ public class Station extends SimState{
         return true;
     }
 
-    public Bag getExits() {
-        Bag exitsCopy = new Bag();
-        exitsCopy.addAll(exits);
-        return exitsCopy;
+    public ArrayList<Exit> getExits() {
+        //Bag exitsCopy = new Bag();
+        //exitsCopy.addAll(exits);
+        //return exitsCopy;
+        return exits;
     }
 
     public boolean hideExits() {

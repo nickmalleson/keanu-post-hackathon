@@ -26,11 +26,14 @@ import sim.util.Double2D;
  */
 public class Exit extends Agent {
 
+
     private int exitInterval;
+    public int totalRemoved;
 
     public Exit(int size, Double2D location, String name, int exitInterval) {
         super(size, location, name);
         this.exitInterval = exitInterval;
+        this.totalRemoved = 0;
     }
 
 
@@ -56,6 +59,7 @@ public class Exit extends Agent {
                                 personLocation.getY() > (location.getY() - (size / 2.0))) {
                     station.finishedPeople.add(p); // Put into bag of finished people
                     station.area.remove(p); //remove from sim
+                    totalRemoved++;
                 }
             }
         }
