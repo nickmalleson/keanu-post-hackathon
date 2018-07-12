@@ -406,6 +406,8 @@ public class Analysis implements Steppable {
             output[i + station.getNumEntrances()] = station.getExits().get(i).totalRemoved;
         }
 
+        output[station.getNumEntrances() + station.getNumExits()] = station.area.size();
+
         return output;
     }
 
