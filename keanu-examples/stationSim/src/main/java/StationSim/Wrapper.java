@@ -3,21 +3,17 @@ package StationSim;
 
 
 import io.improbable.keanu.algorithms.NetworkSamples;
-import io.improbable.keanu.algorithms.VertexSamples;
 import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
 import io.improbable.keanu.network.BayesianNetwork;
 import io.improbable.keanu.research.randomfactory.RandomFactory;
 import io.improbable.keanu.research.randomfactory.VertexBackedRandomFactory;
 import io.improbable.keanu.research.vertices.IntegerArrayIndexingVertex;
 import io.improbable.keanu.research.vertices.RandomFactoryVertex;
-import io.improbable.keanu.tensor.intgr.IntegerTensor;
-import io.improbable.keanu.vertices.dbl.DoubleVertex;
 import io.improbable.keanu.vertices.dbl.nonprobabilistic.CastDoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.unary.UnaryOpLambda;
 
 import java.io.*;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -27,10 +23,10 @@ import java.util.List;
 public class Wrapper {
 
     static Station stationSim = new Station(System.currentTimeMillis());
-    private static int numTimeSteps = 1200;
+    private static int numTimeSteps = 800;
     public static int numRandomDoubles = 10;
-    private static int numSamples = 400;
-    private static int dropSamples = 100;
+    private static int numSamples = 500;
+    private static int dropSamples = 200;
     private static int downSample = 3;
     //private static boolean OBSERVE = true;
     private static double sigmaNoise = 0.1 ; // The amount of noise to be added to the truth

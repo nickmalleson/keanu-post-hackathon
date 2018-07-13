@@ -396,7 +396,7 @@ public class Analysis implements Steppable {
 
     public Integer[] getNumPeopleInandOut() {
 
-        Integer[] output = new Integer[station.getNumEntrances() + station.getNumExits()];
+        Integer[] output = new Integer[station.getNumEntrances() + station.getNumExits() + 1];
 
         for (int i = 0; i < station.getNumEntrances(); i++) {
             output[i] = station.getEntrances().get(i).totalAdded;
@@ -406,7 +406,11 @@ public class Analysis implements Steppable {
             output[i + station.getNumEntrances()] = station.getExits().get(i).totalRemoved;
         }
 
-        output[station.getNumEntrances() + station.getNumExits()] = station.area.size();
+        output[station.getNumEntrances() + station.getNumExits()] = station.area.getAllObjects().size();
+        //System.out.println("right: " + station.area.getAllObjects().size());
+        //System.out.println("wrong:" + station.area.getAllObjects().size());
+
+
 
         return output;
     }

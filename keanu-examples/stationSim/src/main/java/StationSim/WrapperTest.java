@@ -23,28 +23,23 @@ import java.util.List;
 public class WrapperTest {
 
     static Station stationSim = new Station(System.currentTimeMillis());
-    private static int numTimeSteps = 500;
+    private static int numTimeSteps = 800;
     public static int numRandomDoubles = 10;
-    private static int numSamples = 50;
-    private static int dropSamples = 10;
-    private static int downSample = 1;
+    private static int numSamples = 500;
+    private static int dropSamples = 200;
+    private static int downSample = 3;
     //private static boolean OBSERVE = true;
     private static double sigmaNoise = 0.1 ; // The amount of noise to be added to the truth
-
-
-//    static ArrayList<List<IntegerTensor>> results = new ArrayList<List<IntegerTensor>>();
-
-    public WrapperTest() {
-
-    }
 
     public static void writeResults(List<Integer[]> samples, Integer[] truth, Boolean observed, int obInterval) {
         Writer writer = null;
         Station tempStation = new Station(System.currentTimeMillis());
         int totalNumPeople = tempStation.getNumPeople();
+        int numOutputs = 6;
+
 
         String dirName = "results/";
-        String params = "OBSERVE" + observed + "obInterval" + obInterval + "_numSamples" + numSamples + "_numTimeSteps" + numTimeSteps + "_numRandomDoubles" + numRandomDoubles + "_totalNumPeople" + totalNumPeople + "_dropSamples" + dropSamples + "_downSample" + "_sigmaNoise" + sigmaNoise + "_downsample" + downSample + "_timeStamp" + System.currentTimeMillis();
+        String params = "Test_OBSERVE" + observed + "obInterval" + obInterval + "_numSamples" + numSamples + "_numTimeSteps" + numTimeSteps + "_numRandomDoubles" + numRandomDoubles + "_totalNumPeople" + totalNumPeople + "_dropSamples" + dropSamples + "_downSample" + "_sigmaNoise" + sigmaNoise + "_downsample" + downSample + "_timeStamp" + System.currentTimeMillis();
 
         // Write out samples
         try {
@@ -53,10 +48,14 @@ public class WrapperTest {
                 "utf-8"));
             for (int i = 0; i < samples.size(); i++) {
                 Integer[] peoplePerIter = samples.get(i);
+                System.out.println("length: " + peoplePerIter);
                 for (int j = 0; j <  peoplePerIter.length ; j++) {
-                    writer.write(peoplePerIter[j] + "");
-                    if (j != peoplePerIter.length - 1) {
-                        writer.write(",");
+                    if ((j + 1) % numOutputs == 0) {
+                        writer.write(peoplePerIter[j] + "");
+                        if (j < peoplePerIter.length - numOutputs) {
+                            System.out.println(j);
+                            writer.write(",");
+                        }
                     }
                 }
                 writer.write(System.lineSeparator());
@@ -77,9 +76,11 @@ public class WrapperTest {
                 new FileOutputStream(dirName + "Truth_" + params + ".csv"),
                 "utf-8"));
             for (int i = 0; i < truth.length ; i++) {
-                writer.write(truth[i] + "");
-                if (i != truth.length - 1) {
-                    writer.write(",");
+                if ((i + 1) % numOutputs == 0) {
+                    writer.write(truth[i] + "");
+                    if (i < truth.length - numOutputs) {
+                        writer.write(",");
+                    }
                 }
             }
             writer.write(System.lineSeparator());
@@ -99,7 +100,8 @@ public class WrapperTest {
     public static Integer[] run(RandomFactory rand) {
         System.out.println("Model "+ Station.modelCount++ +" starting");
         stationSim.start(rand);
-        int numOutputs = stationSim.getNumEntrances() + stationSim.getNumExits();
+        int numOutputs = stationSim.getNumEntrances() + stationSim.getNumExits() + 1;
+        System.out.println("Num of outputs: " + numOutputs);
 
         Integer[] stepOutput;
         Integer[] results = new Integer[numTimeSteps * numOutputs + 1];
@@ -115,11 +117,12 @@ public class WrapperTest {
             }
             stepOutput = stationSim.analysis.getNumPeopleInandOut();
             //System.out.println(stepOutput.length);
-            for (int j = 0; j < stepOutput.length; j++) {
+            for (int j = 0; j < numOutputs; j++) {
                 //System.out.println(i + j);
                 results[i * numOutputs + j] = stepOutput[j];
                 //System.out.println("j: " + j);
             }
+            //System.out.println(stepOutput[5]);
             i++;
             //System.out.println("i: " + i);
         } while (stationSim.area.getAllObjects().size() > 0 && i < numTimeSteps);
@@ -163,7 +166,8 @@ public class WrapperTest {
         if (observe) {
             System.out.println("Observing truth data. Adding noise with standard dev: " + sigmaNoise);
             for (Integer i = 0; i < truth.length; i++) {
-                if(i % obInterval == 0) {
+                if((i + 1) % 6 != 0) {
+                    //if (i % 6 != 0) {
                     // output is the ith element of the model output (from box)
                     IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
                     // output with a bit of noise. Lower sigma makes it more constrained.
@@ -171,6 +175,7 @@ public class WrapperTest {
                     // Observe the output
                     System.out.println(truth[i]);
                     noisyOutput.observe(truth[i].doubleValue()); //.toDouble().scalar());
+                    //}
                 }
             }
         }
@@ -232,7 +237,6 @@ public class WrapperTest {
         observe = false;
         samples = keanu(truth, observe, 0);
         writeResults(samples, truth, observe, 0);
-
 
         //int[] obIntervals = {1,5,10,50,100};
         int[] obIntervals = {1};

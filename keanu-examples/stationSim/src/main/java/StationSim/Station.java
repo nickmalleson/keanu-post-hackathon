@@ -329,6 +329,7 @@ public class Station extends SimState{
         walls.clear();
         addedCount = 0;
         random = new VertexBackedRandomFactory(Wrapper.numRandomDoubles, 0, 0);
+        numRandoms = 0;
 
         createWalls();
         createExits();
