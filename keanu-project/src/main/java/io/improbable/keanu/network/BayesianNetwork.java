@@ -62,6 +62,11 @@ public class BayesianNetwork {
         VertexValuePropagation.cascadeUpdate(observedVertices);
     }
 
+
+    public void probeForNonZeroMasterP(int attempts) {
+        probeForNonZeroMasterP(attempts, KeanuRandom.getDefaultRandom());
+    }
+
     /**
      * Attempt to find a non-zero master probability
      * by naively sampling vertices in order of data dependency
@@ -86,10 +91,9 @@ public class BayesianNetwork {
      */
     private void probeForNonZeroMasterP(List<? extends Vertex> latentVertices, int attempts, KeanuRandom random) {
 
-        Map<Long, Long> setAndCascadeCache = VertexValuePropagation.exploreSetting(latentVertices);
         int iteration = 0;
         while (isInImpossibleState()) {
-            setFromSampleAndCascade(latentVertices, setAndCascadeCache, random);
+            setFromSampleAndCascade(latentVertices, random);
             iteration++;
 
             if (iteration > attempts) {
@@ -103,17 +107,15 @@ public class BayesianNetwork {
         return logOfMasterP == Double.NEGATIVE_INFINITY || logOfMasterP == Double.NaN;
     }
 
-    public static void setFromSampleAndCascade(List<? extends Vertex> vertices, KeanuRandom random) {
-        setFromSampleAndCascade(vertices, VertexValuePropagation.exploreSetting(vertices), random);
+    public static void setFromSampleAndCascade(List<? extends Vertex> vertices) {
+        setFromSampleAndCascade(vertices, KeanuRandom.getDefaultRandom());
     }
 
-    public static void setFromSampleAndCascade(List<? extends Vertex> vertices,
-                                               Map<Long, Long> setAndCascadeCache,
-                                               KeanuRandom random) {
+    public static void setFromSampleAndCascade(List<? extends Vertex> vertices, KeanuRandom random) {
         for (Vertex<?> vertex : vertices) {
             setValueFromSample(vertex, random);
         }
-        VertexValuePropagation.cascadeUpdate(vertices, setAndCascadeCache);
+        VertexValuePropagation.cascadeUpdate(vertices);
     }
 
     private static <T> void setValueFromSample(Vertex<T> vertex, KeanuRandom random) {

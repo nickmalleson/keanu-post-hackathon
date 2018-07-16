@@ -1,5 +1,6 @@
 package io.improbable.keanu.research.randomfactory;
 
+import io.improbable.keanu.research.abstractinterpretation.VertexInterpretation;
 import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.bool.BoolVertex;
 import io.improbable.keanu.vertices.bool.probabilistic.Flip;
@@ -14,7 +15,7 @@ import io.improbable.keanu.vertices.intgr.probabilistic.UniformIntVertex;
 import java.util.HashSet;
 import java.util.Set;
 
-public class VertexFactory implements GenericRandomFactory<DoubleVertex, IntegerVertex, BoolVertex> {
+public class VertexFactory extends VertexInterpretation implements GenericRandomFactory<DoubleVertex, IntegerVertex, BoolVertex> {
     Set<Vertex> allCreatedVertices = new HashSet<>();
 
 
@@ -45,11 +46,6 @@ public class VertexFactory implements GenericRandomFactory<DoubleVertex, Integer
     @Override
     public UniformVertex nextDouble() {
         return nextDouble(0.0,1.0);
-    }
-
-    @Override
-    public ConstantDoubleVertex nextConstant(double value) {
-        return new ConstantDoubleVertex(value);
     }
 
     @Override

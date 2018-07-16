@@ -11,7 +11,7 @@ public interface DoubleRandomFactory<T> {
 
     T nextDouble();
 
-    T nextConstant(double value);
+//    T nextConstant(double value);
 
     T nextGaussian(T mu, T sigma);
 

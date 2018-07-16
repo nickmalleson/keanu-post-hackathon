@@ -27,6 +27,10 @@ public abstract class DoubleVertex extends ContinuousVertex<DoubleTensor> implem
         return new MultiplicationVertex(this, that);
     }
 
+    public DoubleVertex matrixMultiply(DoubleVertex that) {
+        return new MatrixMultiplicationVertex(this, that);
+    }
+
     public DoubleVertex divideBy(DoubleVertex that) {
         return new DivisionVertex(this, that);
     }
@@ -105,6 +109,10 @@ public abstract class DoubleVertex extends ContinuousVertex<DoubleTensor> implem
 
     public DoubleVertex atan2(DoubleVertex that) {
         return new ArcTan2Vertex(this, that);
+    }
+
+    public DoubleVertex sum() {
+        return new SumVertex(this);
     }
 
     public DoubleVertex lambda(int[] outputShape, Function<DoubleTensor, DoubleTensor> op, Function<Map<Vertex, DualNumber>, DualNumber> dualNumberCalculation) {
@@ -193,14 +201,6 @@ public abstract class DoubleVertex extends ContinuousVertex<DoubleTensor> implem
         super.setAndCascade(DoubleTensor.create(values, getShape()));
     }
 
-    public void setAndCascade(double value, Map<Long, Long> explored) {
-        super.setAndCascade(DoubleTensor.create(value, getShape()), explored);
-    }
-
-    public void setAndCascade(double[] values, Map<Long, Long> explored) {
-        super.setAndCascade(DoubleTensor.create(values, getShape()), explored);
-    }
-
     public void observe(double value) {
         super.observe(DoubleTensor.create(value, getShape()));
     }
@@ -223,5 +223,9 @@ public abstract class DoubleVertex extends ContinuousVertex<DoubleTensor> implem
 
     public Map<Long, DoubleTensor> dLogPdf(double[] values) {
         return this.dLogPdf(DoubleTensor.create(values));
+    }
+
+    public double getValue(int... index) {
+        return getValue().getValue(index);
     }
 }

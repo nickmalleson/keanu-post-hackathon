@@ -9,7 +9,11 @@ public interface GenericRandomFactory<
     DOUBLETYPE extends DoubleOperators<DOUBLETYPE>,
     INTTYPE extends IntegerOperators<INTTYPE>,
     BOOLTYPE extends BooleanOperators<BOOLTYPE>
-    > extends DoubleRandomFactory<DOUBLETYPE>, IntRandomFactory<INTTYPE>, BoolRandomFactory<BOOLTYPE>
+    > extends
+    DoubleRandomFactory<DOUBLETYPE>,
+    IntRandomFactory<INTTYPE>,
+    BoolRandomFactory<BOOLTYPE>,
+    AbstractInterpretation<DOUBLETYPE, INTTYPE, BOOLTYPE>
 {
 
 }

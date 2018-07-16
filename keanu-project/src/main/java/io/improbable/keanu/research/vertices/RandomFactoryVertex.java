@@ -1,26 +1,24 @@
 package io.improbable.keanu.research.vertices;
 
-import io.improbable.keanu.research.randomfactory.VertexBackedRandomFactory;
+import io.improbable.keanu.research.randomfactory.VertexBackedRandomGenerator;
 import io.improbable.keanu.vertices.bool.probabilistic.Flip;
-import io.improbable.keanu.vertices.dbl.DoubleVertex;
 import io.improbable.keanu.vertices.dbl.KeanuRandom;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.UniformVertex;
 import io.improbable.keanu.vertices.generic.nonprobabilistic.NonProbabilistic;
 
-import java.util.ArrayList;
 import java.util.List;
 
-public class RandomFactoryVertex extends NonProbabilistic<VertexBackedRandomFactory> {
+public class RandomFactoryVertex extends NonProbabilistic<VertexBackedRandomGenerator> {
 
     public RandomFactoryVertex(List<GaussianVertex> randDoubleSource, List<UniformVertex> randIntSource, List<Flip> randBoolSource) {
-        setValue(new VertexBackedRandomFactory(randDoubleSource, randIntSource, randBoolSource));
+        setValue(new VertexBackedRandomGenerator(randDoubleSource, randIntSource, randBoolSource));
         addAllParents();
     }
 
 
     public RandomFactoryVertex(int numberOfDoubles, int numberOfInts, int numberOfBools) {
-        setValue(new VertexBackedRandomFactory(numberOfDoubles, numberOfInts, numberOfBools));
+        setValue(new VertexBackedRandomGenerator(numberOfDoubles, numberOfInts, numberOfBools));
         addAllParents();
     }
 
@@ -32,12 +30,12 @@ public class RandomFactoryVertex extends NonProbabilistic<VertexBackedRandomFact
 
 
     @Override
-    public VertexBackedRandomFactory getDerivedValue() {
+    public VertexBackedRandomGenerator getDerivedValue() {
         return getValue();
     }
 
     @Override
-    public VertexBackedRandomFactory sample(KeanuRandom random) {
+    public VertexBackedRandomGenerator sample(KeanuRandom random) {
         return getValue();
     }
 }
