@@ -5,13 +5,14 @@ package StationSim;
 import io.improbable.keanu.algorithms.NetworkSamples;
 import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
 import io.improbable.keanu.network.BayesianNetwork;
-import io.improbable.keanu.research.randomfactory.RandomFactory;
-import io.improbable.keanu.research.randomfactory.VertexBackedRandomFactory;
+import io.improbable.keanu.research.randomfactory.VertexBackedRandomGenerator;
+import io.improbable.keanu.research.visualisation.GraphvizKt;
 import io.improbable.keanu.research.vertices.IntegerArrayIndexingVertex;
 import io.improbable.keanu.research.vertices.RandomFactoryVertex;
 import io.improbable.keanu.vertices.dbl.nonprobabilistic.CastDoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.unary.UnaryOpLambda;
+import org.apache.commons.math3.random.RandomGenerator;
 
 import java.io.*;
 import java.util.Arrays;
@@ -23,10 +24,10 @@ import java.util.List;
 public class Wrapper {
 
     static Station stationSim = new Station(System.currentTimeMillis());
-    private static int numTimeSteps = 800;
+    private static int numTimeSteps = 1000;
     public static int numRandomDoubles = 10;
-    private static int numSamples = 500;
-    private static int dropSamples = 200;
+    private static int numSamples = 7000;
+    private static int dropSamples = 1000;
     private static int downSample = 3;
     //private static boolean OBSERVE = true;
     private static double sigmaNoise = 0.1 ; // The amount of noise to be added to the truth
@@ -96,7 +97,7 @@ public class Wrapper {
     }
 
 
-    public static Integer[] run(RandomFactory rand) {
+    public static Integer[] run(RandomGenerator rand) {
         System.out.println("Model "+ Station.modelCount++ +" starting");
         stationSim.start(rand);
 
@@ -134,7 +135,7 @@ public class Wrapper {
         //BlackBox box = new BlackBox(inputs, wrap::run, Wrapper.numTimeSteps);
         //UnaryOpVertex<RandomFactory,Integer[]> box = new Unar<>( random, wrap::run )
         System.out.println("Initialising black box model");
-        UnaryOpLambda<VertexBackedRandomFactory,Integer[]> box = new UnaryOpLambda<>( random, Wrapper::run);
+        UnaryOpLambda<VertexBackedRandomGenerator,Integer[]> box = new UnaryOpLambda<>( random, Wrapper::run);
 
         // This is the list of random numbers that are fed into model (similar to drawing from a distribution,
         // but they're pre-defined in randSource)
@@ -172,6 +173,8 @@ public class Wrapper {
         System.out.println("Creating BayesNet");
         BayesianNetwork testNet = new BayesianNetwork(box.getConnectedGraph());
 
+        //GraphvizKt.toGraphvizString(box.getConnectedGraph());
+
         // Workaround for too many evaluations during sample startup
         random.setAndCascade(random.getValue());
 
@@ -205,7 +208,7 @@ public class Wrapper {
 
         // Make truth data
         System.out.println("Making truth data");
-        VertexBackedRandomFactory truthRandom = new VertexBackedRandomFactory(numRandomDoubles, 0, 0);
+        VertexBackedRandomGenerator truthRandom = new VertexBackedRandomGenerator(numRandomDoubles, 0, 0);
         Integer[] truth = Wrapper.run(truthRandom);
 
         System.out.println("Random values - Truth:\nMu");

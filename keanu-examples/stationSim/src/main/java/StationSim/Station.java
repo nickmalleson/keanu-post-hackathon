@@ -15,8 +15,8 @@
  */
 package StationSim;
 
-import io.improbable.keanu.research.randomfactory.RandomFactory;
-import io.improbable.keanu.research.randomfactory.VertexBackedRandomFactory;
+import io.improbable.keanu.research.randomfactory.VertexBackedRandomGenerator;
+import org.apache.commons.math3.random.RandomGenerator;
 import sim.engine.SimState;
 import sim.field.continuous.Continuous2D;
 import sim.util.Bag;
@@ -60,7 +60,7 @@ public class Station extends SimState{
     public int addedCount;
     private boolean writeResults = false;
 
-    public RandomFactory random;
+    public RandomGenerator random;
 
     //Bag of people who have finished the simulation
     public Bag finishedPeople = new Bag();
@@ -292,7 +292,7 @@ public class Station extends SimState{
      * Start a simulation. This is the version that is called directly from the Wrapper and uses the
      * random factory supplied as a parameter.
      */
-    public void start(RandomFactory rand) {
+    public void start(RandomGenerator rand) {
         System.out.println("Model "+Station.modelCount++ +" starting");
         super.start();
         random = rand;
@@ -328,7 +328,7 @@ public class Station extends SimState{
         doorways.clear();
         walls.clear();
         addedCount = 0;
-        random = new VertexBackedRandomFactory(Wrapper.numRandomDoubles, 0, 0);
+        random = new VertexBackedRandomGenerator(Wrapper.numRandomDoubles, 0, 0);
         numRandoms = 0;
 
         createWalls();
