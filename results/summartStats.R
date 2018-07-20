@@ -29,9 +29,8 @@ truth_file <-  grep("Truth", list.files(path = dataDir), value=TRUE)
 samples_files <- mixedsort(unlist(samples_files))
 
 # Read all the files in
-samples <- map(samples_files, function(x) read_csv(paste("7000samples/", x, sep=""), col_names = FALSE))
-truth <- read_csv(truth_file[1], col_names = FALSE)
-truth <- read_csv(paste("7000samples/", truth_file[1], sep=""), col_names = FALSE)
+samples <- map(samples_files, function(x) read_csv(paste("plot/", x, sep=""), col_names = FALSE))
+truth <- read_csv(paste("plot/", truth_file[1], sep=""), col_names = FALSE)
 
 # This should be greped instead
 obIntervals <- c(0,1,5,10)
