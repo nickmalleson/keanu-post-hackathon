@@ -16,36 +16,28 @@ import org.apache.commons.math3.random.RandomGenerator;
 
 import java.io.*;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 /**
  * Created by nick on 22/06/2018.
  */
-public class Wrapper {
+public class Wrapper{
 
-    static Station stationSim = new Station(System.currentTimeMillis());
     private static int numTimeSteps = 1000;
     public static int numRandomDoubles = 10;
-    private static int numSamples = 7000;
-    private static int dropSamples = 1000;
+    private static int numSamples = 100;
+    private static int dropSamples = 0;
     private static int downSample = 3;
-    //private static boolean OBSERVE = true;
     private static double sigmaNoise = 0.1 ; // The amount of noise to be added to the truth
 
-
-//    static ArrayList<List<IntegerTensor>> results = new ArrayList<List<IntegerTensor>>();
-
-    public Wrapper() {
-
-    }
-
-    public static void writeResults(List<Integer[]> samples, Integer[] truth, Boolean observed, int obInterval) {
+    public static void writeResults(List<Integer[]> samples, Integer[] truth, Boolean observed, int obInterval, long timestamp) {
         Writer writer = null;
         Station tempStation = new Station(System.currentTimeMillis());
         int totalNumPeople = tempStation.getNumPeople();
 
         String dirName = "results/";
-        String params = "OBSERVE" + observed + "obInterval" + obInterval + "_numSamples" + numSamples + "_numTimeSteps" + numTimeSteps + "_numRandomDoubles" + numRandomDoubles + "_totalNumPeople" + totalNumPeople + "_dropSamples" + dropSamples + "_downSample" + "_sigmaNoise" + sigmaNoise + "_downsample" + downSample + "_timeStamp" + System.currentTimeMillis();
+        String params = "OBSERVE" + observed + "obInterval" + obInterval + "_numSamples" + numSamples + "_numTimeSteps" + numTimeSteps + "_numRandomDoubles" + numRandomDoubles + "_totalNumPeople" + totalNumPeople + "_dropSamples" + dropSamples + "_downSample" + "_sigmaNoise" + sigmaNoise + "_downsample" + downSample + "_timeStamp" + timestamp;
 
         // Write out samples
         try {
@@ -98,6 +90,8 @@ public class Wrapper {
 
 
     public static Integer[] run(RandomGenerator rand) {
+
+        Station stationSim = new Station(System.currentTimeMillis());
         System.out.println("Model "+ Station.modelCount++ +" starting");
         stationSim.start(rand);
 
@@ -125,22 +119,14 @@ public class Wrapper {
     public static List<Integer[]> keanu(Integer[] truth, boolean observe, int obInterval) {
 
         System.out.println("Initialising random number stream");
-        Wrapper wrap = new Wrapper();
         //VertexBackedRandomFactory random = new VertexBackedRandomFactory(numInputs,, 0, 0);
         RandomFactoryVertex random = new RandomFactoryVertex (numRandomDoubles, 0, 0);
 
 
         // This is the 'black box' vertex that runs the model. It's input is the random numbers and
         // output is a list of Integer(tensor)s (the number of agents in the model at each iteration).
-        //BlackBox box = new BlackBox(inputs, wrap::run, Wrapper.numTimeSteps);
-        //UnaryOpVertex<RandomFactory,Integer[]> box = new Unar<>( random, wrap::run )
         System.out.println("Initialising black box model");
         UnaryOpLambda<VertexBackedRandomGenerator,Integer[]> box = new UnaryOpLambda<>( random, Wrapper::run);
-
-        // This is the list of random numbers that are fed into model (similar to drawing from a distribution,
-        // but they're pre-defined in randSource)
-
-
 
         System.out.println("Before:\n Mu");
         List<GaussianVertex>  randSource = random.getValue().randDoubleSource;
@@ -173,7 +159,9 @@ public class Wrapper {
         System.out.println("Creating BayesNet");
         BayesianNetwork testNet = new BayesianNetwork(box.getConnectedGraph());
 
-        //GraphvizKt.toGraphvizString(box.getConnectedGraph());
+
+        System.out.println("\n\n\n" + GraphvizKt.toGraphvizString(testNet, new HashMap<>()) + "\n\n\n");
+
 
         // Workaround for too many evaluations during sample startup
         random.setAndCascade(random.getValue());
@@ -204,6 +192,8 @@ public class Wrapper {
         List<Integer[]> samples;
         Boolean observe;
 
+        long timestamp = System.currentTimeMillis();
+
         System.out.println("Starting. Number of iterations: " + numTimeSteps);
 
         // Make truth data
@@ -225,15 +215,15 @@ public class Wrapper {
         // Results without observations of truth data
         observe = false;
         samples = keanu(truth, observe, 0);
-        writeResults(samples, truth, observe, 0);
+        writeResults(samples, truth, observe, 0, timestamp);
 
 
-        int[] obIntervals = {1,5,10,50,100};
+        int[] obIntervals = {1,10,50,100};
 
         for(int i = 0; i < obIntervals.length; i++) {
             observe = true;
             samples = keanu(truth, observe, obIntervals[i]);
-            writeResults(samples, truth, observe, obIntervals[i]);
+            writeResults(samples, truth, observe, obIntervals[i], timestamp);
         }
     }
 
