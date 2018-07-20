@@ -15,6 +15,7 @@ import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.unary.Una
 import org.apache.commons.math3.random.RandomGenerator;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -24,20 +25,20 @@ import java.util.List;
  */
 public class Wrapper{
 
-    private static int numTimeSteps = 1000;
+    private static int numTimeSteps = 800;
     public static int numRandomDoubles = 10;
-    private static int numSamples = 100;
-    private static int dropSamples = 0;
+    private static int numSamples = 500;
+    private static int dropSamples = 200;
     private static int downSample = 3;
     private static double sigmaNoise = 0.1 ; // The amount of noise to be added to the truth
 
-    public static void writeResults(List<Integer[]> samples, Integer[] truth, Boolean observed, int obInterval, long timestamp) {
+    public static void writeResults(List<Integer[]> samples, Integer[] truth, int obInterval, long timestamp) {
         Writer writer = null;
         Station tempStation = new Station(System.currentTimeMillis());
         int totalNumPeople = tempStation.getNumPeople();
 
         String dirName = "results/";
-        String params = "OBSERVE" + observed + "obInterval" + obInterval + "_numSamples" + numSamples + "_numTimeSteps" + numTimeSteps + "_numRandomDoubles" + numRandomDoubles + "_totalNumPeople" + totalNumPeople + "_dropSamples" + dropSamples + "_downSample" + "_sigmaNoise" + sigmaNoise + "_downsample" + downSample + "_timeStamp" + timestamp;
+        String params = "obInterval" + obInterval + "_numSamples" + numSamples + "_numTimeSteps" + numTimeSteps + "_numRandomDoubles" + numRandomDoubles + "_totalNumPeople" + totalNumPeople + "_dropSamples" + dropSamples + "_downSample" + "_sigmaNoise" + sigmaNoise + "_downsample" + downSample + "_timeStamp" + timestamp;
 
         // Write out samples
         try {
@@ -116,32 +117,21 @@ public class Wrapper{
         return numPeople;
     }
 
-    public static List<Integer[]> keanu(Integer[] truth, boolean observe, int obInterval) {
+    public static List<Integer[]> keanu(Integer[] truth, int obInterval, long timestamp) {
 
         System.out.println("Initialising random number stream");
         //VertexBackedRandomFactory random = new VertexBackedRandomFactory(numInputs,, 0, 0);
         RandomFactoryVertex random = new RandomFactoryVertex (numRandomDoubles, 0, 0);
-
 
         // This is the 'black box' vertex that runs the model. It's input is the random numbers and
         // output is a list of Integer(tensor)s (the number of agents in the model at each iteration).
         System.out.println("Initialising black box model");
         UnaryOpLambda<VertexBackedRandomGenerator,Integer[]> box = new UnaryOpLambda<>( random, Wrapper::run);
 
-        System.out.println("Before:\n Mu");
-        List<GaussianVertex>  randSource = random.getValue().randDoubleSource;
-        for (GaussianVertex num : randSource) {
-            System.out.print(num.getMu().getValue().scalar() + ",");
-        }
-        System.out.println("Sigma");
-        for (GaussianVertex num : randSource) {
-            System.out.print(num.getSigma().getValue().scalar() + ",");
-        }
-
         // Observe the truth data plus some noise?
-        if (observe) {
+        if (obInterval > 0) {
             System.out.println("Observing truth data. Adding noise with standard dev: " + sigmaNoise);
-            for (Integer i = 0; i< numTimeSteps; i++) {
+            for (Integer i = 0; i < numTimeSteps; i++) {
                 if(i % obInterval == 0) {
                     // output is the ith element of the model output (from box)
                     IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
@@ -175,22 +165,12 @@ public class Wrapper{
         // Get the number of people per iteration (an array of IntegerTensors) for each sample
         List<Integer[]> samples = sampler.drop(dropSamples).downSample(downSample).get(box).asList();
 
-        System.out.println("After:\nMu");
-        randSource = random.getValue().randDoubleSource;
-        for (GaussianVertex num : randSource) {
-            System.out.print(num.getMu().getValue().scalar() + ",");
-        }
-        System.out.println("Sigma");
-        for (GaussianVertex num : randSource) {
-            System.out.print(num.getSigma().getValue().scalar() + ",");
-        }
+        writeResults(samples, truth, obInterval, timestamp);
 
         return samples;
     }
 
     public static void main(String[] args) {
-        List<Integer[]> samples;
-        Boolean observe;
 
         long timestamp = System.currentTimeMillis();
 
@@ -201,30 +181,10 @@ public class Wrapper{
         VertexBackedRandomGenerator truthRandom = new VertexBackedRandomGenerator(numRandomDoubles, 0, 0);
         Integer[] truth = Wrapper.run(truthRandom);
 
-        System.out.println("Random values - Truth:\nMu");
+        //Run kenanu
+        ArrayList<Integer> obIntervals = new ArrayList<>(Arrays.asList(0,1,10,100));
+        obIntervals.parallelStream().forEach(i -> keanu(truth, i, timestamp));
 
-        List<GaussianVertex>  randSource = truthRandom.randDoubleSource;
-        for (GaussianVertex num : randSource) {
-            System.out.print(num.getMu().getValue().scalar() + ",");
-        }
-        System.out.println("Sigma");
-        for (GaussianVertex num : randSource) {
-            System.out.print(num.getSigma().getValue().scalar() + ",");
-        }
-
-        // Results without observations of truth data
-        observe = false;
-        samples = keanu(truth, observe, 0);
-        writeResults(samples, truth, observe, 0, timestamp);
-
-
-        int[] obIntervals = {1,10,50,100};
-
-        for(int i = 0; i < obIntervals.length; i++) {
-            observe = true;
-            samples = keanu(truth, observe, obIntervals[i]);
-            writeResults(samples, truth, observe, obIntervals[i], timestamp);
-        }
     }
 
 

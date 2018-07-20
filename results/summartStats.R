@@ -18,7 +18,7 @@ spag_plot <- function(samples, truth, obs) {
   legend("bottomright", c("Samples", "Truth"), lty=c(1,1), lwd=c(2.5,2.5),col=c(sample_col, truth_col))
 }
 
-dataDir = "."
+dataDir = "./plot"
 
 
 #Find files
@@ -29,15 +29,16 @@ truth_file <-  grep("Truth", list.files(path = dataDir), value=TRUE)
 samples_files <- mixedsort(unlist(samples_files))
 
 # Read all the files in
-samples <- map(samples_files, function(x) read_csv(x, col_names = FALSE))
+samples <- map(samples_files, function(x) read_csv(paste("7000samples/", x, sep=""), col_names = FALSE))
 truth <- read_csv(truth_file[1], col_names = FALSE)
+truth <- read_csv(paste("7000samples/", truth_file[1], sep=""), col_names = FALSE)
 
 # This should be greped instead
-obIntervals <- c(0,1,5,10,50)
+obIntervals <- c(0,1,5,10)
 
 
 # plot all
-par(mfrow=c(3,2))
+par(mfrow=c(2,2))
 map2(samples, obIntervals, function(x, obInterval) spag_plot(x, truth, obInterval))
 
 
@@ -48,13 +49,19 @@ samples_Summary <- function(df, obInterval) {
   median_range <-  median(apply(df, 2, function(x) max(x) - min(x)))
   mean_IQR <- mean(apply(df, 2, function(x) IQR(x)))
   median_IQR <- median(apply(df, 2, function(x) IQR(x)))
-  data.frame(observation_Interval=obInterval, mean_range=mean_range, median_range=median_range,
-             mean_IQR=mean_IQR, median_IQR=median_IQR)
+  mean_sd <- mean(apply(df, 2, function(x) sd(x)))
+  median_sd <- median(apply(df, 2, function(x) sd(x)))
+  data.frame(observation_Interval=obInterval,
+             mean_sd=mean_sd, median_sd=median_sd,
+             mean_IQR=mean_IQR, median_IQR=median_IQR,
+             mean_range=mean_range, median_range=median_range
+  )
 
 }
 
 
 summaryStats <- do.call("rbind", map2(samples, obIntervals, samples_Summary))
+summaryStats
 
 write_csv(summaryStats, "observation_intervals_summary.csv")
 

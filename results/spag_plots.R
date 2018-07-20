@@ -11,16 +11,18 @@ spag_plot <- function(samples, truth, obs) {
   x_axis <- 1:ncol(samples)
   sample_col <- alpha("#ADD8E6", 0.9)
   truth_col <- "red"
+  sample_col <- brewer.pal(9, "Blues")
 
   #create plot
   plot(1, xlim=c(0, max(x_axis)), ylim=c(0, max(samples)), type='l', xlab="Number of iterations", ylab = "Number of agents",
        main = paste("Number of agents in simulation \n as sampled from posterior (obs = ", obs, ")", sep = ""))
   print(max(x_axis))
-  map(1:nrow(samples), function(x) lines(x_axis, samples[x,], type='l', col=sample_col))
+  map(1:nrow(samples), function(x) {lines(x_axis, samples[x,], type='l', col=sample_col[x / 3])
+    print(sample_col[x / 10])})
   lines(x_axis, truth, type='l', lwd=2.5, col = truth_col)
   # confidence intervals
   #lines()
-  legend("bottomright", c("Samples", "Truth"), lty=c(1,1), lwd=c(2.5,2.5),col=c(sample_col, truth_col))
+  legend("bottomright", c("Samples", "Truth"), lty=c(1,1), lwd=c(2.5,2.5),col=c(sample_col[4], truth_col))
 }
 
 matrix_cols <- function(i, data, len) {
@@ -48,18 +50,16 @@ dist_plot <- function(samples) {
 
 
 
-par(mfrow=c(1,1))
+par(mfrow=c(1,2))
 # no obs
-samples_no_obs <- read_csv("Samples_OBSERVEtrueobInterval1_numSamples50_numTimeSteps500_numRandomDoubles10_totalNumPeople700_dropSamples10_downSample_sigmaNoise0.1_downsample1_timeStamp1531391432710.csv", col_names = FALSE)
-truth_no_obs <- read_csv("Truth_OBSERVEtrueobInterval1_numSamples50_numTimeSteps500_numRandomDoubles10_totalNumPeople700_dropSamples10_downSample_sigmaNoise0.1_downsample1_timeStamp1531391432710.csv", col_names = FALSE)
+samples_no_obs <- read_csv("Samples_OBSERVEfalseobInterval0_numSamples100_numTimeSteps1000_numRandomDoubles10_totalNumPeople700_dropSamples0_downSample_sigmaNoise0.1_downsample3_timeStamp1532077346294.csv", col_names = FALSE)
+truth_no_obs <- read_csv("Truth_OBSERVEfalseobInterval0_numSamples100_numTimeSteps1000_numRandomDoubles10_totalNumPeople700_dropSamples0_downSample_sigmaNoise0.1_downsample3_timeStamp1532077346294.csv", col_names = FALSE)
 spag_plot(samples_no_obs, truth_no_obs, FALSE)
 
 
 # with obs
-samples_with_obs <- read_csv("Samples_OBSERVEfalseobInterval0_numSamples50_numTimeSteps500_numRandomDoubles10_totalNumPeople700_dropSamples10_downSample_sigmaNoise0.1_downsample1_timeStamp1531391148080.csv", col_names = FALSE)
-truth_with_obs <- read_csv("Truth_OBSERVEfalseobInterval0_numSamples50_numTimeSteps500_numRandomDoubles10_totalNumPeople700_dropSamples10_downSample_sigmaNoise0.1_downsample1_timeStamp1531391148080.csv", col_names = FALSE)
-
-
+samples_with_obs <- read_csv("Samples_OBSERVEtrueobInterval1_numSamples100_numTimeSteps1000_numRandomDoubles10_totalNumPeople700_dropSamples0_downSample_sigmaNoise0.1_downsample3_timeStamp1532077346294.csv", col_names = FALSE)
+truth_with_obs <- read_csv("Truth_OBSERVEtrueobInterval1_numSamples100_numTimeSteps1000_numRandomDoubles10_totalNumPeople700_dropSamples0_downSample_sigmaNoise0.1_downsample3_timeStamp1532077346294.csv", col_names = FALSE)
 spag_plot(samples_with_obs, truth_with_obs, TRUE)
 
 
