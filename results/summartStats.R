@@ -19,6 +19,7 @@ spag_plot <- function(samples, truth, obs) {
 }
 
 dataDir = "./plot"
+setwd("/Users/nick/research_not_syncd/git_projects/keanu-post-hackathon/results/")
 
 
 #Find files
@@ -33,11 +34,12 @@ samples <- map(samples_files, function(x) read_csv(paste("plot/", x, sep=""), co
 truth <- read_csv(paste("plot/", truth_file[1], sep=""), col_names = FALSE)
 
 # This should be greped instead
-obIntervals <- c(0,1,5,10)
+#obIntervals <- c(0,1,5,10)
+obIntervals <- c(0,1)
 
 
 # plot all
-par(mfrow=c(2,2))
+par(mfrow=c(1,2))
 map2(samples, obIntervals, function(x, obInterval) spag_plot(x, truth, obInterval))
 
 
@@ -64,3 +66,31 @@ summaryStats
 
 write_csv(summaryStats, "observation_intervals_summary.csv")
 
+
+# See if later samples are closer to the truth.
+s <- samples[[which(obIntervals == 1)]] # Just look at those with an observation interval of 1
+# Calculate the euclidean distance of the sample away from the truth and see how this changes with sample number
+x1 <- as.vector(t(truth)) # truth as a vector (not a load of tibble columns)
+euclidean.dist <- sapply(X=1:nrow(s), FUN=function(x) {  
+  x2 <- as.vector(t(s[x,])) # A row from the samples as a vector
+  return(dist(rbind(x1,x2))) # Return euclidean distance (https://stackoverflow.com/questions/5559384/euclidean-distance-of-two-vectors)
+  }  )
+plot(euclidean.dist)
+
+
+
+plot(x=1:ncol(truth), y=as.vector(t(truth)), type='l')
+
+
+
+plot(1, xlim=c(0, ncol(s)), ylim=c(0, max(s)), type='l',
+     xlab="Number of iterations", ylab = "Number of agents")
+lines(x=1:ncol(truth), y=truth, col="red")
+lines(x=1:ncol(truth), y=s[1,], type='l', col="blue")
+
+
+
+
+
+map(1:nrow(samples), function(x) lines(x_axis, samples[x,], type='l', col=sample_col))
+lines(x_axis, truth, type='l', lwd=2.5, col = truth_col)
