@@ -64,3 +64,13 @@ summaryStats
 
 write_csv(summaryStats, "observation_intervals_summary.csv")
 
+
+# See if later samples are closer to the truth.
+s <- samples[[which(obIntervals == 1)]] # Just look at those with an observation interval of 1
+# Calculate the euclidean distance of the sample away from the truth and see how this changes with sample number
+x1 <- as.vector(t(truth)) # truth as a vector (not a load of tibble columns)
+euclidean.dist <- sapply(X=1:nrow(s), FUN=function(x) {  
+  x2 <- as.vector(t(s[x,])) # A row from the samples as a vector
+  return(dist(rbind(x1,x2))) # Return euclidean distance (https://stackoverflow.com/questions/5559384/euclidean-distance-of-two-vectors)
+  }  )
+plot(euclidean.dist)
