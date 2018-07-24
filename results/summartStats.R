@@ -23,7 +23,7 @@ setwd("/Users/nick/research_not_syncd/git_projects/keanu-post-hackathon/results/
 
 
 #Find files
-samples_files <- grep("Samples_OBSERVE", list.files(path = dataDir), value=TRUE)
+samples_files <- grep("Samples_obInterval", list.files(path = dataDir), value=TRUE)
 truth_file <-  grep("Truth", list.files(path = dataDir), value=TRUE)
 
 #Ensure files are in correct order (mixed sort includes numerical sorting of embeded numbers)
@@ -35,11 +35,12 @@ truth <- read_csv(paste("plot/", truth_file[1], sep=""), col_names = FALSE)
 
 # This should be greped instead
 #obIntervals <- c(0,1,5,10)
-obIntervals <- c(0,1)
+#obIntervals <- c(0,1)
+obIntervals <- c(0,1,2,5,10,20,50,100)
 
 
 # plot all
-par(mfrow=c(1,2))
+par(mfrow=c(3,3))
 map2(samples, obIntervals, function(x, obInterval) spag_plot(x, truth, obInterval))
 
 
@@ -78,6 +79,16 @@ euclidean.dist <- sapply(X=1:nrow(s), FUN=function(x) {
 plot(euclidean.dist)
 
 
+
+
+
+
+
+ XXXX DELETE BELOW .... 
+ 
+ 
+ 
+ 
 
 plot(x=1:ncol(truth), y=as.vector(t(truth)), type='l')
 

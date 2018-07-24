@@ -25,7 +25,7 @@ import java.util.List;
  */
 public class Wrapper{
 
-    private static int numTimeSteps = 800;
+    private static int numTimeSteps = 1200;
     public static int numRandomDoubles = 10;
     private static int numSamples = 500;
     private static int dropSamples = 200;
@@ -163,7 +163,8 @@ public class Wrapper{
         // Interrogate the samples
 
         // Get the number of people per iteration (an array of IntegerTensors) for each sample
-        List<Integer[]> samples = sampler.drop(dropSamples).downSample(downSample).get(box).asList();
+        //List<Integer[]> samples = sampler.drop(dropSamples).downSample(downSample).get(box).asList();
+        List<Integer[]> samples = sampler.get(box).asList(); // Temporarily don't drop any samples
 
         writeResults(samples, truth, obInterval, timestamp);
 
@@ -182,7 +183,7 @@ public class Wrapper{
         Integer[] truth = Wrapper.run(truthRandom);
 
         //Run kenanu
-        ArrayList<Integer> obIntervals = new ArrayList<>(Arrays.asList(0,1,10,100));
+        ArrayList<Integer> obIntervals = new ArrayList<>(Arrays.asList(0,1,2,5,10,20,50,100));
         obIntervals.parallelStream().forEach(i -> keanu(truth, i, timestamp));
 
     }
