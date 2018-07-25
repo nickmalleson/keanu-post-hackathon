@@ -27,9 +27,9 @@ public class Wrapper{
 
     private static int numTimeSteps = 1200;
     public static int numRandomDoubles = 10;
-    private static int numSamples = 500;
-    private static int dropSamples = 200;
-    private static int downSample = 3;
+    private static int numSamples = 5000;
+    private static int dropSamples = 0;
+    private static int downSample = 10;
     private static double sigmaNoise = 0.1 ; // The amount of noise to be added to the truth
 
     public static void writeResults(List<Integer[]> samples, Integer[] truth, int obInterval, long timestamp) {
@@ -164,7 +164,7 @@ public class Wrapper{
 
         // Get the number of people per iteration (an array of IntegerTensors) for each sample
         //List<Integer[]> samples = sampler.drop(dropSamples).downSample(downSample).get(box).asList();
-        List<Integer[]> samples = sampler.get(box).asList(); // Temporarily don't drop any samples
+        List<Integer[]> samples = sampler.downSample(downSample).get(box).asList(); // Temporarily don't drop any samples
 
         writeResults(samples, truth, obInterval, timestamp);
 
