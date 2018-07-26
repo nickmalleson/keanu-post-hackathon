@@ -101,6 +101,7 @@ density_plot <- function(s, truth, obs) {
   the.plot <- ggplot(data=scatter, mapping=aes(x,y)) +
     geom_hex(bins=35, show.legend = FALSE) +
     geom_line(data = data.frame("x"=1:length(truth), "y"=t(truth)), mapping=aes(x,y), colour="red") + # Truth
+    geom_smooth(method="loess", se=TRUE, level=0.95, color="orange") +
     #geom_point(size=0.1, color="white") + # individual points
     ylab("Number of agents in the system")+
     xlab("Iteration")+
@@ -115,7 +116,7 @@ plots <- map2(samples, obIntervals, function(x, obInterval) density_plot(x, trut
 
 Plot them:
 
-```{r density.plot1, fig.width=11, fig.height=7}
+```{r density.plot1, fig.width=11, fig.height=7, cache=TRUE}
 
 # use grid.arrange() function
 do.call("grid.arrange", c(plots, ncol=length(obIntervals)/2))
@@ -123,8 +124,28 @@ do.call("grid.arrange", c(plots, ncol=length(obIntervals)/2))
 ```
 
 
+##Plot Sample accuracy change
+
+See how the sample accuracy changes (are later samples closer to the truth?)
+
+```{r euclidean.distance, fig.width=9, fig.height=5}
+# See if later samples are closer to the truth.
+s <- samples[[which(obIntervals == 1)]] # Just look at those with an observation interval of 1
+# Calculate the euclidean distance of the sample away from the truth and see how this changes with sample number
+x1 <- as.vector(t(truth)) # truth as a vector (not a load of tibble columns)
+euclidean.dist <- sapply(X=1:nrow(s), FUN=function(x) {  
+  x2 <- as.vector(t(s[x,])) # A row from the samples as a vector
+  return(dist(rbind(x1,x2))) # Return euclidean distance (https://stackoverflow.com/questions/5559384/euclidean-distance-of-two-vectors)
+  }  )
+plot(euclidean.dist)
+
+```
+
+_TODO: culd calculate mean autocorrelation 
 
 # Summary stats
+
+Calculate some summary statistics.
 
 ```{r }
 
@@ -152,17 +173,12 @@ summaryStats
 
 ```
 
-See how the sample accuracy changes (are later samples closer to the truth?)
+Now see if the mean standard deviation varies with the observation interval. I.e. do we start to see more/less spread with fewer observations?
 
-```{r }
-# See if later samples are closer to the truth.
-s <- samples[[which(obIntervals == 1)]] # Just look at those with an observation interval of 1
-# Calculate the euclidean distance of the sample away from the truth and see how this changes with sample number
-x1 <- as.vector(t(truth)) # truth as a vector (not a load of tibble columns)
-euclidean.dist <- sapply(X=1:nrow(s), FUN=function(x) {  
-  x2 <- as.vector(t(s[x,])) # A row from the samples as a vector
-  return(dist(rbind(x1,x2))) # Return euclidean distance (https://stackoverflow.com/questions/5559384/euclidean-distance-of-two-vectors)
-  }  )
-plot(euclidean.dist)
+```{r plot.sample.spread }
+
+plot(summaryStats$observation_Interval, summaryStats$mean_sd,
+     main="Spread of samples", xlab="Observation interval", ylab-"Mean Standard Deviation"
 
 ```
+
