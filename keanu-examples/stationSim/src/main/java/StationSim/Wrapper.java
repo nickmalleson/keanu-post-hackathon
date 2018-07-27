@@ -32,6 +32,8 @@ public class Wrapper{
     private static int downSample = 3;
     private static double sigmaNoise = 0.1 ; // The amount of noise to be added to the truth
 
+    private static boolean justCreateGraphs = true; // Create graphs and then exit, no sampling
+
     private static String dirName = "results/"; // Place to store results
 
     public static void writeResults(List<Integer[]> samples, Integer[] truth, int obInterval, long timestamp, String params) {
@@ -114,7 +116,7 @@ public class Wrapper{
         return numPeople;
     }
 
-    public static List<Integer[]> keanu(Integer[] truth, int obInterval, long timestamp) {
+    public static List<Integer[]> keanu(Integer[] truth, int obInterval, long timestamp, boolean createGraph) {
 
         // (Useful string for writing results)
         int totalNumPeople = new Station(System.currentTimeMillis()).getNumPeople();
@@ -163,10 +165,12 @@ public class Wrapper{
             System.out.println("Error writing graph to file");
         }
 
-        System.out.println("\n\n\n" + GraphvizKt.toGraphvizString(testNet, new HashMap<>()) + "\n\n\n");
-
-        System.out.println("temporarily exitting");
-        System.exit(1);
+        // If just creating a graph then don't do anything further
+        if (createGraph) {
+            //System.out.println("\n\n\n" + GraphvizKt.toGraphvizString(testNet, new HashMap<>()) + "\n\n\n");
+            System.out.println("Have created graph. Not sampling");
+            return new ArrayList<Integer[]>();
+        }
 
         // Workaround for too many evaluations during sample startup
         random.setAndCascade(random.getValue());
@@ -198,7 +202,7 @@ public class Wrapper{
 
         //Run kenanu
         ArrayList<Integer> obIntervals = new ArrayList<>(Arrays.asList(0,1,10,100));
-        obIntervals.parallelStream().forEach(i -> keanu(truth, i, timestamp));
+        obIntervals.parallelStream().forEach(i -> keanu(truth, i, timestamp, justCreateGraphs));
 
     }
 

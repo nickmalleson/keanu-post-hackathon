@@ -4,5 +4,5 @@
 for file in *.dot; do
     echo "Converting file $file"
     dot -Tpdf $file > $file.pdf
-    open $file.pdf 
+    open $file.pdf
 done
