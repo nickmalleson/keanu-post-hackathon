@@ -9,4 +9,5 @@ build
 classes/
 .Rproj.user
 results/*.csv
+results/*.dot
 
