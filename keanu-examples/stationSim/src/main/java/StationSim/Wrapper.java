@@ -155,7 +155,7 @@ public class Wrapper{
         try {
             System.out.println("Writing out graph");
             Writer graphWriter = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(dirName + "Graph_" + params + ".csv"),
+                new FileOutputStream(dirName + "Graph_" + params + ".dot"),
                 "utf-8"));
             graphWriter.write(GraphvizKt.toGraphvizString(testNet, new HashMap<>()) );
             graphWriter.close();
@@ -163,7 +163,9 @@ public class Wrapper{
             System.out.println("Error writing graph to file");
         }
 
-        System.out.println("\n\n\n" + GraphvizKt.toGraphvizString(testNet, new HashMap<>()) + "\n\n\n");
+        //System.out.println("\n\n\n" + GraphvizKt.toGraphvizString(testNet, new HashMap<>()) + "\n\n\n");
+        System.out.println("temporerily exiting");
+        System.exit(1);
 
 
         // Workaround for too many evaluations during sample startup
