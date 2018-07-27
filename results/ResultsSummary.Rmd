@@ -101,7 +101,7 @@ density_plot <- function(s, truth, obs) {
   the.plot <- ggplot(data=scatter, mapping=aes(x,y)) +
     geom_hex(bins=35, show.legend = FALSE) +
     geom_line(data = data.frame("x"=1:length(truth), "y"=t(truth)), mapping=aes(x,y), colour="red") + # Truth
-    geom_smooth(method="loess", se=TRUE, level=0.95, color="orange") +
+    #geom_smooth(method="loess", se=TRUE, level=0.95, color="orange") +
     #geom_point(size=0.1, color="white") + # individual points
     ylab("Number of agents in the system")+
     xlab("Iteration")+
@@ -141,7 +141,7 @@ plot(euclidean.dist)
 
 ```
 
-_TODO: culd calculate mean autocorrelation 
+_TODO: could calculate mean autocorrelation_
 
 # Summary stats
 
@@ -178,7 +178,8 @@ Now see if the mean standard deviation varies with the observation interval. I.e
 ```{r plot.sample.spread }
 
 plot(summaryStats$observation_Interval, summaryStats$mean_sd,
-     main="Spread of samples", xlab="Observation interval", ylab-"Mean Standard Deviation"
+     main="Spread of samples", xlab="Observation interval", ylab="Mean Standard Deviation")
 
 ```
 
+_I think we need more observations_
