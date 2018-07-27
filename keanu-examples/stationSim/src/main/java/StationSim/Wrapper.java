@@ -25,20 +25,17 @@ import java.util.List;
  */
 public class Wrapper{
 
-    private static int numTimeSteps = 1200;
+    private static int numTimeSteps = 800;
     public static int numRandomDoubles = 10;
-    private static int numSamples = 5000;
-    private static int dropSamples = 0;
-    private static int downSample = 10;
+    private static int numSamples = 500;
+    private static int dropSamples = 200;
+    private static int downSample = 3;
     private static double sigmaNoise = 0.1 ; // The amount of noise to be added to the truth
 
-    public static void writeResults(List<Integer[]> samples, Integer[] truth, int obInterval, long timestamp) {
-        Writer writer = null;
-        Station tempStation = new Station(System.currentTimeMillis());
-        int totalNumPeople = tempStation.getNumPeople();
+    private static String dirName = "results/"; // Place to store results
 
-        String dirName = "results/";
-        String params = "obInterval" + obInterval + "_numSamples" + numSamples + "_numTimeSteps" + numTimeSteps + "_numRandomDoubles" + numRandomDoubles + "_totalNumPeople" + totalNumPeople + "_dropSamples" + dropSamples + "_downSample" + "_sigmaNoise" + sigmaNoise + "_downsample" + downSample + "_timeStamp" + timestamp;
+    public static void writeResults(List<Integer[]> samples, Integer[] truth, int obInterval, long timestamp, String params) {
+        Writer writer = null;
 
         // Write out samples
         try {
@@ -119,6 +116,10 @@ public class Wrapper{
 
     public static List<Integer[]> keanu(Integer[] truth, int obInterval, long timestamp) {
 
+        // (Useful string for writing results)
+        int totalNumPeople = new Station(System.currentTimeMillis()).getNumPeople();
+        String params = "obInterval" + obInterval + "_numSamples" + numSamples + "_numTimeSteps" + numTimeSteps + "_numRandomDoubles" + numRandomDoubles + "_totalNumPeople" + totalNumPeople + "_dropSamples" + dropSamples + "_downSample" + "_sigmaNoise" + sigmaNoise + "_downsample" + downSample + "_timeStamp" + timestamp;
+
         System.out.println("Initialising random number stream");
         //VertexBackedRandomFactory random = new VertexBackedRandomFactory(numInputs,, 0, 0);
         RandomFactoryVertex random = new RandomFactoryVertex (numRandomDoubles, 0, 0);
@@ -149,6 +150,18 @@ public class Wrapper{
         System.out.println("Creating BayesNet");
         BayesianNetwork testNet = new BayesianNetwork(box.getConnectedGraph());
 
+        // Create a graph and write it out
+        // Write out samples
+        try {
+            System.out.println("Writing out graph");
+            Writer graphWriter = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(dirName + "Graph_" + params + ".csv"),
+                "utf-8"));
+            graphWriter.write(GraphvizKt.toGraphvizString(testNet, new HashMap<>()) );
+            graphWriter.close();
+       } catch (IOException ex) {
+            System.out.println("Error writing graph to file");
+        }
 
         System.out.println("\n\n\n" + GraphvizKt.toGraphvizString(testNet, new HashMap<>()) + "\n\n\n");
 
@@ -163,10 +176,9 @@ public class Wrapper{
         // Interrogate the samples
 
         // Get the number of people per iteration (an array of IntegerTensors) for each sample
-        //List<Integer[]> samples = sampler.drop(dropSamples).downSample(downSample).get(box).asList();
-        List<Integer[]> samples = sampler.downSample(downSample).get(box).asList(); // Temporarily don't drop any samples
+        List<Integer[]> samples = sampler.drop(dropSamples).downSample(downSample).get(box).asList();
 
-        writeResults(samples, truth, obInterval, timestamp);
+        writeResults(samples, truth, obInterval, timestamp, params);
 
         return samples;
     }
@@ -183,7 +195,7 @@ public class Wrapper{
         Integer[] truth = Wrapper.run(truthRandom);
 
         //Run kenanu
-        ArrayList<Integer> obIntervals = new ArrayList<>(Arrays.asList(0,1,2,5,10,20,50,100));
+        ArrayList<Integer> obIntervals = new ArrayList<>(Arrays.asList(0,1,10,100));
         obIntervals.parallelStream().forEach(i -> keanu(truth, i, timestamp));
 
     }
