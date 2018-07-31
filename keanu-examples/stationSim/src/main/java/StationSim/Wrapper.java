@@ -25,14 +25,14 @@ import java.util.List;
  */
 public class Wrapper{
 
-    private static int numTimeSteps = 800;
+    private static int numTimeSteps = 1200;
     public static int numRandomDoubles = 10;
     private static int numSamples = 500;
-    private static int dropSamples = 200;
+    private static int dropSamples = 100;
     private static int downSample = 3;
     private static double sigmaNoise = 0.1 ; // The amount of noise to be added to the truth
 
-    private static boolean justCreateGraphs = true; // Create graphs and then exit, no sampling
+    private static boolean justCreateGraphs = false; // Create graphs and then exit, no sampling
 
     private static String dirName = "results/"; // Place to store results
 
@@ -201,7 +201,7 @@ public class Wrapper{
         Integer[] truth = Wrapper.run(truthRandom);
 
         //Run kenanu
-        ArrayList<Integer> obIntervals = new ArrayList<>(Arrays.asList(0,1,10,100));
+        ArrayList<Integer> obIntervals = new ArrayList<>(Arrays.asList(0,1,3,5,10,20,50,100));
         obIntervals.parallelStream().forEach(i -> keanu(truth, i, timestamp, justCreateGraphs));
 
     }
