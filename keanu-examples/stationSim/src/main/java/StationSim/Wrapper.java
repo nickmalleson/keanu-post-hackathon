@@ -182,7 +182,8 @@ public class Wrapper{
         // Interrogate the samples
 
         // Get the number of people per iteration (an array of IntegerTensors) for each sample
-        List<Integer[]> samples = sampler.drop(dropSamples).downSample(downSample).get(box).asList();
+        //List<Integer[]> samples = sampler.drop(dropSamples).downSample(downSample).get(box).asList();
+        List<Integer[]> samples = sampler.get(box).asList(); // temporarily not dropping samples
 
         writeResults(samples, truth, obInterval, timestamp, params);
 
