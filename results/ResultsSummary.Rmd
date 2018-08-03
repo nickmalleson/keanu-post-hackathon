@@ -17,15 +17,15 @@ fontsize: 10pt
 library(tidyverse)
 library(gtools)
 library(ggplot2)
+library(hexbin) # (this is called automatically if required, but putting it here ensures it has been installed)
 library(gridExtra) # For arranging two grids side by side
 #library(reshape2) # for melting (taking wide format and making it narrow)
 
 
-homedir<-"/Users/nick/research/projects/current/bayesian-crime"
+homedir<-"/Users/nick/research_not_syncd/git_projects/keanu-post-hackathon/results/"
 setwd(homedir)
 
 dataDir = "./plot"
-setwd("/Users/nick/research_not_syncd/git_projects/keanu-post-hackathon/results/")
 
 ```
 
@@ -118,7 +118,7 @@ Plot them:
 
 ```{r density.plot1, fig.width=11, fig.height=7, cache=TRUE}
 
-# use grid.arrange() function
+# use grid.arrange() function to lay out the plots
 do.call("grid.arrange", c(plots, ncol=length(obIntervals)/2))
 
 ```
