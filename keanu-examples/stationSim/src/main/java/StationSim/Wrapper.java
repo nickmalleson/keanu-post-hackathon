@@ -202,7 +202,7 @@ public class Wrapper{
         Integer[] truth = Wrapper.run(truthRandom);
 
         //Run kenanu
-        ArrayList<Integer> obIntervals = new ArrayList<>(Arrays.asList(0,1,3,5,10,20,50,100));
+        ArrayList<Integer> obIntervals = new ArrayList<>(Arrays.asList(0,1,3,5,10,15,20,25,30,40,50,60,70,80,90,100));
         obIntervals.parallelStream().forEach(i -> keanu(truth, i, timestamp, justCreateGraphs));
 
     }
