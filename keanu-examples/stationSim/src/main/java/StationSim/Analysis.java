@@ -76,9 +76,9 @@ public class Analysis implements Steppable {
      * @param state
      */
     public void step(SimState state) {
+        station = (Station) state;
+        updateOccupancy();
         if(station.getWriteResults()) {
-            station = (Station) state;
-            updateOccupancy();
             //writeTemporalOccupancy();
             updateStateDataFrame();
             updateAggregateDataFrame();
@@ -116,6 +116,7 @@ public class Analysis implements Steppable {
                 j = numCols - 1;
             }
             occupancyMatrix[i][j]++;
+            //System.out.println("updated");
         }
     }
 
@@ -406,13 +407,16 @@ public class Analysis implements Steppable {
             output[i + station.getNumEntrances()] = station.getExits().get(i).totalRemoved;
         }
 
-        output[station.getNumEntrances() + station.getNumExits()] = station.area.getAllObjects().size();
-        //System.out.println("right: " + station.area.getAllObjects().size());
-        //System.out.println("wrong:" + station.area.getAllObjects().size());
-
-
+        //output[station.getNumEntrances() + station.getNumExits()] = station.area.getAllObjects().size();
+        output[station.getNumEntrances() + station.getNumExits()] = occupancyMatrix[10][20];
+//        for (int i =0; i < occupancyMatrix.length; i++) {
+//            for (int j = 0; j < occupancyMatrix[i].length; j++) {
+//                System.out.print(occupancyMatrix[i][j] + ",");
+//            }
+//            System.out.println();
+//        }
+//        System.out.println("\n");
 
         return output;
     }
-
 }

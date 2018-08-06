@@ -9,13 +9,16 @@ import io.improbable.keanu.network.BayesianNetwork;
 import io.improbable.keanu.research.randomfactory.VertexBackedRandomGenerator;
 import io.improbable.keanu.research.vertices.IntegerArrayIndexingVertex;
 import io.improbable.keanu.research.vertices.RandomFactoryVertex;
+import io.improbable.keanu.research.visualisation.GraphvizKt;
 import io.improbable.keanu.vertices.dbl.nonprobabilistic.CastDoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.unary.UnaryOpLambda;
 import org.apache.commons.math3.random.RandomGenerator;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 
 /**
@@ -24,23 +27,19 @@ import java.util.List;
 public class WrapperTest {
 
     static Station stationSim = new Station(System.currentTimeMillis());
-    private static int numTimeSteps = 1000;
+    private static int numTimeSteps = 100;
     public static int numRandomDoubles = 10;
-    private static int numSamples = 7000;
-    private static int dropSamples = 1000;
-    private static int downSample = 3;
-    //private static boolean OBSERVE = true;
+    private static int numSamples = 150;
+    private static int dropSamples = 50;
+    private static int downSample = 1;
     private static double sigmaNoise = 0.1 ; // The amount of noise to be added to the truth
 
-    public static void writeResults(List<Integer[]> samples, Integer[] truth, Boolean observed, int obInterval) {
+    private static boolean justCreateGraphs = false; // Create graphs and then exit, no sampling
+    private static String dirName = "results/"; // Place to store results
+
+    public static void writeResults(List<Integer[]> samples, Integer[] truth, String params) {
         Writer writer = null;
-        Station tempStation = new Station(System.currentTimeMillis());
-        int totalNumPeople = tempStation.getNumPeople();
         int numOutputs = 6;
-
-
-        String dirName = "results/";
-        String params = "Test_OBSERVE" + observed + "obInterval" + obInterval + "_numSamples" + numSamples + "_numTimeSteps" + numTimeSteps + "_numRandomDoubles" + numRandomDoubles + "_totalNumPeople" + totalNumPeople + "_dropSamples" + dropSamples + "_downSample" + "_sigmaNoise" + sigmaNoise + "_downsample" + downSample + "_timeStamp" + System.currentTimeMillis();
 
         // Write out samples
         try {
@@ -133,42 +132,29 @@ public class WrapperTest {
         return results;
     }
 
-    public static List<Integer[]> keanu(Integer[] truth, boolean observe, int obInterval) {
+    public static List<Integer[]> keanu(Integer[] truth, int obInterval, long timestamp, boolean createGraph) {
+
+        // (Useful string for writing results)
+        int totalNumPeople = new Station(System.currentTimeMillis()).getNumPeople();
+        String params = "obInterval" + obInterval + "_numSamples" + numSamples + "_numTimeSteps" + numTimeSteps + "_numRandomDoubles" + numRandomDoubles + "_totalNumPeople" + totalNumPeople + "_dropSamples" + dropSamples + "_downSample" + "_sigmaNoise" + sigmaNoise + "_downsample" + downSample + "_timeStamp" + timestamp;
 
         System.out.println("Initialising random number stream");
-
         //VertexBackedRandomFactory random = new VertexBackedRandomFactory(numInputs,, 0, 0);
         RandomFactoryVertex random = new RandomFactoryVertex (numRandomDoubles, 0, 0);
 
-
         // This is the 'black box' vertex that runs the model. It's input is the random numbers and
         // output is a list of Integer(tensor)s (the number of agents in the model at each iteration).
-        //BlackBox box = new BlackBox(inputs, wrap::run, Wrapper.numTimeSteps);
-        //UnaryOpVertex<RandomFactory,Integer[]> box = new Unar<>( random, wrap::run )
         System.out.println("Initialising black box model");
         UnaryOpLambda<VertexBackedRandomGenerator,Integer[]> box = new UnaryOpLambda<>( random, WrapperTest::run);
 
         // This is the list of random numbers that are fed into model (similar to drawing from a distribution,
         // but they're pre-defined in randSource)
 
-
-
-        System.out.println("Before:\n Mu");
-        List<GaussianVertex>  randSource = random.getValue().randDoubleSource;
-        for (GaussianVertex num : randSource) {
-            System.out.print(num.getMu().getValue().scalar() + ",");
-        }
-        System.out.println("Sigma");
-        for (GaussianVertex num : randSource) {
-            System.out.print(num.getSigma().getValue().scalar() + ",");
-        }
-
         // Observe the truth data plus some noise?
-        if (observe) {
+        if (obInterval > 0) {
             System.out.println("Observing truth data. Adding noise with standard dev: " + sigmaNoise);
             for (Integer i = 0; i < truth.length; i++) {
                 if((i + 1) % 6 != 0) {
-                    //if (i % 6 != 0) {
                     // output is the ith element of the model output (from box)
                     IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
                     // output with a bit of noise. Lower sigma makes it more constrained.
@@ -176,7 +162,6 @@ public class WrapperTest {
                     // Observe the output
                     System.out.println(truth[i]);
                     noisyOutput.observe(truth[i].doubleValue()); //.toDouble().scalar());
-                    //}
                 }
             }
         }
@@ -186,6 +171,26 @@ public class WrapperTest {
 
         System.out.println("Creating BayesNet");
         BayesianNetwork testNet = new BayesianNetwork(box.getConnectedGraph());
+
+        // Create a graph and write it out
+        // Write out samples
+        try {
+            System.out.println("Writing out graph");
+            Writer graphWriter = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(dirName + "Graph_" + params + ".dot"),
+                "utf-8"));
+            graphWriter.write(GraphvizKt.toGraphvizString(testNet, new HashMap<>()) );
+            graphWriter.close();
+        } catch (IOException ex) {
+            System.out.println("Error writing graph to file");
+        }
+
+        // If just creating a graph then don't do anything further
+        if (createGraph) {
+            System.out.println("\n\n\n" + GraphvizKt.toGraphvizString(testNet, new HashMap<>()) + "\n\n\n");
+            System.out.println("Have created graph. Not sampling");
+            return new ArrayList<Integer[]>();
+        }
 
         // Workaround for too many evaluations during sample startup
         random.setAndCascade(random.getValue());
@@ -199,52 +204,25 @@ public class WrapperTest {
         // Get the number of people per iteration (an array of IntegerTensors) for each sample
         List<Integer[]> samples = sampler.drop(dropSamples).downSample(downSample).get(box).asList();
 
-        System.out.println("After:\nMu");
-        randSource = random.getValue().randDoubleSource;
-        for (GaussianVertex num : randSource) {
-            System.out.print(num.getMu().getValue().scalar() + ",");
-        }
-        System.out.println("Sigma");
-        for (GaussianVertex num : randSource) {
-            System.out.print(num.getSigma().getValue().scalar() + ",");
-        }
+        writeResults(samples, truth, params);
 
         return samples;
     }
 
     public static void main(String[] args) {
-        List<Integer[]> samples;
-        Boolean observe;
+
+        long timestamp = System.currentTimeMillis();
 
         System.out.println("Starting. Number of iterations: " + numTimeSteps);
 
         // Make truth data
         System.out.println("Making truth data");
         VertexBackedRandomGenerator truthRandom = new VertexBackedRandomGenerator(numRandomDoubles, 0, 0);
-        Integer[] truth = WrapperTest.run(truthRandom);
+        Integer[] truth = Wrapper.run(truthRandom);
 
-        System.out.println("Random values - Truth:\nMu");
+        //Run kenanu
+        ArrayList<Integer> obIntervals = new ArrayList<>(Arrays.asList(0,1));
+        obIntervals.parallelStream().forEach(i -> keanu(truth, i, timestamp, justCreateGraphs));
 
-        List<GaussianVertex>  randSource = truthRandom.randDoubleSource;
-        for (GaussianVertex num : randSource) {
-            System.out.print(num.getMu().getValue().scalar() + ",");
-        }
-        System.out.println("Sigma");
-        for (GaussianVertex num : randSource) {
-            System.out.print(num.getSigma().getValue().scalar() + ",");
-        }
-
-        // Results without observations of truth data
-        observe = false;
-        samples = keanu(truth, observe, 0);
-        writeResults(samples, truth, observe, 0);
-
-        //int[] obIntervals = {1,5,10,50,100};
-        int[] obIntervals = {1};
-        for(int i = 0; i < obIntervals.length; i++) {
-            observe = true;
-            samples = keanu(truth, observe, obIntervals[i]);
-            writeResults(samples, truth, observe, obIntervals[i]);
-        }
     }
 }

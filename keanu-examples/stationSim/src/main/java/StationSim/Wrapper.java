@@ -1,7 +1,5 @@
 package StationSim;
 
-
-
 import io.improbable.keanu.algorithms.NetworkSamples;
 import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
 import io.improbable.keanu.network.BayesianNetwork;
@@ -25,18 +23,18 @@ import java.util.List;
  */
 public class Wrapper{
 
-    private static int numTimeSteps = 1200;
+    private static int numTimeSteps = 100;
     public static int numRandomDoubles = 10;
-    private static int numSamples = 500;
-    private static int dropSamples = 100;
-    private static int downSample = 3;
+    private static int numSamples = 100;
+    private static int dropSamples = 50;
+    private static int downSample = 1;
     private static double sigmaNoise = 0.1 ; // The amount of noise to be added to the truth
 
     private static boolean justCreateGraphs = false; // Create graphs and then exit, no sampling
 
     private static String dirName = "results/"; // Place to store results
 
-    public static void writeResults(List<Integer[]> samples, Integer[] truth, int obInterval, long timestamp, String params) {
+    public static void writeResults(List<Integer[]> samples, Integer[] truth, String params) {
         Writer writer = null;
 
         // Write out samples
@@ -44,6 +42,7 @@ public class Wrapper{
             writer = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream(dirName + "Samples_" + params + ".csv"),
                 "utf-8"));
+            System.out.println("writing: " + dirName + "Samples_" + params + ".csv");
             for (int i = 0; i < samples.size(); i++) {
                 Integer[] peoplePerIter = samples.get(i);
                 for (int j = 0; j <  peoplePerIter.length ; j++) {
@@ -167,7 +166,7 @@ public class Wrapper{
 
         // If just creating a graph then don't do anything further
         if (createGraph) {
-            //System.out.println("\n\n\n" + GraphvizKt.toGraphvizString(testNet, new HashMap<>()) + "\n\n\n");
+            System.out.println("\n\n\n" + GraphvizKt.toGraphvizString(testNet, new HashMap<>()) + "\n\n\n");
             System.out.println("Have created graph. Not sampling");
             return new ArrayList<Integer[]>();
         }
@@ -185,7 +184,7 @@ public class Wrapper{
         //List<Integer[]> samples = sampler.drop(dropSamples).downSample(downSample).get(box).asList();
         List<Integer[]> samples = sampler.get(box).asList(); // temporarily not dropping samples
 
-        writeResults(samples, truth, obInterval, timestamp, params);
+        writeResults(samples, truth, params);
 
         return samples;
     }
@@ -202,10 +201,8 @@ public class Wrapper{
         Integer[] truth = Wrapper.run(truthRandom);
 
         //Run kenanu
-        ArrayList<Integer> obIntervals = new ArrayList<>(Arrays.asList(0,1,3,5,10,20,50,100));
+        ArrayList<Integer> obIntervals = new ArrayList<>(Arrays.asList(0,1));
         obIntervals.parallelStream().forEach(i -> keanu(truth, i, timestamp, justCreateGraphs));
 
     }
-
-
 }

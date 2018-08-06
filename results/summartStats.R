@@ -15,14 +15,14 @@ spag_plot <- function(samples, truth, obs) {
   map(1:nrow(samples), function(x) lines(x_axis, samples[x,], type='l', col=sample_col))
   lines(x_axis, truth, type='l', lwd=2.5, col = truth_col)
 
-  legend("bottomright", c("Samples", "Truth"), lty=c(1,1), lwd=c(2.5,2.5),col=c(sample_col, truth_col))
+  #legend("bottomright", c("Samples", "Truth"), lty=c(1,1), lwd=c(2.5,2.5),col=c(sample_col, truth_col))
 }
 
 dataDir = "./plot"
 
 
 #Find files
-samples_files <- grep("Samples_OBSERVE", list.files(path = dataDir), value=TRUE)
+samples_files <- grep("Samples_ob", list.files(path = dataDir), value=TRUE)
 truth_file <-  grep("Truth", list.files(path = dataDir), value=TRUE)
 
 #Ensure files are in correct order (mixed sort includes numerical sorting of embeded numbers)
@@ -33,11 +33,11 @@ samples <- map(samples_files, function(x) read_csv(paste("plot/", x, sep=""), co
 truth <- read_csv(paste("plot/", truth_file[1], sep=""), col_names = FALSE)
 
 # This should be greped instead
-obIntervals <- c(0,1,5,10)
+obIntervals <- c(0,1)
 
 
 # plot all
-par(mfrow=c(2,2))
+par(mfrow=c(2,1))
 map2(samples, obIntervals, function(x, obInterval) spag_plot(x, truth, obInterval))
 
 
@@ -69,7 +69,7 @@ write_csv(summaryStats, "observation_intervals_summary.csv")
 s <- samples[[which(obIntervals == 1)]] # Just look at those with an observation interval of 1
 # Calculate the euclidean distance of the sample away from the truth and see how this changes with sample number
 x1 <- as.vector(t(truth)) # truth as a vector (not a load of tibble columns)
-euclidean.dist <- sapply(X=1:nrow(s), FUN=function(x) {  
+euclidean.dist <- sapply(X=1:nrow(s), FUN=function(x) {
   x2 <- as.vector(t(s[x,])) # A row from the samples as a vector
   return(dist(rbind(x1,x2))) # Return euclidean distance (https://stackoverflow.com/questions/5559384/euclidean-distance-of-two-vectors)
   }  )
