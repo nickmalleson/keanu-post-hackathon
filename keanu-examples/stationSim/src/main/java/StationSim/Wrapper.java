@@ -13,6 +13,7 @@ import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.unary.Una
 import org.apache.commons.math3.random.RandomGenerator;
 
 import java.io.*;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -23,16 +24,17 @@ import java.util.List;
  */
 public class Wrapper{
 
-    private static int numTimeSteps = 2000;
+    private static int numTimeSteps = 100;
     public static int numRandomDoubles = 10;
-    private static int numSamples = 500;
-    private static int dropSamples = 200;
+    private static int numSamples = 100;
+    private static int dropSamples = 20;
     private static int downSample = 3;
     private static double sigmaNoise = 0.1; // The amount of noise to be added to the truth
+    private static int numOutputs = 6;
 
     private static boolean justCreateGraphs = false; // Create graphs and then exit, no sampling
 
-    private static String dirName = "results/"; // Place to store results
+    private static String dirName = "results/plot/"; // Place to store results
 
     public static void writeResults(List<Integer[]> samples, Integer[] truth, String params) {
         Writer writer = null;
@@ -46,9 +48,11 @@ public class Wrapper{
             for (int i = 0; i < samples.size(); i++) {
                 Integer[] peoplePerIter = samples.get(i);
                 for (int j = 0; j <  peoplePerIter.length ; j++) {
-                    writer.write(peoplePerIter[j] + "");
-                    if (j != peoplePerIter.length - 1) {
-                        writer.write(",");
+                    if ((j + 1) % numOutputs == 0) {
+                        writer.write(peoplePerIter[j] + "");
+                        if (j < peoplePerIter.length - numOutputs) {
+                            writer.write(",");
+                        }
                     }
                 }
                 writer.write(System.lineSeparator());
@@ -69,9 +73,11 @@ public class Wrapper{
                 new FileOutputStream(dirName + "Truth_" + params + ".csv"),
                 "utf-8"));
             for (int i = 0; i < truth.length ; i++) {
-                writer.write(truth[i] + "");
-                if (i != truth.length - 1) {
-                    writer.write(",");
+                if ((i + 1) % numOutputs == 0) {
+                    writer.write(truth[i] + "");
+                    if (i < truth.length - numOutputs) {
+                        writer.write(",");
+                    }
                 }
             }
             writer.write(System.lineSeparator());
@@ -87,32 +93,34 @@ public class Wrapper{
         }
     }
 
-
     public static Integer[] run(RandomGenerator rand) {
-
         Station stationSim = new Station(System.currentTimeMillis());
         System.out.println("Model "+ Station.modelCount++ +" starting");
         stationSim.start(rand);
+        System.out.println("Num of outputs: " + numOutputs);
 
-        Integer[] numPeople = new Integer[numTimeSteps];
-        for (int i = 0; i < numTimeSteps; i++) {
-            numPeople[i] = 0;
+        Integer[] stepOutput;
+        Integer[] results = new Integer[numTimeSteps * numOutputs]; //why was a "+ 1" in here?
+        for (int i = 0; i < results.length; i++) {
+            results[i] = 0;
         }
-
         int i = 0;
         do {
             // Run a step of each simulation
             if (!stationSim.schedule.step(stationSim)) {
                 break;
             }
-            numPeople[i] = stationSim.area.getAllObjects().size();
+
+            stepOutput = stationSim.analysis.getNumPeopleInandOut();
+            //stepOutput = new Integer[] {stationSim.area.getAllObjects().size()};
+            for (int j = 0; j < numOutputs; j++) {
+                results[i * numOutputs + j] = stepOutput[j];
+            }
             i++;
         } while (stationSim.area.getAllObjects().size() > 0 && i < numTimeSteps);
         stationSim.finish();
 
-        //      results.add(Arrays.asList(numPeople));
-
-        return numPeople;
+        return results;
     }
 
     public static List<Integer[]> keanu(Integer[] truth, int obInterval, long timestamp, boolean createGraph) {
@@ -134,7 +142,8 @@ public class Wrapper{
         if (obInterval > 0) {
             System.out.println("Observing truth data. Adding noise with standard dev: " + sigmaNoise);
             for (Integer i = 0; i < numTimeSteps; i++) {
-                if(i % obInterval == 0) {
+                //if((i % obInterval == 0) {
+                if((i + 1) % numOutputs != 0) {
                     // output is the ith element of the model output (from box)
                     IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
                     // output with a bit of noise. Lower sigma makes it more constrained.
@@ -160,7 +169,7 @@ public class Wrapper{
                 "utf-8"));
             graphWriter.write(GraphvizKt.toGraphvizString(testNet, new HashMap<>()) );
             graphWriter.close();
-       } catch (IOException ex) {
+        } catch (IOException ex) {
             System.out.println("Error writing graph to file");
         }
 
@@ -181,7 +190,6 @@ public class Wrapper{
         // Interrogate the samples
 
         // Get the number of people per iteration (an array of IntegerTensors) for each sample
-        //List<Integer[]> samples = sampler.drop(dropSamples).downSample(downSample).get(box).asList();
         List<Integer[]> samples = sampler.get(box).asList(); // temporarily not dropping samples
 
         writeResults(samples, truth, params);
@@ -199,6 +207,7 @@ public class Wrapper{
         System.out.println("Making truth data");
         VertexBackedRandomGenerator truthRandom = new VertexBackedRandomGenerator(numRandomDoubles, 0, 0);
         Integer[] truth = Wrapper.run(truthRandom);
+        System.out.println("Truth data length: " + truth.length);
 
         //Run kenanu
         ArrayList<Integer> obIntervals = new ArrayList<>(Arrays.asList(0,1));

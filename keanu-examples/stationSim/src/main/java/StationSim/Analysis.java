@@ -411,13 +411,6 @@ public class Analysis implements Steppable {
 
         //output[station.getNumEntrances() + station.getNumExits()] = station.area.getAllObjects().size();
         output[station.getNumEntrances() + station.getNumExits()] = currentOccupancyMatrix[10][10];
-//        for (int i =0; i < occupancyMatrix.length; i++) {
-//            for (int j = 0; j < occupancyMatrix[i].length; j++) {
-//                System.out.print(occupancyMatrix[i][j] + ",");
-//            }
-//            System.out.println();
-//        }
-//        System.out.println("\n");
 
         return output;
     }
