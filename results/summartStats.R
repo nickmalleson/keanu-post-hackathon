@@ -1,5 +1,6 @@
 library(tidyverse)
 library(gtools)
+library(gridExtra)
 
 
 spag_plot <- function(samples, truth, obs) {
@@ -9,13 +10,41 @@ spag_plot <- function(samples, truth, obs) {
   truth_col <- "red"
 
   #create plot
-  plot(1, xlim=c(0, max(x_axis)), ylim=c(0, max(samples)), type='l',
+  plot(1, xlim=c(0, max(x_axis)), type='l', ylim=c(0,16000), #ylim=c(0, max(samples)),
        xlab="Number of iterations", ylab = "Number of agents",
        main = paste("Observation Interval =", obs, sep =' '))
   map(1:nrow(samples), function(x) lines(x_axis, samples[x,], type='l', col=sample_col))
   lines(x_axis, truth, type='l', lwd=2.5, col = truth_col)
 
-  #legend("bottomright", c("Samples", "Truth"), lty=c(1,1), lwd=c(2.5,2.5),col=c(sample_col, truth_col))
+  legend("bottomright", c("Samples", "Truth"), lty=c(1,1), lwd=c(2.5,2.5),col=c(sample_col, truth_col))
+}
+
+## Returns a single ggplot2 density plot
+density_plot <- function(s, truth, obs) {
+
+  # Y values for this sample (num people per iteration)
+  y <- t(s[1,])[,1]
+  # X values
+  x <- 1:length(y)
+  # A long two-column matrix will have number of people at every iteration across all samples
+  scatter <- cbind(x, y)
+  # Now add the rest of the samples
+  for (i in 2:nrow(s)) {
+    scatter <- rbind(scatter, cbind(1:length(y), t(s[i,])[,1]) )
+  }
+  scatter <- as.data.frame(scatter)
+
+  the.plot <- ggplot(data=scatter, mapping=aes(x,y)) +
+    geom_hex(bins=60, aes(alpha=log(..count..)), fill="#000230", show.legend = FALSE) +
+    geom_line(data = data.frame("x"=1:length(truth), "y"=t(truth)), mapping=aes(x,y), colour="red") + # Truth
+    #geom_smooth(method="loess", se=TRUE, level=0.95, color="orange") +
+    #geom_point(size=0.1, color="white") + # individual points
+    ylab("Number of agents in the system") +
+    xlab("Iteration") +
+    ylim(-100, 16000)
+    ggtitle(paste("Observation Interval =", obs, sep =' '))
+
+  return(the.plot)
 }
 
 dataDir = "./plot"
@@ -37,9 +66,11 @@ obIntervals <- c(0,1)
 
 
 # plot all
-par(mfrow=c(2,1))
+par(mfrow=c(1,2))
 map2(samples, obIntervals, function(x, obInterval) spag_plot(x, truth, obInterval))
 
+plots <- map2(samples, obIntervals, function(x, obInterval) density_plot(x, truth, obInterval))
+grid.arrange(plots[[1]], plots[[2]], nrow = 1)
 
 #Summary stats
 samples_Summary <- function(df, obInterval) {

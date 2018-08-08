@@ -28,7 +28,7 @@ public class WrapperTest1{
     private static int numSamples = 500;
     private static int dropSamples = 200;
     private static int downSample = 3;
-    private static double sigmaNoise = 0.1 ; // The amount of noise to be added to the truth
+    private static double sigmaNoise = 0.1; // The amount of noise to be added to the truth
 
     private static boolean justCreateGraphs = false; // Create graphs and then exit, no sampling
 

@@ -39,7 +39,7 @@ public class Analysis implements Steppable {
     private int numCols = 40;
     int[][] occupancyMatrix = new int[numRows][numCols];
     int[][] temporalOccupancyMatrix = new int[numRows][numCols];
-
+    int[][] currentOccupancyMatrix = new int[numRows][numCols];
 
     private List<List<String>> stateDataFrame;
     private List<List<String>> aggregateDataFrame;
@@ -106,6 +106,7 @@ public class Analysis implements Steppable {
      * people in a grid space for a step.
      */
     public void updateOccupancy() {
+        currentOccupancyMatrix = new int[numRows][numCols];
         int i, j;
         Bag people = station.area.getAllObjects();
         for (int x = 0; x < people.size(); x++) {
@@ -116,6 +117,7 @@ public class Analysis implements Steppable {
                 j = numCols - 1;
             }
             occupancyMatrix[i][j]++;
+            currentOccupancyMatrix[i][j]++;
             //System.out.println("updated");
         }
     }
@@ -408,7 +410,7 @@ public class Analysis implements Steppable {
         }
 
         //output[station.getNumEntrances() + station.getNumExits()] = station.area.getAllObjects().size();
-        output[station.getNumEntrances() + station.getNumExits()] = occupancyMatrix[10][20];
+        output[station.getNumEntrances() + station.getNumExits()] = currentOccupancyMatrix[10][10];
 //        for (int i =0; i < occupancyMatrix.length; i++) {
 //            for (int j = 0; j < occupancyMatrix[i].length; j++) {
 //                System.out.print(occupancyMatrix[i][j] + ",");
