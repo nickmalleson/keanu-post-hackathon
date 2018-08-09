@@ -39,7 +39,7 @@ public class Analysis implements Steppable {
     private int numCols = 40;
     int[][] occupancyMatrix = new int[numRows][numCols];
     int[][] temporalOccupancyMatrix = new int[numRows][numCols];
-
+    int[][] currentOccupancyMatrix = new int[numRows][numCols];
 
     private List<List<String>> stateDataFrame;
     private List<List<String>> aggregateDataFrame;
@@ -76,9 +76,9 @@ public class Analysis implements Steppable {
      * @param state
      */
     public void step(SimState state) {
+        station = (Station) state;
+        updateOccupancy();
         if(station.getWriteResults()) {
-            station = (Station) state;
-            updateOccupancy();
             //writeTemporalOccupancy();
             updateStateDataFrame();
             updateAggregateDataFrame();
@@ -106,6 +106,7 @@ public class Analysis implements Steppable {
      * people in a grid space for a step.
      */
     public void updateOccupancy() {
+        currentOccupancyMatrix = new int[numRows][numCols];
         int i, j;
         Bag people = station.area.getAllObjects();
         for (int x = 0; x < people.size(); x++) {
@@ -116,6 +117,8 @@ public class Analysis implements Steppable {
                 j = numCols - 1;
             }
             occupancyMatrix[i][j]++;
+            currentOccupancyMatrix[i][j]++;
+            //System.out.println("updated");
         }
     }
 
@@ -406,13 +409,9 @@ public class Analysis implements Steppable {
             output[i + station.getNumEntrances()] = station.getExits().get(i).totalRemoved;
         }
 
-        output[station.getNumEntrances() + station.getNumExits()] = station.area.getAllObjects().size();
-        //System.out.println("right: " + station.area.getAllObjects().size());
-        //System.out.println("wrong:" + station.area.getAllObjects().size());
-
-
+        //output[station.getNumEntrances() + station.getNumExits()] = station.area.getAllObjects().size();
+        output[station.getNumEntrances() + station.getNumExits()] = currentOccupancyMatrix[10][10];
 
         return output;
     }
-
 }

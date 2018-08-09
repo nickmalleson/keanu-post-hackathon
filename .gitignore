@@ -10,4 +10,5 @@ classes/
 .Rproj.user
 results/*.csv
 results/*.dot
+results/plot/*
 results/*.dot.pdf
