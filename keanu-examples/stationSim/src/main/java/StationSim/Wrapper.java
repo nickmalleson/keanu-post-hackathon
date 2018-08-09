@@ -24,17 +24,29 @@ import java.util.List;
  */
 public class Wrapper{
 
-    private static int numTimeSteps = 100;
+    private static int numTimeSteps = 2000;
     public static int numRandomDoubles = 10;
-    private static int numSamples = 100;
-    private static int dropSamples = 20;
+    private static int numSamples = 500;
+    private static int dropSamples = 200;
     private static int downSample = 3;
     private static double sigmaNoise = 0.1; // The amount of noise to be added to the truth
-    private static int numOutputs = 6;
+
+    private static HashMap<Integer, Integer> optionsMap = createOptions();
+    private static int option = 3;
+    private static int numOutputs = optionsMap.get(option);
 
     private static boolean justCreateGraphs = false; // Create graphs and then exit, no sampling
 
-    private static String dirName = "results/plot/"; // Place to store results
+    private static String dirName = "results/plot/three"; // Place to store results
+
+    private static HashMap<Integer, Integer> createOptions() {
+        // Map options to the number of outputs given from model
+        HashMap optionsMap = new HashMap<Integer, Integer>();
+        optionsMap.put(1, 1); //Observe total num people in simulation : Output same
+        optionsMap.put(2, 6); // Observe total people that have passed through each entrance/exit : Output cumulative number of people in a given grid square
+        optionsMap.put(3, 6); // Observe total people that have passed through each entrance/exit : Output number of people in a given grid square per step
+        return optionsMap;
+    }
 
     public static void writeResults(List<Integer[]> samples, Integer[] truth, String params) {
         Writer writer = null;
@@ -110,8 +122,21 @@ public class Wrapper{
             if (!stationSim.schedule.step(stationSim)) {
                 break;
             }
+            switch(option) {
+                case 1:
+                    stepOutput = new Integer[] {stationSim.area.getAllObjects().size()};
+                    break;
+                case 2:
+                    stepOutput = stationSim.analysis.getOption2();
+                    break;
+                case 3:
+                    stepOutput = stationSim.analysis.getOption3();
+                    break;
+                default:
+                    stepOutput = new Integer[] {0};
+                    System.exit(0);
+            }
 
-            stepOutput = stationSim.analysis.getNumPeopleInandOut();
             //stepOutput = new Integer[] {stationSim.area.getAllObjects().size()};
             for (int j = 0; j < numOutputs; j++) {
                 results[i * numOutputs + j] = stepOutput[j];
@@ -136,7 +161,7 @@ public class Wrapper{
         // This is the 'black box' vertex that runs the model. It's input is the random numbers and
         // output is a list of Integer(tensor)s (the number of agents in the model at each iteration).
         System.out.println("Initialising black box model");
-        UnaryOpLambda<VertexBackedRandomGenerator,Integer[]> box = new UnaryOpLambda<>( random, Wrapper::run);
+        UnaryOpLambda<VertexBackedRandomGenerator, Integer[]> box = new UnaryOpLambda<>( random, Wrapper::run);
 
         // Observe the truth data plus some noise?
         if (obInterval > 0) {

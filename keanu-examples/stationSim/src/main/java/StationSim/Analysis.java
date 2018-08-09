@@ -107,6 +107,7 @@ public class Analysis implements Steppable {
      */
     public void updateOccupancy() {
         currentOccupancyMatrix = new int[numRows][numCols];
+
         int i, j;
         Bag people = station.area.getAllObjects();
         for (int x = 0; x < people.size(); x++) {
@@ -397,7 +398,27 @@ public class Analysis implements Steppable {
         return state;
     }
 
-    public Integer[] getNumPeopleInandOut() {
+    public Integer[] getOption2() {
+
+        Integer[] output = new Integer[station.getNumEntrances() + station.getNumExits() + 1];
+
+        for (int i = 0; i < station.getNumEntrances(); i++) {
+            output[i] = station.getEntrances().get(i).totalAdded;
+        }
+
+        for (int i = 0; i < station.getNumExits(); i++) {
+            output[i + station.getNumEntrances()] = station.getExits().get(i).totalRemoved;
+        }
+        output[station.getNumEntrances() + station.getNumExits()] = occupancyMatrix[10][10];
+
+        for (int i = 0; i < output.length; i++) {
+            System.out.println(output[i]);
+        }
+
+        return output;
+    }
+
+    public Integer[] getOption3() {
 
         Integer[] output = new Integer[station.getNumEntrances() + station.getNumExits() + 1];
 
@@ -409,9 +430,10 @@ public class Analysis implements Steppable {
             output[i + station.getNumEntrances()] = station.getExits().get(i).totalRemoved;
         }
 
-        //output[station.getNumEntrances() + station.getNumExits()] = station.area.getAllObjects().size();
         output[station.getNumEntrances() + station.getNumExits()] = currentOccupancyMatrix[10][10];
+
 
         return output;
     }
+
 }
