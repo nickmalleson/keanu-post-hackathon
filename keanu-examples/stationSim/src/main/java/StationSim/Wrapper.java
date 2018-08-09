@@ -32,17 +32,17 @@ public class Wrapper{
     private static double sigmaNoise = 0.1; // The amount of noise to be added to the truth
 
     private static HashMap<Integer, Integer> optionsMap = createOptions();
-    private static int option = 3;
+    private static int option = 1;
     private static int numOutputs = optionsMap.get(option);
 
     private static boolean justCreateGraphs = false; // Create graphs and then exit, no sampling
 
-    private static String dirName = "results/plot/"; // Place to store results
+    private static String dirName = "results/plot/one/"; // Place to store results
 
     private static HashMap<Integer, Integer> createOptions() {
-        // Map options to the number of outputs given from model
+        // Map options to the number of outputs given from model - key = the option number to use : value = length of array given as output per step
         HashMap optionsMap = new HashMap<Integer, Integer>();
-        optionsMap.put(1, 1); //Observe total num people in simulation : Output same
+        optionsMap.put(1, 2); //Observe total num people in simulation : Output same
         optionsMap.put(2, 6); // Observe total people that have passed through each entrance/exit : Output cumulative number of people in a given grid square
         optionsMap.put(3, 6); // Observe total people that have passed through each entrance/exit : Output number of people in a given grid square per step
         return optionsMap;
@@ -124,7 +124,7 @@ public class Wrapper{
             }
             switch(option) {
                 case 1:
-                    stepOutput = new Integer[] {stationSim.area.getAllObjects().size()};
+                    stepOutput = new Integer[] {stationSim.area.getAllObjects().size(), stationSim.area.getAllObjects().size()}; // added twice as fix - later on the first is observed and the second used as an output - not doing this leads to no observation
                     break;
                 case 2:
                     stepOutput = stationSim.analysis.getOption2();
@@ -134,7 +134,8 @@ public class Wrapper{
                     break;
                 default:
                     stepOutput = new Integer[] {0};
-                    System.exit(0);
+                    System.out.println("\nIncorrect option number");
+                    System.exit(-1);
             }
 
             //stepOutput = new Integer[] {stationSim.area.getAllObjects().size()};
@@ -215,7 +216,7 @@ public class Wrapper{
         // Interrogate the samples
 
         // Get the number of people per iteration (an array of IntegerTensors) for each sample
-        List<Integer[]> samples = sampler.get(box).asList(); // temporarily not dropping samples
+        List<Integer[]> samples = sampler.drop(dropSamples).downSample(downSample).get(box).asList();
 
         writeResults(samples, truth, params);
 
