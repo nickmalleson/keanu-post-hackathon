@@ -37,7 +37,7 @@ public class Wrapper{
 
     private static boolean justCreateGraphs = false; // Create graphs and then exit, no sampling
 
-    private static String dirName = "results/plot/three"; // Place to store results
+    private static String dirName = "results/plot"; // Place to store results
 
     private static HashMap<Integer, Integer> createOptions() {
         // Map options to the number of outputs given from model
