@@ -24,7 +24,7 @@ import java.util.List;
  */
 public class Wrapper{
 
-    private static int numTimeSteps = 2000;
+    private static int numTimeSteps = 1000;
     public static int numRandomDoubles = 10;
     private static int numSamples = 500;
     private static int dropSamples = 200;
@@ -32,12 +32,12 @@ public class Wrapper{
     private static double sigmaNoise = 0.1; // The amount of noise to be added to the truth
 
     private static HashMap<Integer, Integer> optionsMap = createOptions();
-    private static int option = 1;
+    private static int option = 3;
     private static int numOutputs = optionsMap.get(option);
 
     private static boolean justCreateGraphs = false; // Create graphs and then exit, no sampling
 
-    private static String dirName = "results/plot/one/"; // Place to store results
+    private static String dirName = "results/plot/three/"; // Place to store results
 
     private static HashMap<Integer, Integer> createOptions() {
         // Map options to the number of outputs given from model - key = the option number to use : value = length of array given as output per step

@@ -10,13 +10,13 @@ spag_plot <- function(samples, truth, obs) {
   truth_col <- "red"
 
   #create plot
-  plot(1, xlim=c(0, max(x_axis)), type='l', ylim=c(0,16000), #ylim=c(0, max(samples)),
+  plot(1, xlim=c(0, max(x_axis)), type='l',  ylim=c(0, max(samples)),# ylim=c(0,16000),
        xlab="Number of iterations", ylab = "Number of agents",
        main = paste("Observation Interval =", obs, sep =' '))
   map(1:nrow(samples), function(x) lines(x_axis, samples[x,], type='l', col=sample_col))
   lines(x_axis, truth, type='l', lwd=2.5, col = truth_col)
 
-  legend("bottomright", c("Samples", "Truth"), lty=c(1,1), lwd=c(2.5,2.5),col=c(sample_col, truth_col))
+  #legend("bottomright", c("Samples", "Truth"), lty=c(1,1), lwd=c(2.5,2.5),col=c(sample_col, truth_col))
 }
 
 ## Returns a single ggplot2 density plot
@@ -35,19 +35,20 @@ density_plot <- function(s, truth, obs) {
   scatter <- as.data.frame(scatter)
 
   the.plot <- ggplot(data=scatter, mapping=aes(x,y)) +
-    geom_hex(bins=60, aes(alpha=log(..count..)), fill="#000230", show.legend = FALSE) +
+    geom_hex(bins=30, aes(alpha=log(..count..)), fill="#000230", show.legend = FALSE) +
     geom_line(data = data.frame("x"=1:length(truth), "y"=t(truth)), mapping=aes(x,y), colour="red") + # Truth
     #geom_smooth(method="loess", se=TRUE, level=0.95, color="orange") +
     #geom_point(size=0.1, color="white") + # individual points
+    #ylim(-100, 16000) +
     ylab("Number of agents in the system") +
-    xlab("Iteration") +
-    ylim(-100, 16000)
+    xlab("Iteration")
+
     ggtitle(paste("Observation Interval =", obs, sep =' '))
 
   return(the.plot)
 }
 
-dataDir = "./plot"
+dataDir = "./plot/two/"
 
 
 #Find files
@@ -58,8 +59,8 @@ truth_file <-  grep("Truth", list.files(path = dataDir), value=TRUE)
 samples_files <- mixedsort(unlist(samples_files))
 
 # Read all the files in
-samples <- map(samples_files, function(x) read_csv(paste("plot/", x, sep=""), col_names = FALSE))
-truth <- read_csv(paste("plot/", truth_file[1], sep=""), col_names = FALSE)
+samples <- map(samples_files, function(x) read_csv(paste(dataDir, x, sep=""), col_names = FALSE))
+truth <- read_csv(paste(dataDir, truth_file[1], sep=""), col_names = FALSE)
 
 # This should be greped instead
 obIntervals <- c(0,1)

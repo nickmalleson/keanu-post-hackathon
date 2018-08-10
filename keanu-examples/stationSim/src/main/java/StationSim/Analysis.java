@@ -410,7 +410,7 @@ public class Analysis implements Steppable {
             output[i + station.getNumEntrances()] = station.getExits().get(i).totalRemoved;
         }
         output[station.getNumEntrances() + station.getNumExits()] = occupancyMatrix[10][10];
-        
+
 
         return output;
     }
