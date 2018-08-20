@@ -48,62 +48,7 @@ public class Wrapper{
         return optionsMap;
     }
 
-    public static void writeResults(List<Integer[]> samples, Integer[] truth, String params) {
-        Writer writer = null;
 
-        // Write out samples
-        try {
-            writer = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(dirName + "Samples_" + params + ".csv"),
-                "utf-8"));
-            System.out.println("writing: " + dirName + "Samples_" + params + ".csv");
-            for (int i = 0; i < samples.size(); i++) {
-                Integer[] peoplePerIter = samples.get(i);
-                for (int j = 0; j <  peoplePerIter.length ; j++) {
-                    if ((j + 1) % numOutputs == 0) {
-                        writer.write(peoplePerIter[j] + "");
-                        if (j < peoplePerIter.length - numOutputs) {
-                            writer.write(",");
-                        }
-                    }
-                }
-                writer.write(System.lineSeparator());
-            }
-        } catch (IOException ex) {
-            System.out.println("Error writing to file");
-        } finally {
-            try {
-                writer.close();
-            } catch (Exception ex) {
-                System.out.println("Error closing file");
-            }
-        }
-
-        // Write out Truth
-        try {
-            writer = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(dirName + "Truth_" + params + ".csv"),
-                "utf-8"));
-            for (int i = 0; i < truth.length ; i++) {
-                if ((i + 1) % numOutputs == 0) {
-                    writer.write(truth[i] + "");
-                    if (i < truth.length - numOutputs) {
-                        writer.write(",");
-                    }
-                }
-            }
-            writer.write(System.lineSeparator());
-
-        } catch (IOException ex) {
-            System.out.println("Error writing to file");
-        } finally {
-            try {
-                writer.close();
-            } catch (Exception ex) {
-                System.out.println("Error closing file");
-            }
-        }
-    }
 
     public static Integer[] run(RandomGenerator rand) {
         Station stationSim = new Station(System.currentTimeMillis());
@@ -221,6 +166,63 @@ public class Wrapper{
         writeResults(samples, truth, params);
 
         return samples;
+    }
+
+    public static void writeResults(List<Integer[]> samples, Integer[] truth, String params) {
+        Writer writer = null;
+
+        // Write out samples
+        try {
+            writer = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(dirName + "Samples_" + params + ".csv"),
+                "utf-8"));
+            System.out.println("writing: " + dirName + "Samples_" + params + ".csv");
+            for (int i = 0; i < samples.size(); i++) {
+                Integer[] peoplePerIter = samples.get(i);
+                for (int j = 0; j <  peoplePerIter.length ; j++) {
+                    if ((j + 1) % numOutputs == 0) {
+                        writer.write(peoplePerIter[j] + "");
+                        if (j < peoplePerIter.length - numOutputs) {
+                            writer.write(",");
+                        }
+                    }
+                }
+                writer.write(System.lineSeparator());
+            }
+        } catch (IOException ex) {
+            System.out.println("Error writing to file");
+        } finally {
+            try {
+                writer.close();
+            } catch (Exception ex) {
+                System.out.println("Error closing file");
+            }
+        }
+
+        // Write out Truth
+        try {
+            writer = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(dirName + "Truth_" + params + ".csv"),
+                "utf-8"));
+            for (int i = 0; i < truth.length ; i++) {
+                if ((i + 1) % numOutputs == 0) {
+                    writer.write(truth[i] + "");
+                    if (i < truth.length - numOutputs) {
+                        writer.write(",");
+                    }
+                }
+            }
+            writer.write(System.lineSeparator());
+
+        } catch (IOException ex) {
+            System.out.println("Error writing to file");
+        } finally {
+            try {
+                writer.close();
+            } catch (Exception ex) {
+                System.out.println("Error closing file");
+            }
+        }
     }
 
     public static void main(String[] args) {
