@@ -171,7 +171,7 @@ public class Station extends SimState{
     public Object domExitSize() {
         return new Interval(1, 10);
     }
-    
+
     public double[][] getExitProbs() {
         return exitProbs;
     }
