@@ -31,6 +31,7 @@ public class Wrapper{
     private static int downSample = 3;
     private static double sigmaNoise = 0.1; // The amount of noise to be added to the truth
 
+    // Options are used to set what is *observed* and what is *output*. See createOptions() for details.
     private static HashMap<Integer, Integer> optionsMap = createOptions();
     private static int option = 3;
     private static int numOutputs = optionsMap.get(option);
