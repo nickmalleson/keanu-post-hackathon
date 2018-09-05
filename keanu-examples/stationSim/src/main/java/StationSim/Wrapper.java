@@ -155,7 +155,7 @@ public class Wrapper{
         // Workaround for too many evaluations during sample startup
         random.setAndCascade(random.getValue());
 
-        // Sample: feed each randomNumber in and run the model
+        // Sample: feed each randomNumber in and runModel the model
         System.out.println("Sampling");
         NetworkSamples sampler = MetropolisHastings.getPosteriorSamples(testNet, Arrays.asList(box), numSamples);
 

@@ -252,7 +252,7 @@ public class Analysis implements Steppable {
             writer = new BufferedWriter(new OutputStreamWriter(
                     new FileOutputStream(dirName + "/" + fileName), "utf-8"));
             writer.write("<html><head><title>Parameters</title></head><body><p><h2>Parameter Settings</h2>");
-            writer.write("<h3>" + "Simulation run on " +
+            writer.write("<h3>" + "Simulation runModel on " +
                     now.getDayOfWeek() + " " + now.getDayOfMonth() + " " + now.getMonth() + " " + now.getYear() +
                     " at " + now.getHour() + ":" + now.getMinute() + ":" + now.getSecond() +
                     "</h3>");

@@ -12,3 +12,4 @@ results/*.csv
 results/*.dot
 results/plot/*
 results/*.dot.pdf
+results/simple/*
