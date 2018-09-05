@@ -13,6 +13,7 @@ import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.unary.Una
 import org.apache.commons.math3.random.RandomGenerator;
 
 import java.io.*;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -21,14 +22,18 @@ public class SimpleWrapper {
 
     /* Model parameters */
     private static final double threshold = 0.5;
-    private static final int NUM_RAND_DOUBLES = 10;
+    public static final int NUM_RAND_DOUBLES = 10;
     private static final int NUM_ITER = 1500;
 
     /* Hyperparameters */
     private static final double SIGMA_NOISE = 0.1;
-    private static final int NUM_SAMPLES = 500;
-    private static final int DROP_SAMPLES = 200;
-    private static final int DOWN_SAMPLE = 3;
+    private static final int NUM_SAMPLES = 10000;
+    private static final int DROP_SAMPLES = 5000;
+    private static final int DOWN_SAMPLE = 10;
+
+    private static final int numObservations = 5; // Number of points to observe (temporary - will be replaced with proper tests)
+
+    private static ArrayList<SimpleModel> models = new ArrayList<>(); // Keep all the models for analysis later
 
     //private static final long SEED = 1l;
     //private static final RandomGenerator random = new MersenneTwister(SEED);
@@ -40,14 +45,17 @@ public class SimpleWrapper {
 
 
     /** Run the SimpleModel and return the count at each iteration **/
+
     public static Integer[] runModel(RandomGenerator rand) {
         SimpleModel s = new SimpleModel(SimpleWrapper.threshold, rand);
 
         for (int i=0; i<NUM_ITER; i++) {
             s.step();
         }
+        SimpleWrapper.models.add(s);
         return s.getHistory();
     }
+
 
     /**
      * Run the probabilistic model
@@ -67,7 +75,9 @@ public class SimpleWrapper {
 
         // Observe the truth data plus some noise?
         System.out.println("Observing truth data. Adding noise with standard dev: " + SIGMA_NOISE);
-        for (Integer i = 0; i < NUM_ITER; i++) {
+        System.out.print("Observing at iterations: ");
+        for (Integer i = 0; i < NUM_ITER; i+=NUM_ITER/numObservations) {
+            System.out.print(i+",");
             // output is the ith element of the model output (from box)
             IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
             // output with a bit of noise. Lower sigma makes it more constrained.
@@ -75,6 +85,7 @@ public class SimpleWrapper {
             // Observe the output
             noisyOutput.observe(truth[i].doubleValue()); //.toDouble().scalar());
         }
+        System.out.println();
 
         // Create the BayesNet and write it out?
         System.out.println("Creating BayesNet");
@@ -98,14 +109,11 @@ public class SimpleWrapper {
         NetworkSamples sampler = MetropolisHastings.getPosteriorSamples(net, Arrays.asList(box), NUM_SAMPLES);
 
         // Get the number of people per iteration (an array of IntegerTensors) for each sample
-        List<Integer[]> samples = sampler.drop(DROP_SAMPLES).downSample(DOWN_SAMPLE).get(box).asList();
+        //List<Integer[]> samples = sampler.drop(DROP_SAMPLES).downSample(DOWN_SAMPLE).get(box).asList();
+        List<Integer[]> samples = sampler.get(box).asList();
 
         return samples;
     }
-
-
-
-
 
 
     /* Main */
@@ -118,15 +126,54 @@ public class SimpleWrapper {
         System.out.println("Making truth data");
         VertexBackedRandomGenerator truthRandom = new VertexBackedRandomGenerator(NUM_RAND_DOUBLES, 0, 0);
         Integer[] truth = SimpleWrapper.runModel(truthRandom);
+
         System.out.println("Truth data length: " + truth.length);
-        System.out.println(Arrays.asList(truth).toString());
+        System.out.println(Arrays.asList(truth).toString() + "\n\n");
 
         //Run kenanu
         //ArrayList<Integer> obIntervals = new ArrayList<>(Arrays.asList(0,1));
         //obIntervals.parallelStream().forEach(i -> keanu(truth, i, timestamp, justCreateGraphs));
-
         List<Integer[]> samples = runKeanu(truth, true);
 
-    }
+        System.out.println("Finished running. Ran " + samples.size() + " samples and " + models.size() + " models");
 
+
+
+
+        // Write out random numbers used and the actual results
+        Writer w1, w2;
+        long time = System.currentTimeMillis();
+        try {
+            w1 = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(dirName + "Results_" + time + ".csv"), "utf-8"));
+            w2 = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(dirName + "RandomNumbers_" + time + ".csv"), "utf-8"));
+
+            // Do the truth data first
+            for (int val : truth) w1.write(val + ","); // Values
+            w1.write("\n");
+            // (First model created is the truth model, hence get(0) )
+            for (double rand : models.get(0).getRandomNumbers()) w2.write(rand + ",");
+            w2.write("\n");
+
+            // Now the samples. Results first, then the random numbers
+            for (Integer[] sample : samples) {
+                for (int val : sample) {
+                    w1.write(val + ",");
+                }
+                w1.write("\n");
+            }
+            for (int i = 1; i < models.size(); i++) { // start from 1 as element 0 is the truth model
+                for (double rand : models.get(i).getRandomNumbers()) {
+                    w2.write(rand + ",");
+                }
+                w2.write("\n");
+            }
+            w1.close();
+            w2.close();
+        } catch (IOException ex) {
+            System.out.println("Error writing to file");
+        }
+
+    }
 }
