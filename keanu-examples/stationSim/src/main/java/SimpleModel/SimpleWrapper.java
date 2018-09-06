@@ -33,8 +33,6 @@ public class SimpleWrapper {
 
     private static final int numObservations = 5; // Number of points to observe (temporary - will be replaced with proper tests)
 
-    private static ArrayList<SimpleModel> models = new ArrayList<>(); // Keep all the models for analysis later
-
     //private static final long SEED = 1l;
     //private static final RandomGenerator random = new MersenneTwister(SEED);
 
@@ -52,7 +50,6 @@ public class SimpleWrapper {
         for (int i=0; i<NUM_ITER; i++) {
             s.step();
         }
-        SimpleWrapper.models.add(s);
         return s.getHistory();
     }
 
@@ -135,7 +132,7 @@ public class SimpleWrapper {
         //obIntervals.parallelStream().forEach(i -> keanu(truth, i, timestamp, justCreateGraphs));
         List<Integer[]> samples = runKeanu(truth, true);
 
-        System.out.println("Finished running. Ran " + samples.size() + " samples and " + models.size() + " models");
+        System.out.println("Finished running. Ran " + samples.size() + " samples and " + SimpleModel.getNumModelsCreated() + " models");
 
 
 
@@ -146,31 +143,19 @@ public class SimpleWrapper {
         try {
             w1 = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream(dirName + "Results_" + time + ".csv"), "utf-8"));
-            w2 = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(dirName + "RandomNumbers_" + time + ".csv"), "utf-8"));
 
             // Do the truth data first
             for (int val : truth) w1.write(val + ","); // Values
             w1.write("\n");
-            // (First model created is the truth model, hence get(0) )
-            for (double rand : models.get(0).getRandomNumbers()) w2.write(rand + ",");
-            w2.write("\n");
 
-            // Now the samples. Results first, then the random numbers
+            // Now the samples
             for (Integer[] sample : samples) {
                 for (int val : sample) {
                     w1.write(val + ",");
                 }
                 w1.write("\n");
             }
-            for (int i = 1; i < models.size(); i++) { // start from 1 as element 0 is the truth model
-                for (double rand : models.get(i).getRandomNumbers()) {
-                    w2.write(rand + ",");
-                }
-                w2.write("\n");
-            }
             w1.close();
-            w2.close();
         } catch (IOException ex) {
             System.out.println("Error writing to file");
         }

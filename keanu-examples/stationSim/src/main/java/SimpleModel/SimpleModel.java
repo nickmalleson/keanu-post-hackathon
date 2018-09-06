@@ -25,6 +25,7 @@ public class SimpleModel {
     /* Constructors */
 
     public SimpleModel(double threshold, RandomGenerator random ) {
+        SimpleModel.modelCount++;
         this.threshold = threshold;
         this.random = random;
         this.randomNumbers = new ArrayList<Double>();
@@ -72,6 +73,10 @@ public class SimpleModel {
 
     public List<Double> getRandomNumbers() {
         return this.randomNumbers;
+    }
+
+    public static int getNumModelsCreated() {
+        return SimpleModel.modelCount;
     }
 
 
