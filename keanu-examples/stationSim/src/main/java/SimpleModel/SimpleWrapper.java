@@ -59,12 +59,19 @@ public class SimpleWrapper {
 
     /**
      * Run the probabilistic model
-     *
-     * @return A list of samples of the posterior
      **/
-    public static List<Integer[]> runKeanu(Integer[] truth, boolean createGraph) {
+    public static void run() {
+        System.out.println("Starting. Number of iterations: " + NUM_ITER);
 
-        System.out.println("Initialising random number stream");
+        System.out.println("Making truth data");
+        System.out.println("Initialising random number stream for truth data");
+        VertexBackedRandomGenerator truthRandom = new VertexBackedRandomGenerator(NUM_RAND_DOUBLES, 0, 0);
+        Integer[] truth = SimpleWrapper.runModel(truthRandom);
+
+        System.out.println("Truth data length: " + truth.length);
+        System.out.println(Arrays.asList(truth).toString() + "\n\n");
+
+        System.out.println("Initialising new random number stream");
         RandomFactoryVertex random = new RandomFactoryVertex(NUM_RAND_DOUBLES, 0, 0);
 
         // This is the 'black box' vertex that runs the model. It's input is the random numbers and
@@ -87,9 +94,38 @@ public class SimpleWrapper {
         }
         System.out.println();
 
-        // Create the BayesNet and write it out?
+        // Create the BayesNet
         System.out.println("Creating BayesNet");
         BayesianNetwork net = new BayesianNetwork(box.getConnectedGraph());
+        SimpleWrapper.writeBaysNetToFile(net);
+
+        // Workaround for too many evaluations during sample startup
+        //random.setAndCascade(random.getValue());
+
+        // Sample from the posterior
+        System.out.println("Sampling");
+        NetworkSamples sampler = MetropolisHastings.getPosteriorSamples(net, Arrays.asList(box), NUM_SAMPLES);
+
+        // Get the number of people per iteration (an array of IntegerTensors) for each sample
+        List<Integer[]> samples = sampler.drop(DROP_SAMPLES).downSample(DOWN_SAMPLE).get(box).asList();
+        //List<Integer[]> samples = sampler.get(box).asList();
+
+        System.out.println("Finished running. Have saved " + samples.size() + " samples and ran " + models.size() + " models");
+
+        SimpleWrapper.writeResults(samples, truth);
+    }
+
+
+
+
+    /* Main */
+
+    public static void main (String[] args) {
+
+        SimpleWrapper.run();
+    }
+
+    private static void writeBaysNetToFile(BayesianNetwork net) {
         try {
             System.out.println("Writing out graph");
             Writer graphWriter = new BufferedWriter(new OutputStreamWriter(
@@ -100,45 +136,9 @@ public class SimpleWrapper {
         } catch (IOException ex) {
             System.out.println("Error writing graph to file");
         }
-
-        // Workaround for too many evaluations during sample startup
-        //random.setAndCascade(random.getValue());
-
-        // Sample from the posterior
-        System.out.println("Sampling");
-        NetworkSamples sampler = MetropolisHastings.getPosteriorSamples(net, Arrays.asList(box), NUM_SAMPLES);
-
-        // Get the number of people per iteration (an array of IntegerTensors) for each sample
-        //List<Integer[]> samples = sampler.drop(DROP_SAMPLES).downSample(DOWN_SAMPLE).get(box).asList();
-        List<Integer[]> samples = sampler.get(box).asList();
-
-        return samples;
     }
 
-
-    /* Main */
-
-    public static void main (String[] args) {
-
-        System.out.println("Starting. Number of iterations: " + NUM_ITER);
-
-        // Make truth data
-        System.out.println("Making truth data");
-        VertexBackedRandomGenerator truthRandom = new VertexBackedRandomGenerator(NUM_RAND_DOUBLES, 0, 0);
-        Integer[] truth = SimpleWrapper.runModel(truthRandom);
-
-        System.out.println("Truth data length: " + truth.length);
-        System.out.println(Arrays.asList(truth).toString() + "\n\n");
-
-        //Run kenanu
-        //ArrayList<Integer> obIntervals = new ArrayList<>(Arrays.asList(0,1));
-        //obIntervals.parallelStream().forEach(i -> keanu(truth, i, timestamp, justCreateGraphs));
-        List<Integer[]> samples = runKeanu(truth, true);
-
-        System.out.println("Finished running. Ran " + samples.size() + " samples and " + models.size() + " models");
-
-
-
+    private static void writeResults(List<Integer[]> samples, Integer[] truth) {
 
         // Write out random numbers used and the actual results
         Writer w1, w2;
@@ -174,6 +174,5 @@ public class SimpleWrapper {
         } catch (IOException ex) {
             System.out.println("Error writing to file");
         }
-
     }
 }
