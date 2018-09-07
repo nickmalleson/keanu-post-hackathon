@@ -140,15 +140,10 @@ public class SimpleWrapper {
         try {
             w1 = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream(dirName + "Results_" + time + ".csv"), "utf-8"));
-            w2 = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(dirName + "RandomNumbers_" + time + ".csv"), "utf-8"));
 
             // Do the truth data first
             for (int val : truth) w1.write(val + ","); // Values
             w1.write("\n");
-            // (First model created is the truth model, hence get(0) )
-            for (double rand : models.get(0).getRandomNumbers()) w2.write(rand + ",");
-            w2.write("\n");
 
             // Now the samples. Results first, then the random numbers
             for (Integer[] sample : samples) {
@@ -157,14 +152,7 @@ public class SimpleWrapper {
                 }
                 w1.write("\n");
             }
-            for (int i = 1; i < models.size(); i++) { // start from 1 as element 0 is the truth model
-                for (double rand : models.get(i).getRandomNumbers()) {
-                    w2.write(rand + ",");
-                }
-                w2.write("\n");
-            }
             w1.close();
-            w2.close();
         } catch (IOException ex) {
             System.out.println("Error writing to file");
         }
