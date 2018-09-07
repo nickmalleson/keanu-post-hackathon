@@ -9,5 +9,9 @@ graphs: # Creates a graph from GraphViz format
 	done 
 	
 clean:
-	rm *.dot *.pdf *.csv
+	rm -r *.dot *.pdf *.csv *_cache *_files cache
 	
+
+results:
+	Rscript -e "require(knitr) ; require(markdown) ;knit('ResultsSummary-Simple.Rmd', 'ResultsSummary-Simple.md'); markdownToHTML('ResultsSummary-Simple.md', 'ResultsSummary-Simple.html');"
+	open ResultsSummary-Simple.html

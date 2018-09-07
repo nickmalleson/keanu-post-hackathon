@@ -15,4 +15,7 @@ results/*.dot.pdf
 results/simple/*.csv
 results/simple/*.dot
 results/simple/*.dot.pdf
-results/ResultsSummary_*
+results/simple/*_cache
+results/simple/*_files
+results/simple/figure/
+results/simple/ResultsSummary-Simple.md

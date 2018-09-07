@@ -22,14 +22,15 @@ public class SimpleWrapper {
 
     /* Model parameters */
     private static final double threshold = 0.5;
-    public static final int NUM_RAND_DOUBLES = 10;
+    public static final int NUM_RAND_DOUBLES = 2;
     private static final int NUM_ITER = 100;
 
     /* Hyperparameters */
     private static final double SIGMA_NOISE = 0.1;
-    private static final int NUM_SAMPLES = 100;
-    private static final int DROP_SAMPLES = 5;
-    private static final int DOWN_SAMPLE = 10;
+    private static final int NUM_SAMPLES = 10000;
+    private static final int DROP_SAMPLES = 1;
+    //private static final int DROP_SAMPLES = NUM_SAMPLES/4;
+    private static final int DOWN_SAMPLE = 1;
 
     private static final int numObservations = 5; // Number of points to observe (temporary - will be replaced with proper tests)
 
@@ -104,15 +105,23 @@ public class SimpleWrapper {
 
         // Sample from the posterior
         System.out.println("Sampling");
-        NetworkSamples sampler = MetropolisHastings.getPosteriorSamples(net, Arrays.asList(box), NUM_SAMPLES);
+        NetworkSamples sampler = MetropolisHastings.getPosteriorSamples(
+            net,                        // The bayes net with latent variables (the random numbers?)
+            Arrays.asList(box),         // The vertices to include in the returned samples
+            NUM_SAMPLES);               // The number of samples
 
-        // Get the number of people per iteration (an array of IntegerTensors) for each sample
-        List<Integer[]> samples = sampler.drop(DROP_SAMPLES).downSample(DOWN_SAMPLE).get(box).asList();
-        //List<Integer[]> samples = sampler.get(box).asList();
+        System.out.println("Finished running MCMC.");
 
-        System.out.println("Finished running. Have saved " + samples.size() + " samples and ran " + models.size() + " models");
+        // Get the number of people per iteration for each sample
+        List<Integer[]> peopleSamples = sampler.drop(DROP_SAMPLES).downSample(DOWN_SAMPLE).get(box).asList();
+        System.out.println("Have saved " + peopleSamples.size() + " samples and ran " + models.size() + " models");
+        SimpleWrapper.writeResults(peopleSamples , truth);
 
-        SimpleWrapper.writeResults(samples, truth);
+        // Get the random numbers used in each sample
+
+        System.out.println(random.getId());
+        List<VertexBackedRandomGenerator> randomParamSamples = sampler.drop(DROP_SAMPLES).downSample(DOWN_SAMPLE).get(random).asList();
+
     }
 
 

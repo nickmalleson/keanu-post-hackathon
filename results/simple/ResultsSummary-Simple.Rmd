@@ -34,7 +34,8 @@ setwd(homedir)
 samples.files <- grep("Results.*.csv", list.files(path = "."), value=TRUE)
 
 if (length(samples.files) != 1) {
-  stop("Only work with one results file at a time. Please move any others somewhere else")
+  message("Found multiple samples files. Using the most recent one.")
+  samples.files <- samples.files[-1]
 }
 
 # Read te file in
@@ -61,7 +62,7 @@ spag_plot <- function(samples, truth) {
   truth_col <- "red"
 
   #create plot
-  plot(1, xlim=c(0, max(x_axis)), ylim=c(min(samples), max(samples)), type='l',
+  plot(1, xlim=c(0, max(x_axis)), ylim=c(min(rbind(truth,samples)), max(rbind(truth,samples))), type='l',
        xlab="Number of iterations", ylab = "Number of agents" )
   map(1:nrow(samples), function(x) lines(x_axis, samples[x,], type='l', col=sample_col))
   lines(x_axis, truth, type='l', lwd=2.5, col = truth_col)
@@ -79,7 +80,7 @@ spag_plot(samples, truth)
 
 Create the plots
 
-```{r density.plot-create, cache=TRUE}
+```{r density.plot-create}
 
 # Returns a single ggplot2 density plot
 density_plot <- function(s, truth) {
