@@ -118,12 +118,6 @@ public class SimpleWrapper {
 
 
 
-    /* Main */
-
-    public static void main (String[] args) {
-
-        SimpleWrapper.run();
-    }
 
     private static void writeBaysNetToFile(BayesianNetwork net) {
         try {
@@ -174,5 +168,10 @@ public class SimpleWrapper {
         } catch (IOException ex) {
             System.out.println("Error writing to file");
         }
+    }
+
+    public static void main (String[] args) {
+
+        SimpleWrapper.run();
     }
 }
