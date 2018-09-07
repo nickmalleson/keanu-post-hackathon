@@ -23,12 +23,12 @@ public class SimpleWrapper {
     /* Model parameters */
     private static final double threshold = 0.5;
     public static final int NUM_RAND_DOUBLES = 10;
-    private static final int NUM_ITER = 1500;
+    private static final int NUM_ITER = 100;
 
     /* Hyperparameters */
     private static final double SIGMA_NOISE = 0.1;
-    private static final int NUM_SAMPLES = 10000;
-    private static final int DROP_SAMPLES = 5000;
+    private static final int NUM_SAMPLES = 100;
+    private static final int DROP_SAMPLES = 5;
     private static final int DOWN_SAMPLE = 10;
 
     private static final int numObservations = 5; // Number of points to observe (temporary - will be replaced with proper tests)
@@ -142,10 +142,12 @@ public class SimpleWrapper {
                 new FileOutputStream(dirName + "Results_" + time + ".csv"), "utf-8"));
 
             // Do the truth data first
-            for (int val : truth) w1.write(val + ","); // Values
+            for (int val : truth) {
+                w1.write(val + ","); // Values
+            }
             w1.write("\n");
 
-            // Now the samples. Results first, then the random numbers
+            // Now the samples.
             for (Integer[] sample : samples) {
                 for (int val : sample) {
                     w1.write(val + ",");
