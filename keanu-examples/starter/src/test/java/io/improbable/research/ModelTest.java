@@ -1,4 +1,4 @@
-package com.example.starter;
+package io.improbable.research;
 
 import org.junit.Test;
 
