@@ -28,7 +28,7 @@ public class SimpleWrapper {
 
     /* Model parameters */
     private static final double threshold = 0.5;
-    public static final int NUM_RAND_DOUBLES = 50;
+    public static final int NUM_RAND_DOUBLES = 10;
     private static final int NUM_ITER = 100;
 
     /* Hyperparameters */
