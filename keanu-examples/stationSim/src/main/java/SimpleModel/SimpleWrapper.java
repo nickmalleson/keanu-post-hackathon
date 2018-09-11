@@ -7,6 +7,8 @@ import io.improbable.keanu.research.randomfactory.VertexBackedRandomGenerator;
 import io.improbable.keanu.research.vertices.IntegerArrayIndexingVertex;
 import io.improbable.keanu.research.vertices.RandomFactoryVertex;
 import io.improbable.keanu.research.visualisation.GraphvizKt;
+import io.improbable.keanu.tensor.dbl.DoubleTensor;
+import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.dbl.nonprobabilistic.CastDoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.unary.UnaryOpLambda;
@@ -17,6 +19,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.DoubleStream;
+import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 public class SimpleWrapper {
 
@@ -30,7 +36,7 @@ public class SimpleWrapper {
     private static final int NUM_SAMPLES = 10000;
     private static final int DROP_SAMPLES = 1;
     //private static final int DROP_SAMPLES = NUM_SAMPLES/4;
-    private static final int DOWN_SAMPLE = 1;
+    private static final int DOWN_SAMPLE = 5;
 
     private static final int numObservations = 5; // Number of points to observe (temporary - will be replaced with proper tests)
 
@@ -70,7 +76,13 @@ public class SimpleWrapper {
         Integer[] truth = SimpleWrapper.runModel(truthRandom);
 
         System.out.println("Truth data length: " + truth.length);
-        System.out.println(Arrays.asList(truth).toString() + "\n\n");
+        System.out.println("Truth data: "+Arrays.asList(truth).toString() + "\n\n");
+        System.out.println("Truth random numbers:");
+        for (int i=0; i<NUM_RAND_DOUBLES; i++) System.out.print(truthRandom.nextDouble()+", ");
+        System.out.println();
+
+        (new ArrayList<String>(NUM_RAND_DOUBLES)).forEach(i -> System.out.print(truthRandom.nextDouble()+", "));
+        System.out.println();
 
         System.out.println("Initialising new random number stream");
         RandomFactoryVertex random = new RandomFactoryVertex(NUM_RAND_DOUBLES, 0, 0);
@@ -105,22 +117,54 @@ public class SimpleWrapper {
 
         // Sample from the posterior
         System.out.println("Sampling");
+
+        // These objectcs represent the random numbers used in the probabilistic model
+        List<GaussianVertex> randNumbers = new ArrayList(random.getValue().randDoubleSource);
+
+        // Collect all the parameters that we want to sample (the random numbers and the box model)
+
+        List<Vertex> parameters = new ArrayList<>(NUM_RAND_DOUBLES+1); // Big enough to hold the random numbers and the box
+        parameters.add(box);
+        parameters.addAll(randNumbers);
+
+        // Sample from the box and the random numbers
         NetworkSamples sampler = MetropolisHastings.getPosteriorSamples(
-            net,                        // The bayes net with latent variables (the random numbers?)
-            Arrays.asList(box),         // The vertices to include in the returned samples
-            NUM_SAMPLES);               // The number of samples
+            net,                // The bayes net with latent variables (the random numbers?)
+            parameters,         // The vertices to include in the returned samples
+            NUM_SAMPLES);       // The number of samples
 
         System.out.println("Finished running MCMC.");
 
+        // Downsample etc
+        sampler = sampler.drop(DROP_SAMPLES).downSample(DOWN_SAMPLE);
+
+        // Get the random numbers. A 2D list. First dimension holds the random number, second dimensions holds its samples.
+        List<List<Double>> randomNumberSamples = new ArrayList<List<Double>>(NUM_SAMPLES);
+        // Add each random number parameter to the list
+        for (int i=0; i<NUM_RAND_DOUBLES; i++) {
+            List<DoubleTensor> randSamples = sampler.get(randNumbers.get(i)).asList();
+            // Convert from Tensors to Doubles
+            List<Double> randSamplesDouble =
+                randSamples.stream().map( (d) -> d.getValue(0)).collect(Collectors.toList());
+            randomNumberSamples.add(randSamplesDouble);
+        }
+
+        // Print the random numbers
+        for (int sample = 0; sample<randomNumberSamples.get(0).size(); sample++) {
+            System.out.print("Sample "+sample+" - ");
+            for (int d = 0; d<NUM_RAND_DOUBLES; d++) {
+                System.out.print(randomNumberSamples.get(d).get(sample)+", ");
+            }
+            System.out.println();
+
+        }
+        
+
         // Get the number of people per iteration for each sample
-        List<Integer[]> peopleSamples = sampler.drop(DROP_SAMPLES).downSample(DOWN_SAMPLE).get(box).asList();
+        //List<Integer[]> peopleSamples = sampler.get(box).asList();
+        List<Integer[]> peopleSamples = sampler.get(box).asList();
         System.out.println("Have saved " + peopleSamples.size() + " samples and ran " + models.size() + " models");
         SimpleWrapper.writeResults(peopleSamples , truth);
-
-        // Get the random numbers used in each sample
-
-        System.out.println(random.getId());
-        List<VertexBackedRandomGenerator> randomParamSamples = sampler.drop(DROP_SAMPLES).downSample(DOWN_SAMPLE).get(random).asList();
 
     }
 
