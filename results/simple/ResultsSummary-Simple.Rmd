@@ -20,6 +20,7 @@ library(ggplot2)
 library(hexbin) # (this is called automatically if required, but putting it here ensures it has been installed)
 library(gridExtra) # For arranging two grids side by side
 #library(reshape2) # for melting (taking wide format and making it narrow)
+library(xtable) # for making nice tables
 
 
 homedir<-"/Users/nick/research_not_syncd/git_projects/keanu-post-hackathon/results/simple"
@@ -32,24 +33,37 @@ setwd(homedir)
 ```{r laodData}
 # Find files
 samples.files <- grep("Results.*.csv", list.files(path = "."), value=TRUE)
+rands.files <- grep("Rands.*.csv", list.files(path = "."), value=TRUE)
+
+if (length(samples.files) != length(rands.files)) {
+  stop("For some reason there are a different number of results files and random number files.
+       This is weird so I'm not continuing.")
+}
 
 if (length(samples.files) != 1) {
   message("Found multiple samples files. Using the most recent one.")
   samples.files <- samples.files[-1]
+  rand.files  <- rand.files[-1]
 }
 
-# Read te file in
+# Read the file in
 samples <- read_csv(samples.files[1], col_names=FALSE)
+rands <- read_csv(rands.files[1], col_names=FALSE)
 
 samples[,ncol(samples)] <- NULL # Last column is NA because I lazily write too many commas
+rands[,ncol(rands)] <- NULL # Last column is NA because I lazily write too many commas
+
 
 # Truth data are the first entry
-truth <- samples[1,]
+truth.results <- samples[1,]
 samples <- samples[-1,]
+
+truth.rands <- rands[1,]
+rands <- rands[-1,]
 
 ```
 
-# Plot results
+# Plot results (look at the people per iteration)
 
 ## Spaghetti plot
 
@@ -72,7 +86,7 @@ spag_plot <- function(samples, truth) {
 
 
 #map2(samples, obIntervals, function(x, obInterval) spag_plot(x, truth, obInterval))
-spag_plot(samples, truth)
+spag_plot(samples, truth.results)
 
 ```
 
@@ -110,8 +124,31 @@ density_plot <- function(s, truth) {
 }
   
 #plots <- map2(samples, obIntervals, function(x, obInterval) density_plot(x, truth, obInterval))
-density_plot(samples, truth)
+density_plot(samples, truth.results)
 
 ```
+
+# Plot random numbers
+
+XXXX Look at how the random numbers changed
+
+_(For now just make a table)_
+
+## 'True' random numbers
+
+```{r randTruthTable, results="asis"}
+print(xtable(
+  truth.rands
+  ), type = "html")
+```
+
+## Random number samples
+
+```{r randTable, results="asis"}
+print(xtable(
+  rands
+  ), type = "html")
+```
+
 
 
