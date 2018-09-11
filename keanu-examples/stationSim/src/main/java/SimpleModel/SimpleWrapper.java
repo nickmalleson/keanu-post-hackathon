@@ -70,19 +70,34 @@ public class SimpleWrapper {
     public static void run() {
         System.out.println("Starting. Number of iterations: " + NUM_ITER);
 
+        /*
+                ************ CREATE THE TRUTH DATA ************
+         */
+
         System.out.println("Making truth data");
         System.out.println("Initialising random number stream for truth data");
         VertexBackedRandomGenerator truthRandom = new VertexBackedRandomGenerator(NUM_RAND_DOUBLES, 0, 0);
+
+        // Store the random numbers used (for comparison later)
+        List<Double> truthRandomNumbers = new ArrayList<>(NUM_RAND_DOUBLES);
+        for (int i=0; i<NUM_RAND_DOUBLES; i++) truthRandomNumbers.add(truthRandom.nextDouble());
+
+        // Run the model
         Integer[] truth = SimpleWrapper.runModel(truthRandom);
 
         System.out.println("Truth data length: " + truth.length);
         System.out.println("Truth data: "+Arrays.asList(truth).toString() + "\n\n");
         System.out.println("Truth random numbers:");
-        for (int i=0; i<NUM_RAND_DOUBLES; i++) System.out.print(truthRandom.nextDouble()+", ");
-        System.out.println();
+        System.out.println(truthRandomNumbers.toString());
 
         (new ArrayList<String>(NUM_RAND_DOUBLES)).forEach(i -> System.out.print(truthRandom.nextDouble()+", "));
         System.out.println();
+
+
+
+        /*
+         ************ INITIALISE THE BLACK BOX MODEL ************
+         */
 
         System.out.println("Initialising new random number stream");
         RandomFactoryVertex random = new RandomFactoryVertex(NUM_RAND_DOUBLES, 0, 0);
@@ -92,6 +107,13 @@ public class SimpleWrapper {
         System.out.println("Initialising black box model");
         UnaryOpLambda<VertexBackedRandomGenerator, Integer[]> box =
             new UnaryOpLambda<>( random, SimpleWrapper::runModel);
+
+
+
+        /*
+         ************ OBSERVE SOME TRUTH DATA ************
+         */
+
 
         // Observe the truth data plus some noise?
         System.out.println("Observing truth data. Adding noise with standard dev: " + SIGMA_NOISE);
@@ -107,6 +129,11 @@ public class SimpleWrapper {
         }
         System.out.println();
 
+
+        /*
+         ************ CREATE THE BAYES NET ************
+         */
+
         // Create the BayesNet
         System.out.println("Creating BayesNet");
         BayesianNetwork net = new BayesianNetwork(box.getConnectedGraph());
@@ -115,6 +142,11 @@ public class SimpleWrapper {
         // Workaround for too many evaluations during sample startup
         //random.setAndCascade(random.getValue());
 
+
+        /*
+         ************ SAMPLE FROM THE POSTERIOR************
+         */
+
         // Sample from the posterior
         System.out.println("Sampling");
 
@@ -122,7 +154,6 @@ public class SimpleWrapper {
         List<GaussianVertex> randNumbers = new ArrayList(random.getValue().randDoubleSource);
 
         // Collect all the parameters that we want to sample (the random numbers and the box model)
-
         List<Vertex> parameters = new ArrayList<>(NUM_RAND_DOUBLES+1); // Big enough to hold the random numbers and the box
         parameters.add(box);
         parameters.addAll(randNumbers);
@@ -138,6 +169,11 @@ public class SimpleWrapper {
         // Downsample etc
         sampler = sampler.drop(DROP_SAMPLES).downSample(DOWN_SAMPLE);
 
+
+        /*
+         ************ GET THE INFORMATION OUT OF THE SAMPLES ************
+         */
+
         // Get the random numbers. A 2D list. First dimension holds the random number, second dimensions holds its samples.
         List<List<Double>> randomNumberSamples = new ArrayList<List<Double>>(NUM_SAMPLES);
         // Add each random number parameter to the list
@@ -149,27 +185,48 @@ public class SimpleWrapper {
             randomNumberSamples.add(randSamplesDouble);
         }
 
-        // Print the random numbers
-        for (int sample = 0; sample<randomNumberSamples.get(0).size(); sample++) {
-            System.out.print("Sample "+sample+" - ");
-            for (int d = 0; d<NUM_RAND_DOUBLES; d++) {
-                System.out.print(randomNumberSamples.get(d).get(sample)+", ");
-            }
-            System.out.println();
-
-        }
-        
+        String theTime = String.valueOf(System.currentTimeMillis()); // So files have unique names
+        SimpleWrapper.writeRandomNumbers(randomNumberSamples, truthRandomNumbers, theTime);
 
         // Get the number of people per iteration for each sample
-        //List<Integer[]> peopleSamples = sampler.get(box).asList();
         List<Integer[]> peopleSamples = sampler.get(box).asList();
         System.out.println("Have saved " + peopleSamples.size() + " samples and ran " + models.size() + " models");
-        SimpleWrapper.writeResults(peopleSamples , truth);
+        SimpleWrapper.writeResults(peopleSamples , truth, theTime);
 
     }
 
 
 
+
+
+    /*
+    **************** ADMIN STUFF ****************
+     */
+
+    private static void writeRandomNumbers(List<List<Double>> randomNumberSamples, List<Double> truthRandomNumbers, String name) {
+
+        // Write out random numbers used and the actual results
+        Writer w1;
+        try {
+            w1 = new BufferedWriter(new OutputStreamWriter(
+                new FileOutputStream(dirName + "Rands_" + name + ".csv"), "utf-8"));
+
+            // Do the truth data first
+            for (double val : truthRandomNumbers) w1.write(val + ",");
+            w1.write("\n");
+
+            // Now the samples.
+            for (int sample = 0; sample<randomNumberSamples.get(0).size(); sample++) {
+                for (int d = 0; d<NUM_RAND_DOUBLES; d++) {
+                    w1.write(randomNumberSamples.get(d).get(sample)+", ");
+                }
+                w1.write("\n");
+            }
+            w1.close();
+        } catch (IOException ex) {
+            System.out.println("Error writing to file");
+        }
+    }
 
 
     private static void writeBaysNetToFile(BayesianNetwork net) {
@@ -185,14 +242,13 @@ public class SimpleWrapper {
         }
     }
 
-    private static void writeResults(List<Integer[]> samples, Integer[] truth) {
+    private static void writeResults(List<Integer[]> samples, Integer[] truth, String name) {
 
-        // Write out random numbers used and the actual results
-        Writer w1, w2;
-        long time = System.currentTimeMillis();
+        // Write out the model results (people per iteration)
+        Writer w1;
         try {
             w1 = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(dirName + "Results_" + time + ".csv"), "utf-8"));
+                new FileOutputStream(dirName + "Results_" + name + ".csv"), "utf-8"));
 
             // Do the truth data first
             for (int val : truth) {
