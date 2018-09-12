@@ -241,9 +241,9 @@ Output}</string>
 								AAAAAAAAAAAA
 								AAAAAAAAAAAA
 								AAD21gABAAAA
-								ANMtYXBwbHuB
-								R48ySeTZc+ut
-								LOki444AAAAA
+								ANMtYXBwbAAA
+								AAAAAAAAAAAA
+								AAAAAAAAAAAA
 								AAAAAAAAAAAA
 								AAAAAAAAAAAA
 								AAAAAAAAAAAA
@@ -785,9 +785,9 @@ Input}</string>
 								AAAAAAAAAAAA
 								AAAAAAAAAAAA
 								AAD21gABAAAA
-								ANMtYXBwbHuB
-								R48ySeTZc+ut
-								LOki444AAAAA
+								ANMtYXBwbAAA
+								AAAAAAAAAAAA
+								AAAAAAAAAAAA
 								AAAAAAAAAAAA
 								AAAAAAAAAAAA
 								AAAAAAAAAAAA
@@ -1159,9 +1159,9 @@ Output}</string>
 								AAAAAAAAAAAA
 								AAAAAAAAAAAA
 								AAD21gABAAAA
-								ANMtYXBwbHuB
-								R48ySeTZc+ut
-								LOki444AAAAA
+								ANMtYXBwbAAA
+								AAAAAAAAAAAA
+								AAAAAAAAAAAA
 								AAAAAAAAAAAA
 								AAAAAAAAAAAA
 								AAAAAAAAAAAA
@@ -1703,9 +1703,9 @@ Input}</string>
 								AAAAAAAAAAAA
 								AAAAAAAAAAAA
 								AAD21gABAAAA
-								ANMtYXBwbHuB
-								R48ySeTZc+ut
-								LOki444AAAAA
+								ANMtYXBwbAAA
+								AAAAAAAAAAAA
+								AAAAAAAAAAAA
 								AAAAAAAAAAAA
 								AAAAAAAAAAAA
 								AAAAAAAAAAAA
@@ -2109,7 +2109,7 @@ Input}</string>
 		</dict>
 		<dict>
 			<key>Bounds</key>
-			<string>{{541.91317570044453, 449.49851035013853}, {53, 22}}</string>
+			<string>{{541.91317580335033, 449.4985103293161}, {53, 22}}</string>
 			<key>Class</key>
 			<string>ShapedGraphic</string>
 			<key>FitText</key>
@@ -2171,7 +2171,7 @@ Input}</string>
 		</dict>
 		<dict>
 			<key>Bounds</key>
-			<string>{{399.68283959214978, 448.33637834848673}, {53, 22}}</string>
+			<string>{{399.68284009819746, 448.33637836475015}, {53, 22}}</string>
 			<key>Class</key>
 			<string>ShapedGraphic</string>
 			<key>FitText</key>
@@ -2296,8 +2296,8 @@ Input}</string>
 			<integer>152</integer>
 			<key>Points</key>
 			<array>
-				<string>{527.13320312021574, 423.17614760155368}</string>
-				<string>{588.79900563473836, 478.9299019471157}</string>
+				<string>{527.13320314411692, 423.17614760136826}</string>
+				<string>{588.79900577666012, 478.92990191610181}</string>
 			</array>
 			<key>Style</key>
 			<dict>
@@ -2386,8 +2386,8 @@ If the samples are tightly constrained around the unknown 'real' data, then the 
 			<integer>122</integer>
 			<key>Points</key>
 			<array>
-				<string>{499.68837563717352, 423.06208912460136}</string>
-				<string>{381.32658383363997, 481.47251778005432}</string>
+				<string>{499.68837574144618, 423.06208912469992}</string>
+				<string>{381.3265845848681, 481.47251780618217}</string>
 			</array>
 			<key>Style</key>
 			<dict>
@@ -2511,8 +2511,8 @@ If the samples are tightly constrained around the unknown 'real' data, then the 
 						AgAAAG1udHJSR0IgWFlaIAfYAAEA
 						FQAOAA4AA2Fjc3BBUFBMAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAAAAD2
-						1gABAAAAANMtYXBwbHuBR48ySeTZ
-						c+utLOki444AAAAAAAAAAAAAAAAA
+						1gABAAAAANMtYXBwbAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAADnJY
 						WVoAAAEsAAAAFGdYWVoAAAFAAAAA
 						FGJYWVoAAAFUAAAAFHd0cHQAAAFo
@@ -3335,8 +3335,8 @@ If the samples are tightly constrained around the unknown 'real' data, then the 
 						AgAAAG1udHJSR0IgWFlaIAfYAAEA
 						FQAOAA4AA2Fjc3BBUFBMAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAAAAD2
-						1gABAAAAANMtYXBwbHuBR48ySeTZ
-						c+utLOki444AAAAAAAAAAAAAAAAA
+						1gABAAAAANMtYXBwbAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAADnJY
 						WVoAAAEsAAAAFGdYWVoAAAFAAAAA
 						FGJYWVoAAAFUAAAAFHd0cHQAAAFo
@@ -3421,7 +3421,7 @@ If the samples are tightly constrained around the unknown 'real' data, then the 
 		</dict>
 		<dict>
 			<key>Bounds</key>
-			<string>{{15.686274803129379, 321.84080882293017}, {104.5294189453125, 98}}</string>
+			<string>{{15.686274803129379, 321.84080882293017}, {104.5294189453125, 84}}</string>
 			<key>Class</key>
 			<string>ShapedGraphic</string>
 			<key>FitText</key>
@@ -3462,7 +3462,7 @@ If the samples are tightly constrained around the unknown 'real' data, then the 
 \pard\tx560\tx1120\tx1680\tx2240\tx2800\tx3360\tx3920\tx4480\tx5040\tx5600\tx6160\tx6720\pardirnatural\qc
 
 \f0\fs24 \cf0 We want to estimate the value of each of these random numbers. They are our 
-\b (uninformed) priors.
+\b (uninform) priors.
 \b0  }</string>
 				<key>VerticalPad</key>
 				<integer>0</integer>
@@ -3741,8 +3741,8 @@ noise}</string>
 						AgAAAG1udHJSR0IgWFlaIAfYAAEA
 						FQAOAA4AA2Fjc3BBUFBMAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAAAAD2
-						1gABAAAAANMtYXBwbHuBR48ySeTZ
-						c+utLOki444AAAAAAAAAAAAAAAAA
+						1gABAAAAANMtYXBwbAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAADnJY
 						WVoAAAEsAAAAFGdYWVoAAAFAAAAA
 						FGJYWVoAAAFUAAAAFHd0cHQAAAFo
@@ -3936,8 +3936,8 @@ Output}</string>
 						AgAAAG1udHJSR0IgWFlaIAfYAAEA
 						FQAOAA4AA2Fjc3BBUFBMAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAAAAD2
-						1gABAAAAANMtYXBwbHuBR48ySeTZ
-						c+utLOki444AAAAAAAAAAAAAAAAA
+						1gABAAAAANMtYXBwbAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAADnJY
 						WVoAAAEsAAAAFGdYWVoAAAFAAAAA
 						FGJYWVoAAAFUAAAAFHd0cHQAAAFo
@@ -4133,8 +4133,8 @@ Input}</string>
 						AgAAAG1udHJSR0IgWFlaIAfYAAEA
 						FQAOAA4AA2Fjc3BBUFBMAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAAAAD2
-						1gABAAAAANMtYXBwbHuBR48ySeTZ
-						c+utLOki444AAAAAAAAAAAAAAAAA
+						1gABAAAAANMtYXBwbAAAAAAAAAAA
+						AAAAAAAAAAAAAAAAAAAAAAAAAAAA
 						AAAAAAAAAAAAAAAAAAAAAAAADnJY
 						WVoAAAEsAAAAFGdYWVoAAAFAAAAA
 						FGJYWVoAAAFUAAAAFHd0cHQAAAFo
@@ -4560,7 +4560,7 @@ Model}</string>
 	<key>MasterSheets</key>
 	<array/>
 	<key>ModificationDate</key>
-	<string>2018-07-10 15:41:28 +0000</string>
+	<string>2018-09-12 12:00:17 +0000</string>
 	<key>Modifier</key>
 	<string>nick</string>
 	<key>NotesVisible</key>
