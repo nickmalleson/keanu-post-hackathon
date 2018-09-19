@@ -19,19 +19,12 @@ public class SimpleModel {
     private ArrayList<Integer> history = new ArrayList<Integer>();
     private static int modelCount = 0 ; // Count the number of models that are created (just for info)
 
-    private ArrayList<Double> randomNumbers ; // TEMPORARY (while we can't get the random numbers from keanu)
-
-
     /* Constructors */
 
     public SimpleModel(double threshold, RandomGenerator random ) {
         SimpleModel.modelCount++;
         this.threshold = threshold;
         this.random = random;
-        this.randomNumbers = new ArrayList<Double>();
-        for (int i=0; i<SimpleWrapper.NUM_RAND_DOUBLES; i++) {
-            this.randomNumbers.add(this.random.nextDouble());
-        }
         //System.out.println("SimpleModel contstuctor: "+SimpleModel.modelCount++ + ". Threshold: "+threshold
         //    +". Random numbers: "+this.randomNumbers.toString());
     }
@@ -44,7 +37,7 @@ public class SimpleModel {
      */
     public void step() {
         //this.counter = this.random.nextDouble() > this.threshold ? this.counter+1 : this.counter-1;
-        if (this.random.nextDouble() > this.threshold) {
+        if (this.random.nextGaussian() > this.threshold) {
             this.counter = this.counter+1;
         }
         else {
@@ -69,10 +62,6 @@ public class SimpleModel {
             System.out.print(c+", ");
         }
         System.out.println();
-    }
-
-    public List<Double> getRandomNumbers() {
-        return this.randomNumbers;
     }
 
     public static int getNumModelsCreated() {

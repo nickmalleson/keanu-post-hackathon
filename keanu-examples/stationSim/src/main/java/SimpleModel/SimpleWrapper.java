@@ -27,13 +27,13 @@ import java.util.stream.Stream;
 public class SimpleWrapper {
 
     /* Model parameters */
-    private static final double threshold = 0.5;
-    public static final int NUM_RAND_DOUBLES = 10;
-    private static final int NUM_ITER = 100;
+    private static final double threshold = 0.0;
+    public static final int NUM_RAND_DOUBLES = 50;
+    private static final int NUM_ITER = 10000;
 
     /* Hyperparameters */
     private static final double SIGMA_NOISE = 0.1;
-    private static final int NUM_SAMPLES = 10000;
+    private static final int NUM_SAMPLES = 50000;
     private static final int DROP_SAMPLES = 1;
     //private static final int DROP_SAMPLES = NUM_SAMPLES/4;
     private static final int DOWN_SAMPLE = 5;
@@ -80,7 +80,7 @@ public class SimpleWrapper {
 
         // Store the random numbers used (for comparison later)
         List<Double> truthRandomNumbers = new ArrayList<>(NUM_RAND_DOUBLES);
-        for (int i=0; i<NUM_RAND_DOUBLES; i++) truthRandomNumbers.add(truthRandom.nextDouble());
+        for (int i=0; i<NUM_RAND_DOUBLES; i++) truthRandomNumbers.add(truthRandom.nextGaussian());
 
         // Run the model
         Integer[] truth = SimpleWrapper.runModel(truthRandom);
@@ -90,7 +90,7 @@ public class SimpleWrapper {
         System.out.println("Truth random numbers:");
         System.out.println(truthRandomNumbers.toString());
 
-        (new ArrayList<String>(NUM_RAND_DOUBLES)).forEach(i -> System.out.print(truthRandom.nextDouble()+", "));
+        (new ArrayList<String>(NUM_RAND_DOUBLES)).forEach(i -> System.out.print(truthRandom.nextGaussian()+", "));
         System.out.println();
 
 
@@ -163,6 +163,23 @@ public class SimpleWrapper {
             net,                // The bayes net with latent variables (the random numbers?)
             parameters,         // The vertices to include in the returned samples
             NUM_SAMPLES);       // The number of samples
+
+        // Sample using a stream.
+        /*
+        NetworkSamples sampler = MetropolisHastings.generatePosteriorSamples(
+            net,                // The bayes net with latent variables (the random numbers?)
+            parameters          // The vertices to include in the returned samples
+        )
+            .dropCount(DROP_SAMPLES)
+            .downSampleInterval(DOWN_SAMPLE)
+            .stream()
+            .limit(NUM_SAMPLES)
+            .map(networkState -> {
+                for()
+                    networkState.get(x)
+            })
+            .average().getAsDouble();
+            */
 
         System.out.println("Finished running MCMC.");
 

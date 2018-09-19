@@ -40,7 +40,7 @@ if (length(samples.files) != length(rands.files)) {
        This is weird so I'm not continuing.")
 }
 
-if (length(samples.files) != 1) {
+if (length(samples.files) != 1) {ç
   message("Found multiple samples files. Using the most recent one.")
   samples.files <- samples.files[-1]
   rand.files  <- rand.files[-1]
@@ -130,9 +130,24 @@ density_plot(samples, truth.results)
 
 # Plot random numbers
 
-XXXX Look at how the random numbers changed
+Look at how the random numbers changed.
 
-_(For now just make a table)_
+Start with a histogram.
+
+```{r randPosterior, fig.width=15, fig.height=15}
+
+par(mfrow=c(ncol(rands)/3, 3))
+i <- 1
+for (column in names(rands)) {
+  #print(column)
+  hist(rands[,column][[1]], xlim=c(-3,3))
+  abline(v=truth.rands[i[[1]]], col="red")
+  abline(v=0.0, col="blue", lty="dashed")
+  i <- i + 1
+}
+
+# XXXX Add vertical lines showing where the true values rae
+```
 
 ## 'True' random numbers
 
