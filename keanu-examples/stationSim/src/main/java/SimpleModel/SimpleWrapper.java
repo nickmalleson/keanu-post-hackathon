@@ -33,7 +33,7 @@ public class SimpleWrapper {
 
     /* Hyperparameters */
     private static final double SIGMA_NOISE = 0.1;
-    private static final int NUM_SAMPLES = 50000;
+    private static final int NUM_SAMPLES = 10000;
     private static final int DROP_SAMPLES = 1;
     //private static final int DROP_SAMPLES = NUM_SAMPLES/4;
     private static final int DOWN_SAMPLE = 5;
@@ -89,7 +89,6 @@ public class SimpleWrapper {
         System.out.println("Truth data: "+Arrays.asList(truth).toString() + "\n\n");
         System.out.println("Truth random numbers:");
         System.out.println(truthRandomNumbers.toString());
-
         (new ArrayList<String>(NUM_RAND_DOUBLES)).forEach(i -> System.out.print(truthRandom.nextGaussian()+", "));
         System.out.println();
 
