@@ -11,6 +11,7 @@ import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.dbl.nonprobabilistic.CastDoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
+import io.improbable.keanu.vertices.generic.nonprobabilistic.ConstantGenericVertex;
 import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.unary.UnaryOpLambda;
 import org.apache.commons.math3.random.RandomGenerator;
 
@@ -24,16 +25,24 @@ import java.util.stream.DoubleStream;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-public class SimpleWrapper {
+/**
+ * Version of the simple wrapper that tries to calibrate on the
+ * threshold parameter rather than the random numbers.
+ */
+public class SimpleWrapperB {
 
     /* Model parameters */
-    private static final double threshold = 0.0;
-    public static final int NUM_RAND_DOUBLES = 50;
-    private static final int NUM_ITER = 500;
+    private static final ConstantGenericVertex<Double> THRESHOLD = new ConstantGenericVertex<> (0.2);
+    public static final int NUM_RAND_DOUBLES = 100000;
+    private static final int NUM_ITER = 1000;
+
+    // Initialise the random number generator used throughout
+   private static final VertexBackedRandomGenerator rand =
+        new VertexBackedRandomGenerator(NUM_RAND_DOUBLES,0,0);
 
     /* Hyperparameters */
     private static final double SIGMA_NOISE = 0.1;
-    private static final int NUM_SAMPLES = 5000;
+    private static final int NUM_SAMPLES = 1000;
     private static final int DROP_SAMPLES = 1;
     //private static final int DROP_SAMPLES = NUM_SAMPLES/4;
     private static final int DOWN_SAMPLE = 5;
@@ -53,13 +62,13 @@ public class SimpleWrapper {
 
     /** Run the SimpleModel and return the count at each iteration **/
 
-    public static Integer[] runModel(RandomGenerator rand) {
-        SimpleModel s = new SimpleModel(SimpleWrapper.threshold, rand);
+    public static Integer[] runModel(ConstantGenericVertex<Double> threshold) {
+        SimpleModel s = new SimpleModel(threshold.getValue(), SimpleWrapperB.rand);
 
         for (int i=0; i<NUM_ITER; i++) {
             s.step();
         }
-        SimpleWrapper.models.add(s);
+        SimpleWrapperB.models.add(s);
         return s.getHistory();
     }
 
@@ -71,41 +80,28 @@ public class SimpleWrapper {
         System.out.println("Starting. Number of iterations: " + NUM_ITER);
 
         /*
-                ************ CREATE THE TRUTH DATA ************
+         ************ CREATE THE TRUTH DATA ************
          */
 
         System.out.println("Making truth data");
-        System.out.println("Initialising random number stream for truth data");
-        VertexBackedRandomGenerator truthRandom = new VertexBackedRandomGenerator(NUM_RAND_DOUBLES, 0, 0);
-
-        // Store the random numbers used (for comparison later)
-        List<Double> truthRandomNumbers = new ArrayList<>(NUM_RAND_DOUBLES);
-        for (int i=0; i<NUM_RAND_DOUBLES; i++) truthRandomNumbers.add(truthRandom.nextGaussian());
 
         // Run the model
-        Integer[] truth = SimpleWrapper.runModel(truthRandom);
+        Integer[] truth = SimpleWrapperB.runModel(THRESHOLD);
 
         System.out.println("Truth data length: " + truth.length);
         System.out.println("Truth data: "+Arrays.asList(truth).toString() + "\n\n");
-        System.out.println("Truth random numbers:");
-        System.out.println(truthRandomNumbers.toString());
-        (new ArrayList<String>(NUM_RAND_DOUBLES)).forEach(i -> System.out.print(truthRandom.nextGaussian()+", "));
-        System.out.println();
-
 
 
         /*
          ************ INITIALISE THE BLACK BOX MODEL ************
          */
 
-        System.out.println("Initialising new random number stream");
-        RandomFactoryVertex random = new RandomFactoryVertex(NUM_RAND_DOUBLES, 0, 0);
 
-        // This is the 'black box' vertex that runs the model. It's input is the random numbers and
-        // output is a list of Integer(tensor)s (the number of agents in the model at each iteration).
+        // This is the 'black box' vertex that runs the model.
         System.out.println("Initialising black box model");
-        UnaryOpLambda<VertexBackedRandomGenerator, Integer[]> box =
-            new UnaryOpLambda<>( random, SimpleWrapper::runModel);
+        UnaryOpLambda<ConstantGenericVertex, Integer[]> box =
+            new UnaryOpLambda<ConstantGenericVertex, Integer[]>
+                ( THRESHOLD, SimpleWrapperB::runModel);
 
 
 
@@ -136,7 +132,7 @@ public class SimpleWrapper {
         // Create the BayesNet
         System.out.println("Creating BayesNet");
         BayesianNetwork net = new BayesianNetwork(box.getConnectedGraph());
-        SimpleWrapper.writeBaysNetToFile(net);
+        SimpleWrapperB.writeBaysNetToFile(net);
 
         // Workaround for too many evaluations during sample startup
         //random.setAndCascade(random.getValue());
@@ -202,12 +198,12 @@ public class SimpleWrapper {
         }
 
         String theTime = String.valueOf(System.currentTimeMillis()); // So files have unique names
-        SimpleWrapper.writeRandomNumbers(randomNumberSamples, truthRandomNumbers, theTime);
+        SimpleWrapperB.writeRandomNumbers(randomNumberSamples, truthRandomNumbers, theTime);
 
         // Get the number of people per iteration for each sample
         List<Integer[]> peopleSamples = sampler.get(box).asList();
         System.out.println("Have saved " + peopleSamples.size() + " samples and ran " + models.size() + " models");
-        SimpleWrapper.writeResults(peopleSamples , truth, theTime);
+        SimpleWrapperB.writeResults(peopleSamples , truth, theTime);
 
     }
 
@@ -216,7 +212,7 @@ public class SimpleWrapper {
 
 
     /*
-    **************** ADMIN STUFF ****************
+     **************** ADMIN STUFF ****************
      */
 
     private static void writeRandomNumbers(List<List<Double>> randomNumberSamples, List<Double> truthRandomNumbers, String name) {
@@ -287,6 +283,6 @@ public class SimpleWrapper {
 
     public static void main (String[] args) {
 
-        SimpleWrapper.run();
+        SimpleWrapperB.run();
     }
 }
