@@ -9,8 +9,10 @@ import io.improbable.keanu.research.vertices.RandomFactoryVertex;
 import io.improbable.keanu.research.visualisation.GraphvizKt;
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.vertices.Vertex;
+import io.improbable.keanu.vertices.dbl.KeanuRandom;
 import io.improbable.keanu.vertices.dbl.nonprobabilistic.CastDoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
+import io.improbable.keanu.vertices.dbl.probabilistic.UniformVertex;
 import io.improbable.keanu.vertices.generic.nonprobabilistic.ConstantGenericVertex;
 import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.unary.UnaryOpLambda;
 import org.apache.commons.math3.random.RandomGenerator;
@@ -32,7 +34,8 @@ import java.util.stream.Stream;
 public class SimpleWrapperB {
 
     /* Model parameters */
-    private static final ConstantGenericVertex THRESHOLD = new ConstantGenericVertex<Double> (0.2);
+    private static final UniformVertex THRESHOLD = new UniformVertex(-1.0, 1.0);
+
     public static final int NUM_RAND_DOUBLES = 100000;
     private static final int NUM_ITER = 1000;
 
@@ -62,8 +65,21 @@ public class SimpleWrapperB {
 
     /** Run the SimpleModel and return the count at each iteration **/
 
-    public static Integer[] runModel(ConstantGenericVertex threshold) {
-        SimpleModel s = new SimpleModel((Double)threshold.getValue(), SimpleWrapperB.rand);
+    public static Integer[] runModel(UniformVertex threshold) {
+        SimpleModel s = new SimpleModel(threshold.sample(KeanuRandom.getDefaultRandom()).getValue(0), SimpleWrapperB.rand);
+
+        for (int i=0; i<NUM_ITER; i++) {
+            s.step();
+        }
+        SimpleWrapperB.models.add(s);
+        return s.getHistory();
+    }
+
+    /** A version of runModel that stores the threshold value actually used. Good for generating truth data */
+    public static Integer[] runModelTruth(UniformVertex threshold, List<Double> truthThreshold) {
+        Double t = threshold.sample(KeanuRandom.getDefaultRandom()).getValue(0);
+        truthThreshold.add(t);
+        SimpleModel s = new SimpleModel(t, SimpleWrapperB.rand);
 
         for (int i=0; i<NUM_ITER; i++) {
             s.step();
@@ -86,10 +102,13 @@ public class SimpleWrapperB {
         System.out.println("Making truth data");
 
         // Run the model
-        Integer[] truth = SimpleWrapperB.runModel(THRESHOLD);
+        List<Double> truthValueList = new ArrayList<Double>(1);
+        Integer[] truth = SimpleWrapperB.runModelTruth(THRESHOLD, truthValueList);
+        double truthThreshold = truthValueList.get(0);
 
         System.out.println("Truth data length: " + truth.length);
         System.out.println("Truth data: "+Arrays.asList(truth).toString() + "\n\n");
+
 
 
         /*
@@ -100,8 +119,8 @@ public class SimpleWrapperB {
         // This is the 'black box' vertex that runs the model.
         System.out.println("Initialising black box model");
 
-        UnaryOpLambda<ConstantGenericVertex, Integer[]> box =
-            new UnaryOpLambda<ConstantGenericVertex, Integer[]> ( THRESHOLD, SimpleWrapperB::runModel);
+        UnaryOpLambda<UniformVertex, Integer[]> box =
+            new UnaryOpLambda<UniformVertex, Integer[]> ( THRESHOLD, SimpleWrapperB::runModel);
 
 
 
@@ -189,15 +208,15 @@ public class SimpleWrapperB {
         // Add the threshold parameter to the list
         for (int i=0; i<1; i++) { // (1 because only 1 threshold parameter)
             //List<DoubleTensor> randSamples = sampler.get(randNumbers.get(i)).asList();
-            List<ConstantGenericVertex> samples = sampler.get(THRESHOLD).asList();
+            List<DoubleTensor> samples = sampler.get(THRESHOLD).asList();
             // Convert from Vertices to Doubles
             List<Double> samplesDouble =
-                samples.stream().map( (d) -> (Double)d.getValue()).collect(Collectors.toList());
+                samples.stream().map( (d) -> d.getValue()).collect(Collectors.toList());
             thresholdSamples.add(samplesDouble);
         }
 
         String theTime = String.valueOf(System.currentTimeMillis()); // So files have unique names
-        SimpleWrapperB.writeThresholds(thresholdSamples, (Double)THRESHOLD.getValue(), theTime);
+        SimpleWrapperB.writeThresholds(thresholdSamples, truthThreshold, theTime);
 
         // Get the number of people per iteration for each sample
         List<Integer[]> peopleSamples = sampler.get(box).asList();
