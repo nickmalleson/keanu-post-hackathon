@@ -32,7 +32,7 @@ import java.util.stream.Stream;
 public class SimpleWrapperB {
 
     /* Model parameters */
-    private static final ConstantGenericVertex<Double> THRESHOLD = new ConstantGenericVertex<> (0.2);
+    private static final ConstantGenericVertex THRESHOLD = new ConstantGenericVertex<Double> (0.2);
     public static final int NUM_RAND_DOUBLES = 100000;
     private static final int NUM_ITER = 1000;
 
@@ -57,13 +57,13 @@ public class SimpleWrapperB {
 
 
     /* Admin parameters */
-    private static String dirName = "results/simple/"; // Place to store results
+    private static String dirName = "results/simpleB/"; // Place to store results
 
 
     /** Run the SimpleModel and return the count at each iteration **/
 
-    public static Integer[] runModel(ConstantGenericVertex<Double> threshold) {
-        SimpleModel s = new SimpleModel(threshold.getValue(), SimpleWrapperB.rand);
+    public static Integer[] runModel(ConstantGenericVertex threshold) {
+        SimpleModel s = new SimpleModel((Double)threshold.getValue(), SimpleWrapperB.rand);
 
         for (int i=0; i<NUM_ITER; i++) {
             s.step();
@@ -99,9 +99,9 @@ public class SimpleWrapperB {
 
         // This is the 'black box' vertex that runs the model.
         System.out.println("Initialising black box model");
+
         UnaryOpLambda<ConstantGenericVertex, Integer[]> box =
-            new UnaryOpLambda<ConstantGenericVertex, Integer[]>
-                ( THRESHOLD, SimpleWrapperB::runModel);
+            new UnaryOpLambda<ConstantGenericVertex, Integer[]> ( THRESHOLD, SimpleWrapperB::runModel);
 
 
 
@@ -145,13 +145,10 @@ public class SimpleWrapperB {
         // Sample from the posterior
         System.out.println("Sampling");
 
-        // These objectcs represent the random numbers used in the probabilistic model
-        List<GaussianVertex> randNumbers = new ArrayList(random.getValue().randDoubleSource);
-
         // Collect all the parameters that we want to sample (the random numbers and the box model)
         List<Vertex> parameters = new ArrayList<>(NUM_RAND_DOUBLES+1); // Big enough to hold the random numbers and the box
         parameters.add(box);
-        parameters.addAll(randNumbers);
+        parameters.add(THRESHOLD);
 
         // Sample from the box and the random numbers
         NetworkSamples sampler = MetropolisHastings.getPosteriorSamples(
@@ -186,19 +183,21 @@ public class SimpleWrapperB {
          ************ GET THE INFORMATION OUT OF THE SAMPLES ************
          */
 
-        // Get the random numbers. A 2D list. First dimension holds the random number, second dimensions holds its samples.
-        List<List<Double>> randomNumberSamples = new ArrayList<List<Double>>(NUM_SAMPLES);
-        // Add each random number parameter to the list
-        for (int i=0; i<NUM_RAND_DOUBLES; i++) {
-            List<DoubleTensor> randSamples = sampler.get(randNumbers.get(i)).asList();
-            // Convert from Tensors to Doubles
-            List<Double> randSamplesDouble =
-                randSamples.stream().map( (d) -> d.getValue(0)).collect(Collectors.toList());
-            randomNumberSamples.add(randSamplesDouble);
+        // Get the threshold estimates. A 2D list. First dimension holds the threshold (one item), second dimensions holds its samples.
+        //List<List<Double>> randomNumberSamples = new ArrayList<List<Double>>(NUM_SAMPLES);
+        List<List<Double>> thresholdSamples = new ArrayList<>(NUM_SAMPLES);
+        // Add the threshold parameter to the list
+        for (int i=0; i<1; i++) { // (1 because only 1 threshold parameter)
+            //List<DoubleTensor> randSamples = sampler.get(randNumbers.get(i)).asList();
+            List<ConstantGenericVertex> samples = sampler.get(THRESHOLD).asList();
+            // Convert from Vertices to Doubles
+            List<Double> samplesDouble =
+                samples.stream().map( (d) -> (Double)d.getValue()).collect(Collectors.toList());
+            thresholdSamples.add(samplesDouble);
         }
 
         String theTime = String.valueOf(System.currentTimeMillis()); // So files have unique names
-        SimpleWrapperB.writeRandomNumbers(randomNumberSamples, truthRandomNumbers, theTime);
+        SimpleWrapperB.writeThresholds(thresholdSamples, (Double)THRESHOLD.getValue(), theTime);
 
         // Get the number of people per iteration for each sample
         List<Integer[]> peopleSamples = sampler.get(box).asList();
@@ -215,7 +214,7 @@ public class SimpleWrapperB {
      **************** ADMIN STUFF ****************
      */
 
-    private static void writeRandomNumbers(List<List<Double>> randomNumberSamples, List<Double> truthRandomNumbers, String name) {
+    private static void writeThresholds(List<List<Double>> randomNumberSamples, Double truthThreshold, String name) {
 
         // Write out random numbers used and the actual results
         Writer w1;
@@ -224,7 +223,7 @@ public class SimpleWrapperB {
                 new FileOutputStream(dirName + "Rands_" + name + ".csv"), "utf-8"));
 
             // Do the truth data first
-            for (double val : truthRandomNumbers) w1.write(val + ",");
+            w1.write(truthThreshold + ",");
             w1.write("\n");
 
             // Now the samples.
