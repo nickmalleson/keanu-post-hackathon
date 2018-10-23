@@ -65,8 +65,8 @@ public class SimpleWrapperB {
 
     /** Run the SimpleModel and return the count at each iteration **/
 
-    public static Integer[] runModel(UniformVertex threshold) {
-        SimpleModel s = new SimpleModel(threshold.sample(KeanuRandom.getDefaultRandom()).getValue(0), SimpleWrapperB.rand);
+    public static Integer[] runModel(DoubleTensor threshold) {
+        SimpleModel s = new SimpleModel(threshold.getValue(0), SimpleWrapperB.rand);
 
         for (int i=0; i<NUM_ITER; i++) {
             s.step();
@@ -119,8 +119,8 @@ public class SimpleWrapperB {
         // This is the 'black box' vertex that runs the model.
         System.out.println("Initialising black box model");
 
-        UnaryOpLambda<UniformVertex, Integer[]> box =
-            new UnaryOpLambda<UniformVertex, Integer[]> ( THRESHOLD, SimpleWrapperB::runModel);
+        UnaryOpLambda<DoubleTensor, Integer[]> box =
+            new UnaryOpLambda<>( THRESHOLD, SimpleWrapperB::runModel);
 
 
 
