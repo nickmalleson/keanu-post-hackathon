@@ -11,10 +11,11 @@ output:
 fontsize: 10pt
 ---
 
+# ResultsSummary - **B**
 
-Analyses the results of the keanu tests when experimenting with parameter estimation (probabilistic model needs to guess a single threshold value )
+Analyses the results of the keanu tests when experimenting with parameter estimation (probabilistic model needs to guess a single threshold value ). Relevant files that generate the results: `simpleModel`, `simpleWrapperB`
 
-# Initialise
+# Initialise and load data
 
 ```{r initialise, echo=FALSE, message=FALSE, warning=FALSE}
 library(tidyverse)
@@ -26,43 +27,38 @@ library(gridExtra) # For arranging two grids side by side
 library(xtable) # for making nice tables
 
 
-homedir<-"/Users/nick/research_not_syncd/git_projects/keanu-post-hackathon/results/simple"
+homedir<-"/Users/nick/research_not_syncd/git_projects/keanu-post-hackathon/results/simpleB/"
 setwd(homedir)
 
-```
-
-# Load Data
-
-```{r laodData}
 # Find files
-samples.files <- grep("Results.*.csv", list.files(path = "."), value=TRUE)
-rands.files <- grep("Rands.*.csv", list.files(path = "."), value=TRUE)
+samples.files <- grep("Results.*csv", list.files(path = "."), value=TRUE)
+params.files <- grep("Params.*csv", list.files(path = "."), value=TRUE)
 
-if (length(samples.files) != length(rands.files)) {
+if (length(samples.files) != length(params.files)) {
   stop("For some reason there are a different number of results files and random number files.
        This is weird so I'm not continuing.")
 }
 
-if (length(samples.files) != 1) {ç
+if (length(samples.files) != 1) {
   message("Found multiple samples files. Using the most recent one.")
-  samples.files <- samples.files[-1]
-  rand.files  <- rand.files[-1]
+  samples.files <- tail(sort(samples.files), n=1)
+  params.files  <- tail(sort(params.files),  n=1)
 }
 
 # Read the file in
 samples <- read_csv(samples.files[1], col_names=FALSE)
-rands <- read_csv(rands.files[1], col_names=FALSE)
+params  <- read_csv(params.files[1],  col_names=FALSE)
 
 samples[,ncol(samples)] <- NULL # Last column is NA because I lazily write too many commas
-rands[,ncol(rands)] <- NULL # Last column is NA because I lazily write too many commas
+params[,ncol(params)] <- NULL # Last column is NA because I lazily write too many commas
 
 
 # Truth data are the first entry
 truth.results <- samples[1,]
 samples <- samples[-1,]
 
-truth.rands <- rands[1,]
-rands <- rands[-1,]
+truth.params <- params[1,]
+params <- params[-1,]
 
 ```
 
@@ -131,40 +127,39 @@ density_plot(samples, truth.results)
 
 ```
 
-# Plot random numbers
+# Plot parameters
 
-Look at how the random numbers changed.
+Look at how the threshold parameter changed.
 
 Start with a histogram.
 
-```{r randPosterior, fig.width=15, fig.height=15}
-
-par(mfrow=c(ncol(rands)/3, 3))
+```{r randPosterior, fig.width=7, fig.height=5}
 i <- 1
-for (column in names(rands)) {
-  #print(column)
-  hist(rands[,column][[1]], xlim=c(-3,3))
-  abline(v=truth.rands[i[[1]]], col="red")
+for (column in names(params)) {
+  plot(density(params[,column][[1]]), col="blue", main="Threshold parameter posterior")
+  hist(params[,column][[1]], xlim=c(-1.1,1.1), prob=TRUE, breaks="Scott", add=T, border="gray")
+  abline(v=truth.params[i[[1]]], col="red")
   abline(v=0.0, col="blue", lty="dashed")
+  
+  ylab("Density")
   i <- i + 1
 }
-
-# XXXX Add vertical lines showing where the true values rae
+legend("topright", legend = c("True threshold value", "Posterior"), lty=c(1,1), col=c("red","blue"))
 ```
 
-## 'True' random numbers
+## 'True' parameter value(s)
 
 ```{r randTruthTable, results="asis"}
 print(xtable(
-  truth.rands
+  truth.params
   ), type = "html")
 ```
 
-## Random number samples
+## Parameter samples
 
 ```{r randTable, results="asis"}
 print(xtable(
-  rands
+  params
   ), type = "html")
 ```
 

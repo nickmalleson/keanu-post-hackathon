@@ -36,6 +36,7 @@ public class SimpleWrapperB {
     /* Model parameters */
     private static final UniformVertex THRESHOLD = new UniformVertex(-1.0, 1.0);
 
+
     public static final int NUM_RAND_DOUBLES = 100000;
     private static final int NUM_ITER = 1000;
 
@@ -54,17 +55,11 @@ public class SimpleWrapperB {
 
     private static ArrayList<SimpleModel> models = new ArrayList<>(); // Keep all the models for analysis later
 
-    //private static final long SEED = 1l;
-    //private static final RandomGenerator random = new MersenneTwister(SEED);
-
-
-
     /* Admin parameters */
     private static String dirName = "results/simpleB/"; // Place to store results
 
 
     /** Run the SimpleModel and return the count at each iteration **/
-
     public static Integer[] runModel(DoubleTensor threshold) {
         SimpleModel s = new SimpleModel(threshold.getValue(0), SimpleWrapperB.rand);
 
@@ -74,20 +69,6 @@ public class SimpleWrapperB {
         SimpleWrapperB.models.add(s);
         return s.getHistory();
     }
-
-    /** A version of runModel that stores the threshold value actually used. Good for generating truth data */
-    public static Integer[] runModelTruth(UniformVertex threshold, List<Double> truthThreshold) {
-        Double t = threshold.sample(KeanuRandom.getDefaultRandom()).getValue(0);
-        truthThreshold.add(t);
-        SimpleModel s = new SimpleModel(t, SimpleWrapperB.rand);
-
-        for (int i=0; i<NUM_ITER; i++) {
-            s.step();
-        }
-        SimpleWrapperB.models.add(s);
-        return s.getHistory();
-    }
-
 
     /**
      * Run the probabilistic model
@@ -101,13 +82,19 @@ public class SimpleWrapperB {
 
         System.out.println("Making truth data");
 
-        // Run the model
-        List<Double> truthValueList = new ArrayList<Double>(1);
-        Integer[] truth = SimpleWrapperB.runModelTruth(THRESHOLD, truthValueList);
-        double truthThreshold = truthValueList.get(0);
+        // Generate truth data
+        Double truthThreshold = THRESHOLD.sample(KeanuRandom.getDefaultRandom()).getValue(0);
+        SimpleModel s = new SimpleModel(truthThreshold, SimpleWrapperB.rand);
 
-        System.out.println("Truth data length: " + truth.length);
-        System.out.println("Truth data: "+Arrays.asList(truth).toString() + "\n\n");
+        for (int i=0; i<NUM_ITER; i++) {
+            s.step();
+        }
+        SimpleWrapperB.models.add(s);
+        Integer[] truthData = s.getHistory();
+
+        System.out.println("Truth data length: " + truthData.length);
+        System.out.println("Truth data: "+Arrays.asList(truthData).toString() + "\n\n");
+        System.out.println("Truth threshold is: "+truthThreshold);
 
 
 
@@ -115,14 +102,11 @@ public class SimpleWrapperB {
          ************ INITIALISE THE BLACK BOX MODEL ************
          */
 
-
         // This is the 'black box' vertex that runs the model.
         System.out.println("Initialising black box model");
 
         UnaryOpLambda<DoubleTensor, Integer[]> box =
             new UnaryOpLambda<>( THRESHOLD, SimpleWrapperB::runModel);
-
-
 
         /*
          ************ OBSERVE SOME TRUTH DATA ************
@@ -139,7 +123,7 @@ public class SimpleWrapperB {
             // output with a bit of noise. Lower sigma makes it more constrained.
             GaussianVertex noisyOutput = new GaussianVertex(new CastDoubleVertex(output), SIGMA_NOISE);
             // Observe the output
-            noisyOutput.observe(truth[i].doubleValue()); //.toDouble().scalar());
+            noisyOutput.observe(truthData[i].doubleValue()); //.toDouble().scalar());
         }
         System.out.println();
 
@@ -201,19 +185,11 @@ public class SimpleWrapperB {
         /*
          ************ GET THE INFORMATION OUT OF THE SAMPLES ************
          */
-
-        // Get the threshold estimates. A 2D list. First dimension holds the threshold (one item), second dimensions holds its samples.
-        //List<List<Double>> randomNumberSamples = new ArrayList<List<Double>>(NUM_SAMPLES);
-        List<List<Double>> thresholdSamples = new ArrayList<>(NUM_SAMPLES);
         // Add the threshold parameter to the list
-        for (int i=0; i<1; i++) { // (1 because only 1 threshold parameter)
-            //List<DoubleTensor> randSamples = sampler.get(randNumbers.get(i)).asList();
-            List<DoubleTensor> samples = sampler.get(THRESHOLD).asList();
-            // Convert from Tensors to Doubles
-            List<Double> samplesDouble =
-                samples.stream().map( (d) -> d.getValue(0)).collect(Collectors.toList());
-            thresholdSamples.add(samplesDouble);
-        }
+        List<DoubleTensor> samples = sampler.get(THRESHOLD).asList();
+        // Get the threshold estimates as a list (Convert from Tensors to Doubles)
+        List<Double> thresholdSamples =
+            samples.stream().map( (d) -> d.getValue(0)).collect(Collectors.toList());
 
         String theTime = String.valueOf(System.currentTimeMillis()); // So files have unique names
         SimpleWrapperB.writeThresholds(thresholdSamples, truthThreshold, theTime);
@@ -221,7 +197,7 @@ public class SimpleWrapperB {
         // Get the number of people per iteration for each sample
         List<Integer[]> peopleSamples = sampler.get(box).asList();
         System.out.println("Have saved " + peopleSamples.size() + " samples and ran " + models.size() + " models");
-        SimpleWrapperB.writeResults(peopleSamples , truth, theTime);
+        SimpleWrapperB.writeResults(peopleSamples , truthData, theTime);
 
     }
 
@@ -233,23 +209,21 @@ public class SimpleWrapperB {
      **************** ADMIN STUFF ****************
      */
 
-    private static void writeThresholds(List<List<Double>> randomNumberSamples, Double truthThreshold, String name) {
+    private static void writeThresholds(List<Double> randomNumberSamples, Double truthThreshold, String name) {
 
         // Write out random numbers used and the actual results
         Writer w1;
         try {
             w1 = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(dirName + "Rands_" + name + ".csv"), "utf-8"));
+                new FileOutputStream(dirName + "Params_" + name + ".csv"), "utf-8"));
 
             // Do the truth data first
             w1.write(truthThreshold + ",");
             w1.write("\n");
 
             // Now the samples.
-            for (int sample = 0; sample<randomNumberSamples.get(0).size(); sample++) {
-                for (int d = 0; d<1; d++) { // d< because only one parameter at the moment
-                    w1.write(randomNumberSamples.get(d).get(sample)+", ");
-                }
+            for (double sample : randomNumberSamples) {
+                w1.write(sample+", ");
                 w1.write("\n");
             }
             w1.close();
