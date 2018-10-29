@@ -209,9 +209,9 @@ public class SimpleWrapperB {
         for (int i=0; i<1; i++) { // (1 because only 1 threshold parameter)
             //List<DoubleTensor> randSamples = sampler.get(randNumbers.get(i)).asList();
             List<DoubleTensor> samples = sampler.get(THRESHOLD).asList();
-            // Convert from Vertices to Doubles
+            // Convert from Tensors to Doubles
             List<Double> samplesDouble =
-                samples.stream().map( (d) -> d.getValue()).collect(Collectors.toList());
+                samples.stream().map( (d) -> d.getValue(0)).collect(Collectors.toList());
             thresholdSamples.add(samplesDouble);
         }
 
@@ -247,7 +247,7 @@ public class SimpleWrapperB {
 
             // Now the samples.
             for (int sample = 0; sample<randomNumberSamples.get(0).size(); sample++) {
-                for (int d = 0; d<NUM_RAND_DOUBLES; d++) {
+                for (int d = 0; d<1; d++) { // d< because only one parameter at the moment
                     w1.write(randomNumberSamples.get(d).get(sample)+", ");
                 }
                 w1.write("\n");
