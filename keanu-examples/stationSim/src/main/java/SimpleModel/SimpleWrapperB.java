@@ -5,7 +5,6 @@ import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
 import io.improbable.keanu.network.BayesianNetwork;
 import io.improbable.keanu.research.randomfactory.VertexBackedRandomGenerator;
 import io.improbable.keanu.research.vertices.IntegerArrayIndexingVertex;
-import io.improbable.keanu.research.vertices.RandomFactoryVertex;
 import io.improbable.keanu.research.visualisation.GraphvizKt;
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.vertices.Vertex;
@@ -13,9 +12,7 @@ import io.improbable.keanu.vertices.dbl.KeanuRandom;
 import io.improbable.keanu.vertices.dbl.nonprobabilistic.CastDoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.UniformVertex;
-import io.improbable.keanu.vertices.generic.nonprobabilistic.ConstantGenericVertex;
 import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.unary.UnaryOpLambda;
-import org.apache.commons.math3.random.RandomGenerator;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -23,9 +20,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.DoubleStream;
-import java.util.stream.IntStream;
-import java.util.stream.Stream;
 
 /**
  * Version of the simple wrapper that tries to calibrate on the
@@ -51,7 +45,7 @@ public class SimpleWrapperB {
     //private static final int DROP_SAMPLES = NUM_SAMPLES/4;
     private static final int DOWN_SAMPLE = 5;
 
-    private static final int numObservations = 5; // Number of points to observe (temporary - will be replaced with proper tests)
+    private static final int NUM_OBSERVATIONS = 5; // Number of points to observe (temporary - will be replaced with proper tests)
 
     private static ArrayList<SimpleModel> models = new ArrayList<>(); // Keep all the models for analysis later
 
@@ -112,11 +106,10 @@ public class SimpleWrapperB {
          ************ OBSERVE SOME TRUTH DATA ************
          */
 
-
         // Observe the truth data plus some noise?
         System.out.println("Observing truth data. Adding noise with standard dev: " + SIGMA_NOISE);
         System.out.print("Observing at iterations: ");
-        for (Integer i = 0; i < NUM_ITER; i+=NUM_ITER/numObservations) {
+        for (Integer i = 0; i < NUM_ITER; i+=NUM_ITER/ NUM_OBSERVATIONS) {
             System.out.print(i+",");
             // output is the ith element of the model output (from box)
             IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
