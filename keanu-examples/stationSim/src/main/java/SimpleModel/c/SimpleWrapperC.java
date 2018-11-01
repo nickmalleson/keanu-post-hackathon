@@ -1,4 +1,4 @@
-package SimpleModel;
+package SimpleModel.c;
 
 import io.improbable.keanu.algorithms.NetworkSamples;
 import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
@@ -21,7 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class SimpleWrapper {
+public class SimpleWrapperC {
 
     /* Model parameters */
     private static final double threshold = 0.0;
@@ -51,12 +51,12 @@ public class SimpleWrapper {
     /** Run the SimpleModel and return the count at each iteration **/
 
     public static Integer[] runModel(RandomGenerator rand) {
-        SimpleModel s = new SimpleModel(SimpleWrapper.threshold, rand);
+        SimpleModel s = new SimpleModel(SimpleWrapperC.threshold, rand);
 
         for (int i=0; i<NUM_ITER; i++) {
             s.step();
         }
-        SimpleWrapper.models.add(s);
+        SimpleWrapperC.models.add(s);
         return s.getHistory();
     }
 
@@ -80,7 +80,7 @@ public class SimpleWrapper {
         for (int i=0; i<NUM_RAND_DOUBLES; i++) truthRandomNumbers.add(truthRandom.nextGaussian());
 
         // Run the model
-        Integer[] truth = SimpleWrapper.runModel(truthRandom);
+        Integer[] truth = SimpleWrapperC.runModel(truthRandom);
 
         System.out.println("Truth data length: " + truth.length);
         System.out.println("Truth data: "+Arrays.asList(truth).toString() + "\n\n");
@@ -102,7 +102,7 @@ public class SimpleWrapper {
         // output is a list of Integer(tensor)s (the number of agents in the model at each iteration).
         System.out.println("Initialising black box model");
         UnaryOpLambda<VertexBackedRandomGenerator, Integer[]> box =
-            new UnaryOpLambda<>( random, SimpleWrapper::runModel);
+            new UnaryOpLambda<>( random, SimpleWrapperC::runModel);
 
 
 
@@ -133,7 +133,7 @@ public class SimpleWrapper {
         // Create the BayesNet
         System.out.println("Creating BayesNet");
         BayesianNetwork net = new BayesianNetwork(box.getConnectedGraph());
-        SimpleWrapper.writeBaysNetToFile(net);
+        SimpleWrapperC.writeBaysNetToFile(net);
 
         // Workaround for too many evaluations during sample startup
         //random.setAndCascade(random.getValue());
@@ -199,12 +199,12 @@ public class SimpleWrapper {
         }
 
         String theTime = String.valueOf(System.currentTimeMillis()); // So files have unique names
-        SimpleWrapper.writeRandomNumbers(randomNumberSamples, truthRandomNumbers, theTime);
+        SimpleWrapperC.writeRandomNumbers(randomNumberSamples, truthRandomNumbers, theTime);
 
         // Get the number of people per iteration for each sample
         List<Integer[]> peopleSamples = sampler.get(box).asList();
         System.out.println("Have saved " + peopleSamples.size() + " samples and ran " + models.size() + " models");
-        SimpleWrapper.writeResults(peopleSamples , truth, theTime);
+        SimpleWrapperC.writeResults(peopleSamples , truth, theTime);
 
     }
 
@@ -284,6 +284,6 @@ public class SimpleWrapper {
 
     public static void main (String[] args) {
 
-        SimpleWrapper.run();
+        SimpleWrapperC.run();
     }
 }

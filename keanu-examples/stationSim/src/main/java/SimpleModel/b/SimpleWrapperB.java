@@ -1,5 +1,6 @@
-package SimpleModel;
+package SimpleModel.b;
 
+import SimpleModel.SimpleModel;
 import io.improbable.keanu.algorithms.NetworkSamples;
 import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
 import io.improbable.keanu.network.BayesianNetwork;
@@ -39,7 +40,7 @@ public class SimpleWrapperB {
         new VertexBackedRandomGenerator(NUM_RAND_DOUBLES,0,0);
 
     /* Hyperparameters */
-    private static final double SIGMA_NOISE = 0.1;
+    private static final double SIGMA_NOISE = 10;
     private static final int NUM_SAMPLES = 1000;
     private static final int DROP_SAMPLES = 1;
     //private static final int DROP_SAMPLES = NUM_SAMPLES/4;
@@ -108,7 +109,7 @@ public class SimpleWrapperB {
 
         // Observe the truth data plus some noise?
         System.out.println("Observing truth data. Adding noise with standard dev: " + SIGMA_NOISE);
-        System.out.print("Observing at iterations: ");
+        System.out.println("Observing at iterations: ");
         for (Integer i = 0; i < NUM_ITER; i+=NUM_ITER/ NUM_OBSERVATIONS) {
             System.out.print(i+",");
             // output is the ith element of the model output (from box)
