@@ -15,10 +15,6 @@ clean:
 	rm -r *.dot *.pdf *.csv *_cache *_files cache
 	
 
-results:
-	Rscript -e "require(knitr) ; require(markdown) ;knit('ResultsSummary-Simple.Rmd', 'ResultsSummary-Simple.md'); markdownToHTML('ResultsSummary-Simple.md', 'ResultsSummary-Simple.html');"
-	rm ResultsSummary-Simple.md
-	open ResultsSummary-Simple.html
 
 resultsB:
 	Rscript -e "require(knitr) ; require(markdown) ;knit('ResultsSummary-SimpleB.Rmd', 'ResultsSummary-SimpleB.md'); markdownToHTML('ResultsSummary-SimpleB.md', 'ResultsSummary-SimpleB.html');"
