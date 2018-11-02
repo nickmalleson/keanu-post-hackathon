@@ -1,6 +1,6 @@
 package SimpleModel.b;
 
-import SimpleModel.SimpleModel;
+import SimpleModel.a.SimpleModel;
 import io.improbable.keanu.algorithms.NetworkSamples;
 import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
 import io.improbable.keanu.network.BayesianNetwork;

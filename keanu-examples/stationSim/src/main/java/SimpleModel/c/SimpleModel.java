@@ -1,81 +1,56 @@
 package SimpleModel.c;
 
-import org.apache.commons.math3.random.MersenneTwister;
 import org.apache.commons.math3.random.RandomGenerator;
+import sun.jvm.hotspot.utilities.AssertionFailure;
 
-import java.util.ArrayList;
+public abstract class SimpleModel {
 
-public class SimpleModel {
+    /* Class Parameters */
+    private static double threshold;
+    private static RandomGenerator random;
+    private static boolean init = false; // Check that the class has been initialised
 
-    /* Parameters */
-    private double threshold;
-    private RandomGenerator random;
-
-    /* Variables */
-    private int counter = 0;
-    private ArrayList<Integer> history = new ArrayList<Integer>();
-    private static int modelCount = 0 ; // Count the number of models that are created (just for info)
-
-    /* Constructors */
-
-    public SimpleModel(double threshold, RandomGenerator random ) {
-        SimpleModel.modelCount++;
-        this.threshold = threshold;
-        this.random = random;
-        //System.out.println("SimpleModel contstuctor: "+SimpleModel.modelCount++ + ". Threshold: "+threshold
-        //    +". Random numbers: "+this.randomNumbers.toString());
+    /** Initialise the class (only needs to be called once) */
+    public static void init(double threshold, RandomGenerator random) {
+        SimpleModel.threshold = threshold;
+        SimpleModel.random = random;
+        init=true;
     }
-
-
-    /* Methods */
 
     /**
-     * Adds or subtracts 1 from the counter depending on the value of a random draw.
+     * Step the model by one iteration.
+     * @param state The current state of the model.
+     * @return The new state after one iteration
      */
-    public void step() {
-        //this.counter = this.random.nextDouble() > this.threshold ? this.counter+1 : this.counter-1;
-        if (this.random.nextGaussian() > this.threshold) {
-            this.counter = this.counter+1;
+    public static final int step(int state) {
+        if (!init) throw new AssertionError("SimpleModel class has not been initialised. Call init().");
+        int newState = SimpleModel.random.nextGaussian() > SimpleModel.threshold ? state+1 : state-1;
+        return newState;
+    }
+
+    /**
+     * Step the model by a number of iterations
+     * @param state The current state of the model.
+     * @param iter The number of iterations to step the model. Must be > 0
+     * @return The new state after <code>iter</code> iterations
+     */
+    public static final int step(int state, int iter) {
+        assert iter > 0;
+
+        int currentState = state;
+        for (int i=0; i< iter; i++) {
+            int newState = step(currentState);
+            currentState = newState;
         }
-        else {
-            this.counter = this.counter-1;
-        }
-        this.history.add(this.counter);
+        return currentState;
     }
 
 
-    /* Getters & Setters etc .*/
-
-    public int getCounter() {
-        return this.counter;
-    }
-
-    public Integer[] getHistory() {
-        return this.history.toArray(new Integer[this.history.size()]);
-    }
-
-    public void printHistory() {
-        for (int c: this.history) {
-            System.out.print(c+", ");
-        }
-        System.out.println();
-    }
-
-    public static int getNumModelsCreated() {
-        return SimpleModel.modelCount;
-    }
-
-
-    /* Main */
-
-    public static void main(String args[]) {
-
-        SimpleModel s = new SimpleModel(0.5, new MersenneTwister(1l));
-        for (int i=0; i<1000; i++ ) {
-            s.step();
-        }
-        s.printHistory();
-
+    //private default constructor ==> can't be instantiated
+    //side effect: class is final because it can't be subclassed:
+    //super() can't be called from subclasses
+    private SimpleModel() {
+        throw new AssertionError();
     }
 
 }

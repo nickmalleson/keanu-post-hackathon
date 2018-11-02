@@ -5,14 +5,14 @@ import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
 import io.improbable.keanu.network.BayesianNetwork;
 import io.improbable.keanu.research.randomfactory.VertexBackedRandomGenerator;
 import io.improbable.keanu.research.vertices.IntegerArrayIndexingVertex;
-import io.improbable.keanu.research.vertices.RandomFactoryVertex;
 import io.improbable.keanu.research.visualisation.GraphvizKt;
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
 import io.improbable.keanu.vertices.Vertex;
+import io.improbable.keanu.vertices.dbl.KeanuRandom;
 import io.improbable.keanu.vertices.dbl.nonprobabilistic.CastDoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
+import io.improbable.keanu.vertices.dbl.probabilistic.UniformVertex;
 import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.unary.UnaryOpLambda;
-import org.apache.commons.math3.random.RandomGenerator;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -21,107 +21,98 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * SimpleWrapperB did parameter estimation and state estimation (the Bayes net estimated a posterior over all
+ * model parameters) but only used the parameter estimates.
+ *
+ * This version of SimpleWrapper does state and parameter estimation *while the model is running* (i.e. rather than
+ * doing so at the end), akin to data assimilation.
+ */
 public class SimpleWrapperC {
 
+    private static final int NUM_OBSERVATIONS = 5; // TEMPORARILY
+
     /* Model parameters */
-    private static final double threshold = 0.0;
-    public static final int NUM_RAND_DOUBLES = 50;
-    private static final int NUM_ITER = 500;
+    private static final UniformVertex THRESHOLD = new UniformVertex(-1.0, 1.0);
+    private static final int NUM_ITER = 1000;
 
     /* Hyperparameters */
-    private static final double SIGMA_NOISE = 0.1;
-    private static final int NUM_SAMPLES = 5000;
+    private static final int UPDATE_INTERVAL = 200; // Number of iterations between updates
+    private static final double SIGMA_NOISE = 10; // Noise added to the observations
+    private static final int NUM_SAMPLES = 1000; // Number of samples to MCMC
     private static final int DROP_SAMPLES = 1;
-    //private static final int DROP_SAMPLES = NUM_SAMPLES/4;
     private static final int DOWN_SAMPLE = 5;
-
-    private static final int numObservations = 5; // Number of points to observe (temporary - will be replaced with proper tests)
 
     private static ArrayList<SimpleModel> models = new ArrayList<>(); // Keep all the models for analysis later
 
-    //private static final long SEED = 1l;
-    //private static final RandomGenerator random = new MersenneTwister(SEED);
-
-
+    // Initialise the random number generator used throughout
+    public static final int NUM_RAND_DOUBLES = 100000;
+    private static final VertexBackedRandomGenerator RAND_GENERATOR =
+        new VertexBackedRandomGenerator(NUM_RAND_DOUBLES,0,0);
 
     /* Admin parameters */
-    private static String dirName = "results/simple/"; // Place to store results
-
-
-    /** Run the SimpleModel and return the count at each iteration **/
-
-    public static Integer[] runModel(RandomGenerator rand) {
-        SimpleModel s = new SimpleModel(SimpleWrapperC.threshold, rand);
-
-        for (int i=0; i<NUM_ITER; i++) {
-            s.step();
-        }
-        SimpleWrapperC.models.add(s);
-        return s.getHistory();
-    }
+    private static String dirName = "results/simpleC/"; // Place to store results
 
 
     /**
-     * Run the probabilistic model
+     * Run the probabilistic model. This is the main function.
      **/
-    public static void run() {
-        System.out.println("Starting. Number of iterations: " + NUM_ITER);
+    public static void main (String[] args) {
+
+        System.out.println("Starting.\n" +
+            "\tNumber of iterations: " + NUM_ITER+"\n"+
+            "\tUpdate interval: " + UPDATE_INTERVAL);
+
+        // Initialise stuff
+        Double truthThreshold = THRESHOLD.sample(KeanuRandom.getDefaultRandom()).getValue(0);
+        SimpleModel.init(truthThreshold, RAND_GENERATOR);
 
         /*
-                ************ CREATE THE TRUTH DATA ************
+         ************ CREATE THE TRUTH DATA ************
          */
 
         System.out.println("Making truth data");
-        System.out.println("Initialising random number stream for truth data");
-        VertexBackedRandomGenerator truthRandom = new VertexBackedRandomGenerator(NUM_RAND_DOUBLES, 0, 0);
 
-        // Store the random numbers used (for comparison later)
-        List<Double> truthRandomNumbers = new ArrayList<>(NUM_RAND_DOUBLES);
-        for (int i=0; i<NUM_RAND_DOUBLES; i++) truthRandomNumbers.add(truthRandom.nextGaussian());
+        // Generate truth data
 
-        // Run the model
-        Integer[] truth = SimpleWrapperC.runModel(truthRandom);
+        // TODO replace with call to step(state,iter)
+        int currentState = 0; // initial state
+        Integer[] truthData = new Integer[NUM_ITER];
+        for (int i=0; i< NUM_ITER; i++) {
+            truthData[i] = currentState;
+            int newState = SimpleModel.step(currentState);
+            currentState = newState;
+        }
 
-        System.out.println("Truth data length: " + truth.length);
-        System.out.println("Truth data: "+Arrays.asList(truth).toString() + "\n\n");
-        System.out.println("Truth random numbers:");
-        System.out.println(truthRandomNumbers.toString());
-        (new ArrayList<String>(NUM_RAND_DOUBLES)).forEach(i -> System.out.print(truthRandom.nextGaussian()+", "));
-        System.out.println();
-
-
+        System.out.println("Truth data length: " + truthData.length);
+        System.out.println("Truth data: "+Arrays.asList(truthData).toString() + "\n\n");
+        System.out.println("Truth threshold is: "+truthThreshold);
 
         /*
          ************ INITIALISE THE BLACK BOX MODEL ************
          */
 
-        System.out.println("Initialising new random number stream");
-        RandomFactoryVertex random = new RandomFactoryVertex(NUM_RAND_DOUBLES, 0, 0);
-
-        // This is the 'black box' vertex that runs the model. It's input is the random numbers and
-        // output is a list of Integer(tensor)s (the number of agents in the model at each iteration).
+        // This is the 'black box' vertex that runs the model.
         System.out.println("Initialising black box model");
-        UnaryOpLambda<VertexBackedRandomGenerator, Integer[]> box =
-            new UnaryOpLambda<>( random, SimpleWrapperC::runModel);
 
-
+        UnaryOpLambda<DoubleTensor, Integer[]> box =
+            new UnaryOpLambda<>( THRESHOLD, SimpleWrapperC::runModel);
 
         /*
          ************ OBSERVE SOME TRUTH DATA ************
          */
 
-
         // Observe the truth data plus some noise?
         System.out.println("Observing truth data. Adding noise with standard dev: " + SIGMA_NOISE);
-        System.out.print("Observing at iterations: ");
-        for (Integer i = 0; i < NUM_ITER; i+=NUM_ITER/numObservations) {
+        System.out.println("Observing at iterations: ");
+        for (Integer i = 0; i < NUM_ITER; i+=NUM_ITER/ NUM_OBSERVATIONS) {
             System.out.print(i+",");
             // output is the ith element of the model output (from box)
             IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
             // output with a bit of noise. Lower sigma makes it more constrained.
             GaussianVertex noisyOutput = new GaussianVertex(new CastDoubleVertex(output), SIGMA_NOISE);
             // Observe the output
-            noisyOutput.observe(truth[i].doubleValue()); //.toDouble().scalar());
+            noisyOutput.observe(truthData[i].doubleValue()); //.toDouble().scalar());
         }
         System.out.println();
 
@@ -146,13 +137,10 @@ public class SimpleWrapperC {
         // Sample from the posterior
         System.out.println("Sampling");
 
-        // These objectcs represent the random numbers used in the probabilistic model
-        List<GaussianVertex> randNumbers = new ArrayList(random.getValue().randDoubleSource);
-
         // Collect all the parameters that we want to sample (the random numbers and the box model)
         List<Vertex> parameters = new ArrayList<>(NUM_RAND_DOUBLES+1); // Big enough to hold the random numbers and the box
         parameters.add(box);
-        parameters.addAll(randNumbers);
+        parameters.add(THRESHOLD);
 
         // Sample from the box and the random numbers
         NetworkSamples sampler = MetropolisHastings.getPosteriorSamples(
@@ -186,53 +174,55 @@ public class SimpleWrapperC {
         /*
          ************ GET THE INFORMATION OUT OF THE SAMPLES ************
          */
-
-        // Get the random numbers. A 2D list. First dimension holds the random number, second dimensions holds its samples.
-        List<List<Double>> randomNumberSamples = new ArrayList<List<Double>>(NUM_SAMPLES);
-        // Add each random number parameter to the list
-        for (int i=0; i<NUM_RAND_DOUBLES; i++) {
-            List<DoubleTensor> randSamples = sampler.get(randNumbers.get(i)).asList();
-            // Convert from Tensors to Doubles
-            List<Double> randSamplesDouble =
-                randSamples.stream().map( (d) -> d.getValue(0)).collect(Collectors.toList());
-            randomNumberSamples.add(randSamplesDouble);
-        }
+        // Add the threshold parameter to the list
+        List<DoubleTensor> samples = sampler.get(THRESHOLD).asList();
+        // Get the threshold estimates as a list (Convert from Tensors to Doubles)
+        List<Double> thresholdSamples =
+            samples.stream().map( (d) -> d.getValue(0)).collect(Collectors.toList());
 
         String theTime = String.valueOf(System.currentTimeMillis()); // So files have unique names
-        SimpleWrapperC.writeRandomNumbers(randomNumberSamples, truthRandomNumbers, theTime);
+        SimpleWrapperC.writeThresholds(thresholdSamples, truthThreshold, theTime);
 
         // Get the number of people per iteration for each sample
         List<Integer[]> peopleSamples = sampler.get(box).asList();
         System.out.println("Have saved " + peopleSamples.size() + " samples and ran " + models.size() + " models");
-        SimpleWrapperC.writeResults(peopleSamples , truth, theTime);
+        SimpleWrapperC.writeResults(peopleSamples , truthData, theTime);
 
     }
 
 
 
-
+    /** Run the SimpleModel and return the count at each iteration **/
+    public static Integer[] runModel(DoubleTensor threshold) {
+        int currentState = 0; // initial state
+        Integer[] history= new Integer[NUM_ITER];
+        for (int i=0; i< NUM_ITER; i++) {
+            history[i] = currentState;
+            int newState = SimpleModel.step(currentState);
+            currentState = newState;
+        }
+        return history;
+    }
 
     /*
-    **************** ADMIN STUFF ****************
+     **************** ADMIN STUFF ****************
      */
 
-    private static void writeRandomNumbers(List<List<Double>> randomNumberSamples, List<Double> truthRandomNumbers, String name) {
+    private static void writeThresholds(List<Double> randomNumberSamples, Double truthThreshold, String name) {
 
         // Write out random numbers used and the actual results
         Writer w1;
         try {
             w1 = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(dirName + "Rands_" + name + ".csv"), "utf-8"));
+                new FileOutputStream(dirName + "Params_" + name + ".csv"), "utf-8"));
 
             // Do the truth data first
-            for (double val : truthRandomNumbers) w1.write(val + ",");
+            w1.write(truthThreshold + ",");
             w1.write("\n");
 
             // Now the samples.
-            for (int sample = 0; sample<randomNumberSamples.get(0).size(); sample++) {
-                for (int d = 0; d<NUM_RAND_DOUBLES; d++) {
-                    w1.write(randomNumberSamples.get(d).get(sample)+", ");
-                }
+            for (double sample : randomNumberSamples) {
+                w1.write(sample+", ");
                 w1.write("\n");
             }
             w1.close();
@@ -282,8 +272,5 @@ public class SimpleWrapperC {
         }
     }
 
-    public static void main (String[] args) {
 
-        SimpleWrapperC.run();
-    }
 }

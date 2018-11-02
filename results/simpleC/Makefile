@@ -16,7 +16,7 @@ clean:
 	
 
 
-resultsB:
+results:
 	Rscript -e "require(knitr) ; require(markdown) ;knit('ResultsSummary-SimpleC.Rmd', 'ResultsSummary-SimpleC.md'); markdownToHTML('ResultsSummary-SimpleC.md', 'ResultsSummary-SimpleC.html');"
 	rm ResultsSummary-SimpleC.md
 	open ResultsSummary-SimpleC.html
