@@ -7,12 +7,15 @@ import io.improbable.keanu.research.randomfactory.VertexBackedRandomGenerator;
 import io.improbable.keanu.research.vertices.IntegerArrayIndexingVertex;
 import io.improbable.keanu.research.visualisation.GraphvizKt;
 import io.improbable.keanu.tensor.dbl.DoubleTensor;
+import io.improbable.keanu.tensor.intgr.IntegerTensor;
 import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.dbl.KeanuRandom;
 import io.improbable.keanu.vertices.dbl.nonprobabilistic.CastDoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.UniformVertex;
+import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.binary.BinaryOpLambda;
 import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.unary.UnaryOpLambda;
+import io.improbable.keanu.vertices.intgr.nonprobabilistic.ConstantIntegerVertex;
 import sun.java2d.pipe.SpanShapeRenderer;
 
 import java.io.*;
@@ -95,9 +98,9 @@ public class SimpleWrapperC {
          */
         int iterations = 0; // Record the total number of iterations we have been through
 
-        for (int window = 0; window < NUM_WINDOWS; window++) { // Loop for every window
+       // for (int window = 0; window < NUM_WINDOWS; window++) { // Loop for every window
 
-            System.out.println("Entering update window "+window);
+      //      System.out.println("Entering update window "+window);
 
             /*
              ************ INITIALISE THE BLACK BOX MODEL ************
@@ -106,8 +109,10 @@ public class SimpleWrapperC {
             // This is the 'black box' vertex that runs the model.
             System.out.println("Initialising black box model");
 
-            UnaryOpLambda<DoubleTensor, Integer[]> box =
-                new UnaryOpLambda<>( THRESHOLD, SimpleWrapperC::runModel);
+            ConstantIntegerVertex initialState = new ConstantIntegerVertex(0); // START WITH 0 TEMPORARILY
+
+            BinaryOpLambda<DoubleTensor, IntegerTensor, Integer[]> box =
+                new BinaryOpLambda<>( THRESHOLD, initialState, SimpleWrapperC::runModel);
 
             /*
              ************ OBSERVE SOME TRUTH DATA ************
@@ -116,7 +121,7 @@ public class SimpleWrapperC {
             // Observe the truth data plus some noise?
             System.out.println("Observing truth data. Adding noise with standard dev: " + SIGMA_NOISE);
             System.out.println("Observing at iterations: ");
-            for (Integer i = 0; i < NUM_ITER; i+=NUM_ITER/ NUM_OBSERVATIONS) {
+            for (Integer i = 0; i < NUM_ITER; i+=5) { // 5 TEMPORARILY
                 System.out.print(i+",");
                 // output is the ith element of the model output (from box)
                 IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
@@ -184,7 +189,7 @@ public class SimpleWrapperC {
             SimpleWrapperC.writeResults(peopleSamples , truthData, theTime);
 
 
-        } // for
+     //   } // for
 
 
 
@@ -193,10 +198,14 @@ public class SimpleWrapperC {
 
 
 
-    /** Run the SimpleModel and return the count at each iteration **/
-    public static Integer[] runModel(DoubleTensor threshold) {
+    /**
+     * Run the SimpleModel for <code>WINDOW_SIZE</code> iterations and return the count at each iteration
+     *
+     **/
+    public static Integer[] runModel(DoubleTensor threshold, IntegerTensor initialState) {
+
         SimpleModel s = new SimpleModel(threshold.getValue(0), RAND_GENERATOR);
-        int state = 0; // initial state
+        int state = initialState.getValue(0);
         Integer[] history= new Integer[NUM_ITER];
         for (int i=0; i< NUM_ITER; i++) {
             //history[i] = state;
@@ -205,6 +214,8 @@ public class SimpleWrapperC {
         }
         return history;
     }
+
+
 
 
 
