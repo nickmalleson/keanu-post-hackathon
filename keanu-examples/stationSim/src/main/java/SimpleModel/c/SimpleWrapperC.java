@@ -64,7 +64,6 @@ public class SimpleWrapperC {
 
         // Initialise stuff
         Double truthThreshold = THRESHOLD.sample(KeanuRandom.getDefaultRandom()).getValue(0);
-        SimpleModel.init(truthThreshold, RAND_GENERATOR);
 
         /*
          ************ CREATE THE TRUTH DATA ************
@@ -75,15 +74,16 @@ public class SimpleWrapperC {
         // Generate truth data
 
         // TODO replace with call to step(state,iter)
-        int currentState = 0; // initial state
+        SimpleModel truthModel = new SimpleModel(truthThreshold , RAND_GENERATOR);
         Integer[] truthData = new Integer[NUM_ITER];
+        int currentState = 0; // initial state
         for (int i=0; i< NUM_ITER; i++) {
             truthData[i] = currentState;
-            int newState = SimpleModel.step(currentState);
+            int newState = truthModel.step(currentState);
             currentState = newState;
         }
 
-        System.out.println("SimpleModel configured with truth threshold: "+SimpleModel.getThreshold());
+        System.out.println("SimpleModel configured with truth threshold: "+truthThreshold);
         System.out.println("Truth data length: " + truthData.length);
         System.out.println("Truth data: "+Arrays.asList(truthData).toString());
         System.out.println("Truth threshold is: "+truthThreshold);
@@ -195,12 +195,12 @@ public class SimpleWrapperC {
 
     /** Run the SimpleModel and return the count at each iteration **/
     public static Integer[] runModel(DoubleTensor threshold) {
-        SimpleModel.setThreshold(threshold.getValue(0));
+        SimpleModel s = new SimpleModel(threshold.getValue(0), RAND_GENERATOR);
         int state = 0; // initial state
         Integer[] history= new Integer[NUM_ITER];
         for (int i=0; i< NUM_ITER; i++) {
             //history[i] = state;
-            state = SimpleModel.step(state); // new state
+            state = s.step(state); // new state
             history[i] = state;
         }
         return history;

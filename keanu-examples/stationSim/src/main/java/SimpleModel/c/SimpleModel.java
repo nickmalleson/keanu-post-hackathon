@@ -3,21 +3,17 @@ package SimpleModel.c;
 import org.apache.commons.math3.random.RandomGenerator;
 import sun.jvm.hotspot.utilities.AssertionFailure;
 
-public abstract class SimpleModel {
+public class SimpleModel {
 
     /* Class Parameters */
-    private static double threshold;
+    private double threshold;
 
-
-
-    private static RandomGenerator random;
-    private static boolean init = false; // Check that the class has been initialised
+    private RandomGenerator random;
 
     /** Initialise the class (only needs to be called once) */
-    public static void init(double threshold, RandomGenerator random) {
-        SimpleModel.threshold = threshold;
-        SimpleModel.random = random;
-        init=true;
+    public SimpleModel(double threshold, RandomGenerator random) {
+        this.threshold = threshold;
+        this.random = random;
     }
 
     /**
@@ -25,9 +21,8 @@ public abstract class SimpleModel {
      * @param state The current state of the model.
      * @return The new state after one iteration
      */
-    public static final int step(int state) {
-        if (!init) throw new AssertionError("SimpleModel class has not been initialised. Call init().");
-        int newState = SimpleModel.random.nextGaussian() > SimpleModel.threshold ? state+1 : state-1;
+    public int step(int state) {
+        int newState = this.random.nextGaussian() > this.threshold ? state+1 : state-1;
         return newState;
     }
 
@@ -37,8 +32,7 @@ public abstract class SimpleModel {
      * @param iter The number of iterations to step the model. Must be > 0
      * @return The new state after <code>iter</code> iterations
      */
-    public static final int step(int state, int iter) {
-        if (!init) throw new AssertionError("SimpleModel class has not been initialised. Call init().");
+    public final int step(int state, int iter) {
         assert iter > 0;
 
         int currentState = state;
@@ -50,22 +44,5 @@ public abstract class SimpleModel {
     }
 
 
-    //private default constructor ==> can't be instantiated
-    //side effect: class is final because it can't be subclassed:
-    //super() can't be called from subclasses
-    private SimpleModel() {
-        throw new AssertionError();
-    }
-
-    public static double getThreshold() {
-        return threshold;
-    }
-    public static void setThreshold(double threshold) {
-        SimpleModel.threshold = threshold;
-    }
-
-    public static RandomGenerator getRandom() {
-        return random;
-    }
 
 }
