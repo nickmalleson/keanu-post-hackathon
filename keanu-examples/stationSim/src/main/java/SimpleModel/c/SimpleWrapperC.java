@@ -38,7 +38,7 @@ public class SimpleWrapperC {
 
     /* Model parameters */
     private static final UniformVertex THRESHOLD = new UniformVertex(-1.0, 1.0);
-    private static final int NUM_ITER = 1000; // Total number of iterations
+    private static final int NUM_ITER = 1001; // Total number of iterations
 
     /* Hyperparameters */
     private static final int WINDOW_SIZE = 200; // Number of iterations per update window
@@ -96,41 +96,38 @@ public class SimpleWrapperC {
         /*
          ************ START THE MAIN LOOP ************
          */
-        int iterations = 0; // Record the total number of iterations we have been through
+        int iter = 0; // Record the total number of iterations we have been through
 
-       // for (int window = 0; window < NUM_WINDOWS; window++) { // Loop for every window
+        for (int window = 0; window < NUM_WINDOWS; window++) { // Loop for every window
 
-      //      System.out.println("Entering update window "+window);
+            System.out.println("Entering update window "+window);
+
+            // Increment the counter of how many iterations the model has been run for
+            iter += WINDOW_SIZE;
 
             /*
              ************ INITIALISE THE BLACK BOX MODEL ************
              */
+            System.out.println("\tInitialising black box model");
 
-            // This is the 'black box' vertex that runs the model.
-            System.out.println("Initialising black box model");
+            // XXXXNeed to get the current distribution of the state from the previous window ??
 
-            ConstantIntegerVertex initialState = new ConstantIntegerVertex(0); // START WITH 0 TEMPORARILY
-
+            ConstantIntegerVertex state = new ConstantIntegerVertex(0); // START WITH 0 TEMPORARILY. WHAT SHOULD THIS BE?
             BinaryOpLambda<DoubleTensor, IntegerTensor, Integer[]> box =
-                new BinaryOpLambda<>( THRESHOLD, initialState, SimpleWrapperC::runModel);
+                new BinaryOpLambda<>( THRESHOLD, state, SimpleWrapperC::runModel);
 
             /*
              ************ OBSERVE SOME TRUTH DATA ************
              */
-
-            // Observe the truth data plus some noise?
-            System.out.println("Observing truth data. Adding noise with standard dev: " + SIGMA_NOISE);
-            System.out.println("Observing at iterations: ");
-            for (Integer i = 0; i < NUM_ITER; i+=5) { // 5 TEMPORARILY
-                System.out.print(i+",");
-                // output is the ith element of the model output (from box)
-                IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
-                // output with a bit of noise. Lower sigma makes it more constrained.
-                GaussianVertex noisyOutput = new GaussianVertex(new CastDoubleVertex(output), SIGMA_NOISE);
-                // Observe the output
-                noisyOutput.observe(truthData[i].doubleValue()); //.toDouble().scalar());
-            }
-            System.out.println();
+            // Get the relevant truth value (the one at the start of this update window)
+            Integer truthValue = truthData[iter];
+            System.out.println("\tObserving truth value "+truthValue+" (with noise "+SIGMA_NOISE+") for iteration "+iter);
+            // output is the ith element of the model output (from box). Observe the most recent observation
+            IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, WINDOW_SIZE-1);
+            // output with a bit of noise. Lower sigma makes it more constrained.
+            GaussianVertex noisyOutput = new GaussianVertex(new CastDoubleVertex(output), SIGMA_NOISE);
+            // Observe the output
+            noisyOutput.observe(truthValue.doubleValue()); //.toDouble().scalar());
 
 
             /*
@@ -138,7 +135,7 @@ public class SimpleWrapperC {
              */
 
             // Create the BayesNet
-            System.out.println("Creating BayesNet");
+            System.out.println("\tCreating BayesNet");
             BayesianNetwork net = new BayesianNetwork(box.getConnectedGraph());
             SimpleWrapperC.writeBaysNetToFile(net);
 
@@ -151,10 +148,10 @@ public class SimpleWrapperC {
              */
 
             // Sample from the posterior
-            System.out.println("Sampling");
+            System.out.println("\tSampling");
 
-            // Collect all the parameters that we want to sample (the random numbers and the box model)
-            List<Vertex> parameters = new ArrayList<>(NUM_RAND_DOUBLES+1); // Big enough to hold the random numbers and the box
+            // Collect all the parameters that we want to sample
+            List<Vertex> parameters = new ArrayList<>();
             parameters.add(box);
             parameters.add(THRESHOLD);
 
@@ -163,8 +160,6 @@ public class SimpleWrapperC {
                 net,                // The bayes net with latent variables (the random numbers?)
                 parameters,         // The vertices to include in the returned samples
                 NUM_SAMPLES);       // The number of samples
-
-            System.out.println("Finished running MCMC.");
 
             // Downsample etc
             sampler = sampler.drop(DROP_SAMPLES).downSample(DOWN_SAMPLE);
@@ -179,17 +174,23 @@ public class SimpleWrapperC {
             List<Double> thresholdSamples =
                 samples.stream().map( (d) -> d.getValue(0)).collect(Collectors.toList());
 
+            System.out.println("\tHave kept " + thresholdSamples.size()+" samples.");
+
             String theTime = String.valueOf(System.currentTimeMillis()); // So files have unique names
+
+            // Write the threshold distribution
             SimpleWrapperC.writeThresholds(thresholdSamples, truthThreshold, theTime);
 
-            // Get the number of people per iteration for each sample
+            // Write the distribution of model states
+            Integer[] truthWindow = Arrays.copyOfRange(truthData, iter-WINDOW_SIZE,iter); // The truth data for this window
             List<Integer[]> peopleSamples = sampler.get(box).asList();
-            assert peopleSamples.size() == thresholdSamples.size();
-            System.out.println("Have saved " + peopleSamples.size()+" samples.");
-            SimpleWrapperC.writeResults(peopleSamples , truthData, theTime);
+            assert truthWindow.length == peopleSamples.get(0).length:
+                String.format("Iteration lengths differ: truth:%s samples:%s", truthWindow.length, peopleSamples.get(0).length);
+             assert peopleSamples.size() == thresholdSamples.size();
+            SimpleWrapperC.writeResults(peopleSamples, truthWindow, theTime);
 
 
-     //   } // for
+        } // for update window
 
 
 
@@ -206,12 +207,13 @@ public class SimpleWrapperC {
 
         SimpleModel s = new SimpleModel(threshold.getValue(0), RAND_GENERATOR);
         int state = initialState.getValue(0);
-        Integer[] history= new Integer[NUM_ITER];
-        for (int i=0; i< NUM_ITER; i++) {
+        Integer[] history= new Integer[WINDOW_SIZE];
+        for (int i=0; i< WINDOW_SIZE; i++) {
             //history[i] = state;
             state = s.step(state); // new state
             history[i] = state;
         }
+        assert history.length == WINDOW_SIZE;
         return history;
     }
 
