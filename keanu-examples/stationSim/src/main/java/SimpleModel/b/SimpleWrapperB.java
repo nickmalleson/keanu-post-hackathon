@@ -40,8 +40,8 @@ public class SimpleWrapperB {
         new VertexBackedRandomGenerator(NUM_RAND_DOUBLES,0,0);
 
     /* Hyperparameters */
-    private static final double SIGMA_NOISE = 10;
-    private static final int NUM_SAMPLES = 1000;
+    private static final double SIGMA_NOISE = 1;
+    private static final int NUM_SAMPLES = 5000;
     private static final int DROP_SAMPLES = 1;
     //private static final int DROP_SAMPLES = NUM_SAMPLES/4;
     private static final int DOWN_SAMPLE = 5;

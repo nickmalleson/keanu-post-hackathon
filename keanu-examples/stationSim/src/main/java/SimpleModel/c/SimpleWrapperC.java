@@ -13,6 +13,7 @@ import io.improbable.keanu.vertices.dbl.nonprobabilistic.CastDoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.UniformVertex;
 import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.unary.UnaryOpLambda;
+import sun.java2d.pipe.SpanShapeRenderer;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -38,15 +39,13 @@ public class SimpleWrapperC {
 
     /* Hyperparameters */
     private static final int UPDATE_INTERVAL = 200; // Number of iterations between updates
-    private static final double SIGMA_NOISE = 10; // Noise added to the observations
-    private static final int NUM_SAMPLES = 1000; // Number of samples to MCMC
+    private static final double SIGMA_NOISE = 5.0; // Noise added to the observations
+    private static final int NUM_SAMPLES = 2000; // Number of samples to MCMC
     private static final int DROP_SAMPLES = 1;
     private static final int DOWN_SAMPLE = 5;
 
-    private static ArrayList<SimpleModel> models = new ArrayList<>(); // Keep all the models for analysis later
-
     // Initialise the random number generator used throughout
-    public static final int NUM_RAND_DOUBLES = 100000;
+    public static final int NUM_RAND_DOUBLES = 10000;
     private static final VertexBackedRandomGenerator RAND_GENERATOR =
         new VertexBackedRandomGenerator(NUM_RAND_DOUBLES,0,0);
 
@@ -84,8 +83,9 @@ public class SimpleWrapperC {
             currentState = newState;
         }
 
+        System.out.println("SimpleModel configured with truth threshold: "+SimpleModel.getThreshold());
         System.out.println("Truth data length: " + truthData.length);
-        System.out.println("Truth data: "+Arrays.asList(truthData).toString() + "\n\n");
+        System.out.println("Truth data: "+Arrays.asList(truthData).toString());
         System.out.println("Truth threshold is: "+truthThreshold);
 
         /*
@@ -185,7 +185,8 @@ public class SimpleWrapperC {
 
         // Get the number of people per iteration for each sample
         List<Integer[]> peopleSamples = sampler.get(box).asList();
-        System.out.println("Have saved " + peopleSamples.size() + " samples and ran " + models.size() + " models");
+        assert peopleSamples.size() == thresholdSamples.size();
+        System.out.println("Have saved " + peopleSamples.size()+" samples.");
         SimpleWrapperC.writeResults(peopleSamples , truthData, theTime);
 
     }
@@ -194,15 +195,19 @@ public class SimpleWrapperC {
 
     /** Run the SimpleModel and return the count at each iteration **/
     public static Integer[] runModel(DoubleTensor threshold) {
-        int currentState = 0; // initial state
+        SimpleModel.setThreshold(threshold.getValue(0));
+        int state = 0; // initial state
         Integer[] history= new Integer[NUM_ITER];
         for (int i=0; i< NUM_ITER; i++) {
-            history[i] = currentState;
-            int newState = SimpleModel.step(currentState);
-            currentState = newState;
+            //history[i] = state;
+            state = SimpleModel.step(state); // new state
+            history[i] = state;
         }
         return history;
     }
+
+
+
 
     /*
      **************** ADMIN STUFF ****************

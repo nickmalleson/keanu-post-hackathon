@@ -12,7 +12,7 @@ graphs: # Creates a graph from GraphViz format
 	done 
 	
 clean:
-	rm -r *.dot *.pdf *.csv *_cache *_files cache
+	rm -r *.dot *.pdf *.csv figure
 	
 
 

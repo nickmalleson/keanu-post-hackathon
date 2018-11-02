@@ -7,6 +7,9 @@ public abstract class SimpleModel {
 
     /* Class Parameters */
     private static double threshold;
+
+
+
     private static RandomGenerator random;
     private static boolean init = false; // Check that the class has been initialised
 
@@ -35,6 +38,7 @@ public abstract class SimpleModel {
      * @return The new state after <code>iter</code> iterations
      */
     public static final int step(int state, int iter) {
+        if (!init) throw new AssertionError("SimpleModel class has not been initialised. Call init().");
         assert iter > 0;
 
         int currentState = state;
@@ -51,6 +55,17 @@ public abstract class SimpleModel {
     //super() can't be called from subclasses
     private SimpleModel() {
         throw new AssertionError();
+    }
+
+    public static double getThreshold() {
+        return threshold;
+    }
+    public static void setThreshold(double threshold) {
+        SimpleModel.threshold = threshold;
+    }
+
+    public static RandomGenerator getRandom() {
+        return random;
     }
 
 }

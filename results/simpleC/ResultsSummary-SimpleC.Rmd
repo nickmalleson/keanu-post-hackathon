@@ -27,7 +27,7 @@ library(gridExtra) # For arranging two grids side by side
 library(xtable) # for making nice tables
 
 
-homedir<-"/Users/nick/research_not_syncd/git_projects/keanu-post-hackathon/results/simpleB/"
+homedir<-"/Users/nick/research_not_syncd/git_projects/keanu-post-hackathon/results/simpleC/"
 setwd(homedir)
 
 # Find files
