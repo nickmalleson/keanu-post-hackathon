@@ -31,14 +31,15 @@ import java.util.stream.Collectors;
  */
 public class SimpleWrapperC {
 
-    private static final int NUM_OBSERVATIONS = 5; // TEMPORARILY
+    //private static final int NUM_OBSERVATIONS = 5; // TEMPORARILY
 
     /* Model parameters */
     private static final UniformVertex THRESHOLD = new UniformVertex(-1.0, 1.0);
-    private static final int NUM_ITER = 1000;
+    private static final int NUM_ITER = 1000; // Total number of iterations
 
     /* Hyperparameters */
-    private static final int UPDATE_INTERVAL = 200; // Number of iterations between updates
+    private static final int WINDOW_SIZE = 200; // Number of iterations per update window
+    private static final int NUM_WINDOWS = NUM_ITER / WINDOW_SIZE; // Number of update windows
     private static final double SIGMA_NOISE = 5.0; // Noise added to the observations
     private static final int NUM_SAMPLES = 2000; // Number of samples to MCMC
     private static final int DROP_SAMPLES = 1;
@@ -60,7 +61,8 @@ public class SimpleWrapperC {
 
         System.out.println("Starting.\n" +
             "\tNumber of iterations: " + NUM_ITER+"\n"+
-            "\tUpdate interval: " + UPDATE_INTERVAL);
+            "\tWindow size: " + WINDOW_SIZE+"\n"+
+            "\tNumber of windows: " +NUM_WINDOWS );
 
         // Initialise stuff
         Double truthThreshold = THRESHOLD.sample(KeanuRandom.getDefaultRandom()).getValue(0);
@@ -73,7 +75,6 @@ public class SimpleWrapperC {
 
         // Generate truth data
 
-        // TODO replace with call to step(state,iter)
         SimpleModel truthModel = new SimpleModel(truthThreshold , RAND_GENERATOR);
         Integer[] truthData = new Integer[NUM_ITER];
         int currentState = 0; // initial state
@@ -88,108 +89,107 @@ public class SimpleWrapperC {
         System.out.println("Truth data: "+Arrays.asList(truthData).toString());
         System.out.println("Truth threshold is: "+truthThreshold);
 
+
         /*
-         ************ INITIALISE THE BLACK BOX MODEL ************
+         ************ START THE MAIN LOOP ************
          */
+        int iterations = 0; // Record the total number of iterations we have been through
 
-        // This is the 'black box' vertex that runs the model.
-        System.out.println("Initialising black box model");
+        for (int window = 0; window < NUM_WINDOWS; window++) { // Loop for every window
 
-        UnaryOpLambda<DoubleTensor, Integer[]> box =
-            new UnaryOpLambda<>( THRESHOLD, SimpleWrapperC::runModel);
+            System.out.println("Entering update window "+window);
 
-        /*
-         ************ OBSERVE SOME TRUTH DATA ************
-         */
+            /*
+             ************ INITIALISE THE BLACK BOX MODEL ************
+             */
 
-        // Observe the truth data plus some noise?
-        System.out.println("Observing truth data. Adding noise with standard dev: " + SIGMA_NOISE);
-        System.out.println("Observing at iterations: ");
-        for (Integer i = 0; i < NUM_ITER; i+=NUM_ITER/ NUM_OBSERVATIONS) {
-            System.out.print(i+",");
-            // output is the ith element of the model output (from box)
-            IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
-            // output with a bit of noise. Lower sigma makes it more constrained.
-            GaussianVertex noisyOutput = new GaussianVertex(new CastDoubleVertex(output), SIGMA_NOISE);
-            // Observe the output
-            noisyOutput.observe(truthData[i].doubleValue()); //.toDouble().scalar());
-        }
-        System.out.println();
+            // This is the 'black box' vertex that runs the model.
+            System.out.println("Initialising black box model");
 
+            UnaryOpLambda<DoubleTensor, Integer[]> box =
+                new UnaryOpLambda<>( THRESHOLD, SimpleWrapperC::runModel);
 
-        /*
-         ************ CREATE THE BAYES NET ************
-         */
+            /*
+             ************ OBSERVE SOME TRUTH DATA ************
+             */
 
-        // Create the BayesNet
-        System.out.println("Creating BayesNet");
-        BayesianNetwork net = new BayesianNetwork(box.getConnectedGraph());
-        SimpleWrapperC.writeBaysNetToFile(net);
-
-        // Workaround for too many evaluations during sample startup
-        //random.setAndCascade(random.getValue());
+            // Observe the truth data plus some noise?
+            System.out.println("Observing truth data. Adding noise with standard dev: " + SIGMA_NOISE);
+            System.out.println("Observing at iterations: ");
+            for (Integer i = 0; i < NUM_ITER; i+=NUM_ITER/ NUM_OBSERVATIONS) {
+                System.out.print(i+",");
+                // output is the ith element of the model output (from box)
+                IntegerArrayIndexingVertex output = new IntegerArrayIndexingVertex(box, i);
+                // output with a bit of noise. Lower sigma makes it more constrained.
+                GaussianVertex noisyOutput = new GaussianVertex(new CastDoubleVertex(output), SIGMA_NOISE);
+                // Observe the output
+                noisyOutput.observe(truthData[i].doubleValue()); //.toDouble().scalar());
+            }
+            System.out.println();
 
 
-        /*
-         ************ SAMPLE FROM THE POSTERIOR************
-         */
+            /*
+             ************ CREATE THE BAYES NET ************
+             */
 
-        // Sample from the posterior
-        System.out.println("Sampling");
+            // Create the BayesNet
+            System.out.println("Creating BayesNet");
+            BayesianNetwork net = new BayesianNetwork(box.getConnectedGraph());
+            SimpleWrapperC.writeBaysNetToFile(net);
 
-        // Collect all the parameters that we want to sample (the random numbers and the box model)
-        List<Vertex> parameters = new ArrayList<>(NUM_RAND_DOUBLES+1); // Big enough to hold the random numbers and the box
-        parameters.add(box);
-        parameters.add(THRESHOLD);
-
-        // Sample from the box and the random numbers
-        NetworkSamples sampler = MetropolisHastings.getPosteriorSamples(
-            net,                // The bayes net with latent variables (the random numbers?)
-            parameters,         // The vertices to include in the returned samples
-            NUM_SAMPLES);       // The number of samples
-
-        // Sample using a stream.
-        /*
-        NetworkSamples sampler = MetropolisHastings.generatePosteriorSamples(
-            net,                // The bayes net with latent variables (the random numbers?)
-            parameters          // The vertices to include in the returned samples
-        )
-            .dropCount(DROP_SAMPLES)
-            .downSampleInterval(DOWN_SAMPLE)
-            .stream()
-            .limit(NUM_SAMPLES)
-            .map(networkState -> {
-                for()
-                    networkState.get(x)
-            })
-            .average().getAsDouble();
-            */
-
-        System.out.println("Finished running MCMC.");
-
-        // Downsample etc
-        sampler = sampler.drop(DROP_SAMPLES).downSample(DOWN_SAMPLE);
+            // Workaround for too many evaluations during sample startup
+            //random.setAndCascade(random.getValue());
 
 
-        /*
-         ************ GET THE INFORMATION OUT OF THE SAMPLES ************
-         */
-        // Add the threshold parameter to the list
-        List<DoubleTensor> samples = sampler.get(THRESHOLD).asList();
-        // Get the threshold estimates as a list (Convert from Tensors to Doubles)
-        List<Double> thresholdSamples =
-            samples.stream().map( (d) -> d.getValue(0)).collect(Collectors.toList());
+            /*
+             ************ SAMPLE FROM THE POSTERIOR************
+             */
 
-        String theTime = String.valueOf(System.currentTimeMillis()); // So files have unique names
-        SimpleWrapperC.writeThresholds(thresholdSamples, truthThreshold, theTime);
+            // Sample from the posterior
+            System.out.println("Sampling");
 
-        // Get the number of people per iteration for each sample
-        List<Integer[]> peopleSamples = sampler.get(box).asList();
-        assert peopleSamples.size() == thresholdSamples.size();
-        System.out.println("Have saved " + peopleSamples.size()+" samples.");
-        SimpleWrapperC.writeResults(peopleSamples , truthData, theTime);
+            // Collect all the parameters that we want to sample (the random numbers and the box model)
+            List<Vertex> parameters = new ArrayList<>(NUM_RAND_DOUBLES+1); // Big enough to hold the random numbers and the box
+            parameters.add(box);
+            parameters.add(THRESHOLD);
 
-    }
+            // Sample from the box and the random numbers
+            NetworkSamples sampler = MetropolisHastings.getPosteriorSamples(
+                net,                // The bayes net with latent variables (the random numbers?)
+                parameters,         // The vertices to include in the returned samples
+                NUM_SAMPLES);       // The number of samples
+
+            System.out.println("Finished running MCMC.");
+
+            // Downsample etc
+            sampler = sampler.drop(DROP_SAMPLES).downSample(DOWN_SAMPLE);
+
+
+            /*
+             ************ GET THE INFORMATION OUT OF THE SAMPLES ************
+             */
+            // Add the threshold parameter to the list
+            List<DoubleTensor> samples = sampler.get(THRESHOLD).asList();
+            // Get the threshold estimates as a list (Convert from Tensors to Doubles)
+            List<Double> thresholdSamples =
+                samples.stream().map( (d) -> d.getValue(0)).collect(Collectors.toList());
+
+            String theTime = String.valueOf(System.currentTimeMillis()); // So files have unique names
+            SimpleWrapperC.writeThresholds(thresholdSamples, truthThreshold, theTime);
+
+            // Get the number of people per iteration for each sample
+            List<Integer[]> peopleSamples = sampler.get(box).asList();
+            assert peopleSamples.size() == thresholdSamples.size();
+            System.out.println("Have saved " + peopleSamples.size()+" samples.");
+            SimpleWrapperC.writeResults(peopleSamples , truthData, theTime);
+
+
+        } // for
+
+
+
+
+    } // main()
 
 
 
