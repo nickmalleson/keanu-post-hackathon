@@ -2,6 +2,7 @@ package SimpleModel.c;
 
 import io.improbable.keanu.algorithms.NetworkSamples;
 import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
+import io.improbable.keanu.algorithms.variational.NonGradientOptimizer;
 import io.improbable.keanu.network.BayesianNetwork;
 import io.improbable.keanu.research.randomfactory.VertexBackedRandomGenerator;
 import io.improbable.keanu.research.vertices.IntegerArrayIndexingVertex;
@@ -14,9 +15,8 @@ import io.improbable.keanu.vertices.dbl.nonprobabilistic.CastDoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.UniformVertex;
 import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.binary.BinaryOpLambda;
-import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.unary.UnaryOpLambda;
 import io.improbable.keanu.vertices.intgr.nonprobabilistic.ConstantIntegerVertex;
-import sun.java2d.pipe.SpanShapeRenderer;
+import io.improbable.keanu.vertices.intgr.probabilistic.PoissonVertex;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -37,7 +37,8 @@ public class SimpleWrapperC {
     //private static final int NUM_OBSERVATIONS = 5; // TEMPORARILY
 
     /* Model parameters */
-    private static final UniformVertex THRESHOLD = new UniformVertex(-1.0, 1.0);
+    private static final UniformVertex threshold = new UniformVertex(-1.0, 1.0);
+    //private static final PoissonVertex state = new PoissonVertex(1);
     private static final int NUM_ITER = 1001; // Total number of iterations
 
     /* Hyperparameters */
@@ -68,7 +69,7 @@ public class SimpleWrapperC {
             "\tNumber of windows: " +NUM_WINDOWS );
 
         // Initialise stuff
-        Double truthThreshold = THRESHOLD.sample(KeanuRandom.getDefaultRandom()).getValue(0);
+        Double truthThreshold = threshold.sample(KeanuRandom.getDefaultRandom()).getValue(0);
 
         /*
          ************ CREATE THE TRUTH DATA ************
@@ -80,11 +81,11 @@ public class SimpleWrapperC {
 
         SimpleModel truthModel = new SimpleModel(truthThreshold , RAND_GENERATOR);
         Integer[] truthData = new Integer[NUM_ITER];
-        int currentState = 0; // initial state
+        int currentTruthState = 0; // initial state
         for (int i=0; i< NUM_ITER; i++) {
-            truthData[i] = currentState;
-            int newState = truthModel.step(currentState);
-            currentState = newState;
+            truthData[i] = currentTruthState ;
+            int newState = truthModel.step(currentTruthState );
+            currentTruthState = newState;
         }
 
         System.out.println("SimpleModel configured with truth threshold: "+truthThreshold);
@@ -97,6 +98,9 @@ public class SimpleWrapperC {
          ************ START THE MAIN LOOP ************
          */
         int iter = 0; // Record the total number of iterations we have been through
+        int currentStateEstimate = 0; // Save our estimate of the state at the end of the window. Initially 0
+        //double currentThresholdEstimate = 0.0; // Save our threshold estimate
+
 
         for (int window = 0; window < NUM_WINDOWS; window++) { // Loop for every window
 
@@ -111,10 +115,11 @@ public class SimpleWrapperC {
             System.out.println("\tInitialising black box model");
 
             // XXXXNeed to get the current distribution of the state from the previous window ??
+            // As doing parameter & state we need to calculate a joint distribition
 
-            ConstantIntegerVertex state = new ConstantIntegerVertex(0); // START WITH 0 TEMPORARILY. WHAT SHOULD THIS BE?
+            ConstantIntegerVertex state = new ConstantIntegerVertex(currentStateEstimate);
             BinaryOpLambda<DoubleTensor, IntegerTensor, Integer[]> box =
-                new BinaryOpLambda<>( THRESHOLD, state, SimpleWrapperC::runModel);
+                new BinaryOpLambda<>(threshold, state, SimpleWrapperC::runModel);
 
             /*
              ************ OBSERVE SOME TRUTH DATA ************
@@ -139,6 +144,7 @@ public class SimpleWrapperC {
             BayesianNetwork net = new BayesianNetwork(box.getConnectedGraph());
             SimpleWrapperC.writeBaysNetToFile(net);
 
+
             // Workaround for too many evaluations during sample startup
             //random.setAndCascade(random.getValue());
 
@@ -153,7 +159,8 @@ public class SimpleWrapperC {
             // Collect all the parameters that we want to sample
             List<Vertex> parameters = new ArrayList<>();
             parameters.add(box);
-            parameters.add(THRESHOLD);
+            parameters.add(threshold);
+            //parameters.add(state);
 
             // Sample from the box and the random numbers
             NetworkSamples sampler = MetropolisHastings.getPosteriorSamples(
@@ -168,26 +175,29 @@ public class SimpleWrapperC {
             /*
              ************ GET THE INFORMATION OUT OF THE SAMPLES ************
              */
-            // Add the threshold parameter to the list
-            List<DoubleTensor> samples = sampler.get(THRESHOLD).asList();
+
+            // ****** The threshold ******
             // Get the threshold estimates as a list (Convert from Tensors to Doubles)
-            List<Double> thresholdSamples =
-                samples.stream().map( (d) -> d.getValue(0)).collect(Collectors.toList());
+            List<Double> thresholdSamples = sampler.get(threshold).asList().
+                stream().map( (d) -> d.getValue(0)).collect(Collectors.toList());
 
             System.out.println("\tHave kept " + thresholdSamples.size()+" samples.");
-
             String theTime = String.valueOf(System.currentTimeMillis()); // So files have unique names
-
             // Write the threshold distribution
             SimpleWrapperC.writeThresholds(thresholdSamples, truthThreshold, theTime);
 
-            // Write the distribution of model states
+            // ****** The model states (out of the box) ******
             Integer[] truthWindow = Arrays.copyOfRange(truthData, iter-WINDOW_SIZE,iter); // The truth data for this window
-            List<Integer[]> peopleSamples = sampler.get(box).asList();
-            assert truthWindow.length == peopleSamples.get(0).length:
-                String.format("Iteration lengths differ: truth:%s samples:%s", truthWindow.length, peopleSamples.get(0).length);
-             assert peopleSamples.size() == thresholdSamples.size();
-            SimpleWrapperC.writeResults(peopleSamples, truthWindow, theTime);
+            List<Integer[]> stateSamples = sampler.get(box).asList();
+            assert truthWindow.length == stateSamples.get(0).length:
+                String.format("Iteration lengths differ: truth:%s samples:%s", truthWindow.length, stateSamples.get(0).length);
+             assert stateSamples.size() == thresholdSamples.size();
+            SimpleWrapperC.writeResults(stateSamples, truthWindow, theTime);
+
+            // Now estimate current state (mean of final states)
+            XXXX HERE
+            currentStateEstimate = stateSamples.stream((s) -> s).collect(Collectors.toList()).
+
 
 
         } // for update window
@@ -252,7 +262,6 @@ public class SimpleWrapperC {
 
     private static void writeBaysNetToFile(BayesianNetwork net) {
         try {
-            System.out.println("Writing out graph");
             Writer graphWriter = new BufferedWriter(new OutputStreamWriter(
                 new FileOutputStream(dirName + "Graph_" + System.currentTimeMillis() + ".dot"),
                 "utf-8"));
