@@ -13,6 +13,7 @@ import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.dbl.KeanuRandom;
 import io.improbable.keanu.vertices.dbl.nonprobabilistic.CastDoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
+import io.improbable.keanu.vertices.dbl.probabilistic.MultivariateGaussian;
 import io.improbable.keanu.vertices.dbl.probabilistic.UniformVertex;
 import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.binary.BinaryOpLambda;
 import io.improbable.keanu.vertices.intgr.nonprobabilistic.ConstantIntegerVertex;
@@ -39,12 +40,12 @@ public class SimpleWrapperC {
     /* Model parameters */
     private static final UniformVertex threshold = new UniformVertex(-1.0, 1.0);
     //private static final PoissonVertex state = new PoissonVertex(1);
-    private static final int NUM_ITER = 1001; // Total number of iterations
+    private static final int NUM_ITER = 2001; // Total number of iterations
 
     /* Hyperparameters */
     private static final int WINDOW_SIZE = 200; // Number of iterations per update window
     private static final int NUM_WINDOWS = NUM_ITER / WINDOW_SIZE; // Number of update windows
-    private static final double SIGMA_NOISE = 5.0; // Noise added to the observations
+    private static final double SIGMA_NOISE = 1.0; // Noise added to the observations
     private static final int NUM_SAMPLES = 2000; // Number of samples to MCMC
     private static final int DROP_SAMPLES = 1;
     private static final int DOWN_SAMPLE = 5;
@@ -57,11 +58,15 @@ public class SimpleWrapperC {
     /* Admin parameters */
     private static String dirName = "results/simpleC/"; // Place to store results
 
+    private static boolean initFiles = false; // Because files need to stay open while the model is running
+    private static Writer thresholdWriter; // Writers for the results
+    private static Writer stateWriter;
+
 
     /**
      * Run the probabilistic model. This is the main function.
      **/
-    public static void main (String[] args) {
+    public static void main (String[] args) throws Exception {
 
         System.out.println("Starting.\n" +
             "\tNumber of iterations: " + NUM_ITER+"\n"+
@@ -117,8 +122,11 @@ public class SimpleWrapperC {
              */
             //System.out.println("\tInitialising black box model");
 
-            // XXXXNeed to get the current distribution of the state from the previous window ??
-            // As doing parameter & state we need to calculate a joint distribition
+            // As doing parameter & state we need to calculate a joint distribition?
+
+            // One way to keep information about the distribution is to represent the state as a
+            // MultivariateGaussian. Can estimate that gaussian of the posterior (after observing
+            // data) using the method that LUke and Dan discussed.
 
             ConstantIntegerVertex state = new ConstantIntegerVertex(currentStateEstimate);
             BinaryOpLambda<DoubleTensor, IntegerTensor, Integer[]> box =
@@ -127,7 +135,7 @@ public class SimpleWrapperC {
             /*
              ************ OBSERVE SOME TRUTH DATA ************
              */
-            // Get the relevant truth value (the one at the start of this update window)
+            // Get the relevant truth value (the one at the end of this update window)
             Integer truthValue = truthData[iter];
             System.out.println("\tObserving truth value "+truthValue+" (with noise "+SIGMA_NOISE+") for iteration "+iter);
             // output is the ith element of the model output (from box). Observe the most recent observation
@@ -189,8 +197,7 @@ public class SimpleWrapperC {
             // System.out.println("\tHave kept " + thresholdSamples.size()+" samples.");
 
             // Write the threshold distribution
-            String theTime = String.valueOf(System.currentTimeMillis()); // So files have unique names
-            SimpleWrapperC.writeThresholds(thresholdSamples, truthThreshold, theTime);
+            SimpleWrapperC.writeThresholds(thresholdSamples, truthThreshold, window, iter);
 
             // ****** The model states (out of the box) ******
             Integer[] truthWindow = Arrays.copyOfRange(truthData, iter-WINDOW_SIZE,iter); // The truth data for this window
@@ -198,9 +205,14 @@ public class SimpleWrapperC {
             assert truthWindow.length == stateSamples.get(0).length:
                 String.format("Iteration lengths differ: truth:%s samples:%s", truthWindow.length, stateSamples.get(0).length);
              assert stateSamples.size() == thresholdSamples.size();
-            SimpleWrapperC.writeResults(stateSamples, truthWindow, theTime);
+            SimpleWrapperC.writeResults(stateSamples, truthWindow);
 
             // Now estimate current state (mean of final states).
+
+            // Want the maximum probability. Could do:
+            // 1 - max value of the KDE
+
+
             //currentStateEstimate = stateSamples.stream((s) -> s).collect(Collectors.toList()).
             // Get the last value from each sample (i.e. the final iteration) and calculate the sum of these
             int stateSum = stateSamples.stream().map(l -> l[l.length-1]).reduce(0,(a,b) -> a+b);
@@ -208,9 +220,11 @@ public class SimpleWrapperC {
             currentStateEstimate = (int) Math.round(mean);
 
 
+
         } // for update window
 
 
+        SimpleWrapperC.closeResultsFiles();
 
 
     } // main()
@@ -244,26 +258,22 @@ public class SimpleWrapperC {
      **************** ADMIN STUFF ****************
      */
 
-    private static void writeThresholds(List<Double> randomNumberSamples, Double truthThreshold, String name) {
+    private static void writeThresholds(List<Double> randomNumberSamples, Double truthThreshold, int window, int iteration) {
 
         // Write out random numbers used and the actual results
-        Writer w1;
         try {
-            w1 = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(dirName + "Params_" + name + ".csv"), "utf-8"));
-
-            // Do the truth data first
-            w1.write(truthThreshold + ",");
-            w1.write("\n");
+            if (initFiles()) { // If true then the files have just been initialised. Write the truth data to be the first row.
+                thresholdWriter.write("-1,-1,"+ truthThreshold + ",\n"); // Truth value (one off)
+            }
 
             // Now the samples.
             for (double sample : randomNumberSamples) {
-                w1.write(sample+", ");
-                w1.write("\n");
+                thresholdWriter.write(String.format("%s, %s, %s, ", window, iteration, sample));
+                thresholdWriter.write("\n");
             }
-            w1.close();
         } catch (IOException ex) {
-            System.out.println("Error writing to file");
+            System.err.println("Error writing thresholds to file: "+ ex.getMessage());
+            ex.printStackTrace();
         }
     }
 
@@ -276,35 +286,63 @@ public class SimpleWrapperC {
             graphWriter.write(GraphvizKt.toGraphvizString(net, new HashMap<>()) );
             graphWriter.close();
         } catch (IOException ex) {
-            System.out.println("Error writing graph to file");
+            System.err.println("Error writing graph to file: "+ ex.getMessage());
+            ex.printStackTrace();
         }
     }
 
-    private static void writeResults(List<Integer[]> samples, Integer[] truth, String name) {
+    private static void writeResults(List<Integer[]> samples, Integer[] truth) {
+
+        System.out.println(truth.length);
+        System.out.println(samples.get(0).length);
+        return false;
+        // XXXX HERE - Need to rewrite this function so that the wide matrix of samples and truth data
+        // is built up gradually over each window. Or, need to rewrite the R code so that it
+        // splits the data on the start of each window (this is probably harder).
 
         // Write out the model results (people per iteration)
-        Writer w1;
         try {
-            w1 = new BufferedWriter(new OutputStreamWriter(
-                new FileOutputStream(dirName + "Results_" + name + ".csv"), "utf-8"));
-
-            // Do the truth data first
-            for (int val : truth) {
-                w1.write(val + ","); // Values
+            if (initFiles()) { // Files have just been initialised so do the truth data first
+                for (int val : truth) {
+                    stateWriter.write(val + ","); // Values
+                }
+                stateWriter.write("\n");
             }
-            w1.write("\n");
-
             // Now the samples.
             for (Integer[] sample : samples) {
                 for (int val : sample) {
-                    w1.write(val + ",");
+                    stateWriter.write(val + ",");
                 }
-                w1.write("\n");
+                stateWriter.write("\n");
             }
-            w1.close();
         } catch (IOException ex) {
-            System.out.println("Error writing to file");
+            System.err.println("Error writing states to file: "+ex.getMessage());
+            ex.printStackTrace();
         }
+    }
+
+    private static boolean initFiles() throws IOException {
+        if (initFiles) { // Have already initialised, nothing to do
+            return false; // To say that the files were already initialised
+        }
+        String theTime = String.valueOf(System.currentTimeMillis()); // So files have unique names
+
+        thresholdWriter = new BufferedWriter(new OutputStreamWriter(
+            new FileOutputStream(dirName + "Params_" + theTime + ".csv"), "utf-8"));
+
+        thresholdWriter.write("Window, Iteration, Threshold,\n");
+
+        stateWriter = new BufferedWriter(new OutputStreamWriter(
+            new FileOutputStream(dirName + "Results_" + theTime + ".csv"), "utf-8"));
+
+        initFiles = true;
+        return true; // to say that the files have just been initialised
+    }
+
+    private static void closeResultsFiles() throws Exception {
+        System.out.println("Closing output files.");
+        thresholdWriter.close();
+        stateWriter.close();
     }
 
 

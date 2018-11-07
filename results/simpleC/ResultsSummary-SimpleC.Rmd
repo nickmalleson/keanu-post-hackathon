@@ -47,18 +47,18 @@ if (length(samples.files) != 1) {
 
 # Read the file in
 samples <- read_csv(samples.files[1], col_names=FALSE)
-params  <- read_csv(params.files[1],  col_names=FALSE)
+params  <- read_csv(params.files[1])
 
 samples[,ncol(samples)] <- NULL # Last column is NA because I lazily write too many commas
 params[,ncol(params)] <- NULL # Last column is NA because I lazily write too many commas
 
-
-# Truth data are the first entry
+# Truth data are the first line
 truth.results <- samples[1,]
 samples <- samples[-1,]
 
-truth.params <- params[1,]
-params <- params[-1,]
+# Truth data are the first entry in the "Threshold" column
+truth.params <- params[1,"Threshold"]
+params <- params[-1,]$Threshold
 
 ```
 
