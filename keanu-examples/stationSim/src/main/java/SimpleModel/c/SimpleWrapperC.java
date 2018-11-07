@@ -99,12 +99,15 @@ public class SimpleWrapperC {
          */
         int iter = 0; // Record the total number of iterations we have been through
         int currentStateEstimate = 0; // Save our estimate of the state at the end of the window. Initially 0
+        double currentThresholdhEstimate = -1; //  Interesting to see what the threshold estimate is (not used in assimilation)
         //double currentThresholdEstimate = 0.0; // Save our threshold estimate
 
 
         for (int window = 0; window < NUM_WINDOWS; window++) { // Loop for every window
 
             System.out.println("Entering update window "+window);
+            System.out.println(String.format("\tCurrent state estimate / actual: %s, %s: ", currentStateEstimate, truthData[iter]));
+            System.out.println(String.format("\tCurrent threshold estimate (for info): %.2f", currentThresholdhEstimate));
 
             // Increment the counter of how many iterations the model has been run for
             iter += WINDOW_SIZE;
@@ -112,7 +115,7 @@ public class SimpleWrapperC {
             /*
              ************ INITIALISE THE BLACK BOX MODEL ************
              */
-            System.out.println("\tInitialising black box model");
+            //System.out.println("\tInitialising black box model");
 
             // XXXXNeed to get the current distribution of the state from the previous window ??
             // As doing parameter & state we need to calculate a joint distribition
@@ -140,7 +143,7 @@ public class SimpleWrapperC {
              */
 
             // Create the BayesNet
-            System.out.println("\tCreating BayesNet");
+            //System.out.println("\tCreating BayesNet");
             BayesianNetwork net = new BayesianNetwork(box.getConnectedGraph());
             SimpleWrapperC.writeBaysNetToFile(net);
 
@@ -154,7 +157,7 @@ public class SimpleWrapperC {
              */
 
             // Sample from the posterior
-            System.out.println("\tSampling");
+            //System.out.println("\tSampling");
 
             // Collect all the parameters that we want to sample
             List<Vertex> parameters = new ArrayList<>();
@@ -181,9 +184,12 @@ public class SimpleWrapperC {
             List<Double> thresholdSamples = sampler.get(threshold).asList().
                 stream().map( (d) -> d.getValue(0)).collect(Collectors.toList());
 
-            System.out.println("\tHave kept " + thresholdSamples.size()+" samples.");
-            String theTime = String.valueOf(System.currentTimeMillis()); // So files have unique names
+            // Find the mean threshold estimate (for info, not used)
+            currentThresholdhEstimate =  thresholdSamples.stream().reduce(0d,(a,b) -> a+b) / thresholdSamples.size();
+            // System.out.println("\tHave kept " + thresholdSamples.size()+" samples.");
+
             // Write the threshold distribution
+            String theTime = String.valueOf(System.currentTimeMillis()); // So files have unique names
             SimpleWrapperC.writeThresholds(thresholdSamples, truthThreshold, theTime);
 
             // ****** The model states (out of the box) ******
@@ -194,10 +200,12 @@ public class SimpleWrapperC {
              assert stateSamples.size() == thresholdSamples.size();
             SimpleWrapperC.writeResults(stateSamples, truthWindow, theTime);
 
-            // Now estimate current state (mean of final states)
-            XXXX HERE
-            currentStateEstimate = stateSamples.stream((s) -> s).collect(Collectors.toList()).
-
+            // Now estimate current state (mean of final states).
+            //currentStateEstimate = stateSamples.stream((s) -> s).collect(Collectors.toList()).
+            // Get the last value from each sample (i.e. the final iteration) and calculate the sum of these
+            int stateSum = stateSamples.stream().map(l -> l[l.length-1]).reduce(0,(a,b) -> a+b);
+            double mean = (double) stateSum / stateSamples.size();
+            currentStateEstimate = (int) Math.round(mean);
 
 
         } // for update window
