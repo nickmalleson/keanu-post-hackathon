@@ -291,11 +291,12 @@ public class SimpleWrapperC {
         }
     }
 
+    private static List<Integer> samplesHistory;
+    private static Integer[] truthHistory;
     private static void writeResults(List<Integer[]> samples, Integer[] truth) {
 
         System.out.println(truth.length);
         System.out.println(samples.get(0).length);
-        return false;
         // XXXX HERE - Need to rewrite this function so that the wide matrix of samples and truth data
         // is built up gradually over each window. Or, need to rewrite the R code so that it
         // splits the data on the start of each window (this is probably harder).
