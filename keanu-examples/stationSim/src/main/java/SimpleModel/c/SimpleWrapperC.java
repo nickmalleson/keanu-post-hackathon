@@ -40,7 +40,7 @@ public class SimpleWrapperC {
     /* Model parameters */
     private static final UniformVertex threshold = new UniformVertex(-1.0, 1.0);
     //private static final PoissonVertex state = new PoissonVertex(1);
-    private static final int NUM_ITER = 2001; // Total number of iterations
+    private static final int NUM_ITER = 2000; // Total number of iterations
 
     /* Hyperparameters */
     private static final int WINDOW_SIZE = 200; // Number of iterations per update window
@@ -58,7 +58,7 @@ public class SimpleWrapperC {
     /* Admin parameters */
     private static String dirName = "results/simpleC/"; // Place to store results
 
-    private static boolean initFiles = false; // Because files need to stay open while the model is running
+    private static boolean firstRun = true; // Horrible hack to do with writing files
     private static Writer thresholdWriter; // Writers for the results
     private static Writer stateWriter;
 
@@ -98,6 +98,7 @@ public class SimpleWrapperC {
         System.out.println("Truth data: "+Arrays.asList(truthData).toString());
         System.out.println("Truth threshold is: "+truthThreshold);
 
+        initFiles(); // Get files ready to start writing results
 
         /*
          ************ START THE MAIN LOOP ************
@@ -200,12 +201,13 @@ public class SimpleWrapperC {
             SimpleWrapperC.writeThresholds(thresholdSamples, truthThreshold, window, iter);
 
             // ****** The model states (out of the box) ******
-            Integer[] truthWindow = Arrays.copyOfRange(truthData, iter-WINDOW_SIZE,iter); // The truth data for this window
+            //Integer[] truthWindow = Arrays.copyOfRange(truthData, iter-WINDOW_SIZE,iter); // The truth data for this window
             List<Integer[]> stateSamples = sampler.get(box).asList();
-            assert truthWindow.length == stateSamples.get(0).length:
-                String.format("Iteration lengths differ: truth:%s samples:%s", truthWindow.length, stateSamples.get(0).length);
-             assert stateSamples.size() == thresholdSamples.size();
-            SimpleWrapperC.writeResults(stateSamples, truthWindow);
+            //assert truthWindow.length == stateSamples.get(0).length:
+            //    String.format("Iteration lengths differ: truth:%s samples:%s", truthWindow.length, stateSamples.get(0).length);
+            assert stateSamples.size() == thresholdSamples.size();
+            //SimpleWrapperC.writeResults(stateSamples, truthWindow);
+            SimpleWrapperC.writeResults(stateSamples, truthData);
 
             // Now estimate current state (mean of final states).
 
@@ -219,6 +221,7 @@ public class SimpleWrapperC {
             double mean = (double) stateSum / stateSamples.size();
             currentStateEstimate = (int) Math.round(mean);
 
+            firstRun = false; // To say the first window has finished (horrible hack to do with writing files)
 
 
         } // for update window
@@ -262,7 +265,7 @@ public class SimpleWrapperC {
 
         // Write out random numbers used and the actual results
         try {
-            if (initFiles()) { // If true then the files have just been initialised. Write the truth data to be the first row.
+            if (firstRun) { // If true then the files have just been initialised. Write the truth data to be the first row.
                 thresholdWriter.write("-1,-1,"+ truthThreshold + ",\n"); // Truth value (one off)
             }
 
@@ -291,30 +294,42 @@ public class SimpleWrapperC {
         }
     }
 
-    private static List<Integer> samplesHistory;
-    private static Integer[] truthHistory;
+    /* Writing these results is a real hack because now that this is called at every window the results
+    need to be cached and all written at once. Each iteration is stored as a new column which is a pain.*/
+    private static List<Integer[]> samplesHistory;
     private static void writeResults(List<Integer[]> samples, Integer[] truth) {
-
-        System.out.println(truth.length);
-        System.out.println(samples.get(0).length);
-        // XXXX HERE - Need to rewrite this function so that the wide matrix of samples and truth data
-        // is built up gradually over each window. Or, need to rewrite the R code so that it
-        // splits the data on the start of each window (this is probably harder).
 
         // Write out the model results (people per iteration)
         try {
-            if (initFiles()) { // Files have just been initialised so do the truth data first
+            if (firstRun) { // Files have just been initialised so do the truth data first
                 for (int val : truth) {
                     stateWriter.write(val + ","); // Values
                 }
                 stateWriter.write("\n");
+
+                // (Hack because the samples now need to be cached after each window)
+                // Initialise from the samples from the first window
+                samplesHistory = samples;
+                return;
             }
-            // Now the samples.
-            for (Integer[] sample : samples) {
-                for (int val : sample) {
-                    stateWriter.write(val + ",");
+            // Cache the samples. They are written when closeFiles() is called. The results from each
+            // sample (a list of integers representing the state) need to be appended to the end of their arrays.
+            assert samples.size() == samplesHistory.size(); // The number of samples hasn't changed
+            for (int sampleNumber = 0; sampleNumber< samples.size(); sampleNumber++) {
+                Integer[] originalSample = samplesHistory.get(sampleNumber);
+                Integer[] newStatesToBeAdded = samples.get(sampleNumber);
+                // Add these new states (the state history) to the existing sample
+                // This is painful because the sample history is an array not an ArrayList
+                // Make a new array that is large enough to hold the new history for this sample
+                Integer[] newSample = Arrays.copyOf(originalSample, originalSample.length+WINDOW_SIZE);
+                // Copy the new states to the end of the sample
+                assert newSample.length == originalSample.length + WINDOW_SIZE :
+                    String.format("New: %s, Original: %s (window size: %s)",newSample.length, originalSample.length, WINDOW_SIZE);
+                for (int i = 0; i< WINDOW_SIZE; i++) {
+                    newSample[i+originalSample.length] = newStatesToBeAdded[i];
                 }
-                stateWriter.write("\n");
+                // Replace the old sample with the new one
+                samplesHistory.set(sampleNumber, newSample);
             }
         } catch (IOException ex) {
             System.err.println("Error writing states to file: "+ex.getMessage());
@@ -322,10 +337,7 @@ public class SimpleWrapperC {
         }
     }
 
-    private static boolean initFiles() throws IOException {
-        if (initFiles) { // Have already initialised, nothing to do
-            return false; // To say that the files were already initialised
-        }
+    private static void initFiles() throws IOException {
         String theTime = String.valueOf(System.currentTimeMillis()); // So files have unique names
 
         thresholdWriter = new BufferedWriter(new OutputStreamWriter(
@@ -336,12 +348,19 @@ public class SimpleWrapperC {
         stateWriter = new BufferedWriter(new OutputStreamWriter(
             new FileOutputStream(dirName + "Results_" + theTime + ".csv"), "utf-8"));
 
-        initFiles = true;
-        return true; // to say that the files have just been initialised
     }
 
     private static void closeResultsFiles() throws Exception {
         System.out.println("Closing output files.");
+
+        // Write the cached samples
+        for (Integer[] sample : samplesHistory) {
+            for (int val : sample) {
+                stateWriter.write(val + ",");
+            }
+            stateWriter.write("\n");
+        }
+
         thresholdWriter.close();
         stateWriter.close();
     }
