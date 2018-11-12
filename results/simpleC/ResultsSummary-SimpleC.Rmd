@@ -58,7 +58,7 @@ samples <- samples[-1,]
 
 # Truth data are the first entry in the "Threshold" column
 truth.params <- params[1,"Threshold"]
-params <- params[-1,]$Threshold
+params <- params[-1,"Threshold"]
 
 ```
 
@@ -139,7 +139,7 @@ for (column in names(params)) {
   plot(density(params[,column][[1]]), col="blue", main="Threshold parameter posterior")
   hist(params[,column][[1]], xlim=c(-1.1,1.1), prob=TRUE, breaks="Scott", add=T, border="gray")
   abline(v=truth.params[i[[1]]], col="red")
-  abline(v=0.0, col="blue", lty="dashed")
+#abline(v=0.0, col="blue", lty="dashed")
   
   ylab("Density")
   i <- i + 1
