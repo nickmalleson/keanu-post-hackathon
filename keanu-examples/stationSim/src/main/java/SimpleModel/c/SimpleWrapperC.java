@@ -111,12 +111,14 @@ public class SimpleWrapperC {
 
         for (int window = 0; window < NUM_WINDOWS; window++) { // Loop for every window
 
-            System.out.println("Entering update window "+window);
-            System.out.println(String.format("\tCurrent state estimate / actual: %s, %s: ", currentStateEstimate, truthData[iter]));
+
+            System.out.println(String.format("Entering update window: %s (iterations %s -> %s)", window, iter, iter+WINDOW_SIZE));
+            System.out.println(String.format("\tCurrent state (at iter %s) estimate / actual: %s, %s: ", iter, currentStateEstimate, truthData[iter]));
             System.out.println(String.format("\tCurrent threshold estimate (for info): %.2f", currentThresholdhEstimate));
 
-            // Increment the counter of how many iterations the model has been run for
-            iter += WINDOW_SIZE;
+            // Increment the counter of how many iterations the model has been run for.
+            // In the first window increment by WINDOW_SIZE-1 otherwise we run off the end of the truth array on the very last iteration
+            iter += window==0 ? WINDOW_SIZE-1 : WINDOW_SIZE;
 
             /*
              ************ INITIALISE THE BLACK BOX MODEL ************
