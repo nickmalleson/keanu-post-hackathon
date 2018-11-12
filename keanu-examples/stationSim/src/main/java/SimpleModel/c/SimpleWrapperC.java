@@ -156,7 +156,6 @@ public class SimpleWrapperC {
             BayesianNetwork net = new BayesianNetwork(box.getConnectedGraph());
             SimpleWrapperC.writeBaysNetToFile(net);
 
-
             // Workaround for too many evaluations during sample startup
             //random.setAndCascade(random.getValue());
 
@@ -176,7 +175,7 @@ public class SimpleWrapperC {
 
             // Sample from the box and the random numbers
             NetworkSamples sampler = MetropolisHastings.getPosteriorSamples(
-                net,                // The bayes net with latent variables (the random numbers?)
+                net,                // The bayes net with latent variables
                 parameters,         // The vertices to include in the returned samples
                 NUM_SAMPLES);       // The number of samples
 

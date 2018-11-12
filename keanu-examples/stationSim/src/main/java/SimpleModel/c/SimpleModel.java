@@ -32,7 +32,7 @@ public class SimpleModel {
      * @param iter The number of iterations to step the model. Must be > 0
      * @return The new state after <code>iter</code> iterations
      */
-    public final int step(int state, int iter) {
+  /**  public final int step(int state, int iter) {
         assert iter > 0;
 
         int currentState = state;
@@ -41,7 +41,7 @@ public class SimpleModel {
             currentState = newState;
         }
         return currentState;
-    }
+    } */
 
 
 
