@@ -56,7 +56,7 @@ public class SimpleWrapper {
         new VertexBackedRandomGenerator(NUM_RAND_DOUBLES,0,0);
 
     /* Admin parameters */
-    private static String dirName = "results/simpleC/"; // Place to store results
+    private static String dirName = "results/simpleD/"; // Place to store results
 
     /* Book keeping */
     private static boolean firstRun = true; // Horrible hack to do with writing files. Set to false after 1st window
