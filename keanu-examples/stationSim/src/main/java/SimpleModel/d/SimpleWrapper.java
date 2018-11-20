@@ -1,8 +1,7 @@
-package SimpleModel.c;
+package SimpleModel.d;
 
 import io.improbable.keanu.algorithms.NetworkSamples;
 import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
-import io.improbable.keanu.algorithms.variational.NonGradientOptimizer;
 import io.improbable.keanu.network.BayesianNetwork;
 import io.improbable.keanu.research.randomfactory.VertexBackedRandomGenerator;
 import io.improbable.keanu.research.vertices.IntegerArrayIndexingVertex;
@@ -13,11 +12,9 @@ import io.improbable.keanu.vertices.Vertex;
 import io.improbable.keanu.vertices.dbl.KeanuRandom;
 import io.improbable.keanu.vertices.dbl.nonprobabilistic.CastDoubleVertex;
 import io.improbable.keanu.vertices.dbl.probabilistic.GaussianVertex;
-import io.improbable.keanu.vertices.dbl.probabilistic.MultivariateGaussian;
 import io.improbable.keanu.vertices.dbl.probabilistic.UniformVertex;
 import io.improbable.keanu.vertices.generic.nonprobabilistic.operators.binary.BinaryOpLambda;
 import io.improbable.keanu.vertices.intgr.nonprobabilistic.ConstantIntegerVertex;
-import io.improbable.keanu.vertices.intgr.probabilistic.PoissonVertex;
 
 import java.io.*;
 import java.util.ArrayList;
@@ -30,10 +27,13 @@ import java.util.stream.Collectors;
  * SimpleWrapperB did parameter estimation and state estimation (the Bayes net estimated a posterior over all
  * model parameters) but only used the parameter estimates.
  *
- * This version of SimpleWrapper does state and parameter estimation *while the model is running* (i.e. rather than
+ * SimpleWrapperC did state and parameter estimation *while the model is running* (i.e. rather than
  * doing so at the end), akin to data assimilation.
+ *
+ * SimpleWrapper D has converted the SimpleModel to keanu native.
+ *
  */
-public class SimpleWrapperC {
+public class SimpleWrapper {
 
     //private static final int NUM_OBSERVATIONS = 5; // TEMPORARILY
 
@@ -134,7 +134,7 @@ public class SimpleWrapperC {
 
             ConstantIntegerVertex state = new ConstantIntegerVertex(currentStateEstimate);
             BinaryOpLambda<DoubleTensor, IntegerTensor, Integer[]> box =
-                new BinaryOpLambda<>(threshold, state, SimpleWrapperC::runModel);
+                new BinaryOpLambda<>(threshold, state, SimpleWrapper::runModel);
 
             /*
              ************ OBSERVE SOME TRUTH DATA ************
@@ -157,7 +157,7 @@ public class SimpleWrapperC {
             // Create the BayesNet
             //System.out.println("\tCreating BayesNet");
             BayesianNetwork net = new BayesianNetwork(box.getConnectedGraph());
-            SimpleWrapperC.writeBaysNetToFile(net);
+            SimpleWrapper.writeBaysNetToFile(net);
 
             // Workaround for too many evaluations during sample startup
             //random.setAndCascade(random.getValue());
@@ -200,7 +200,7 @@ public class SimpleWrapperC {
             // System.out.println("\tHave kept " + thresholdSamples.size()+" samples.");
 
             // Write the threshold distribution
-            SimpleWrapperC.writeThresholds(thresholdSamples, truthThreshold, window, iter);
+            SimpleWrapper.writeThresholds(thresholdSamples, truthThreshold, window, iter);
 
             // ****** The model states (out of the box) ******
             //Integer[] truthWindow = Arrays.copyOfRange(truthData, iter-WINDOW_SIZE,iter); // The truth data for this window
@@ -209,7 +209,7 @@ public class SimpleWrapperC {
             //    String.format("Iteration lengths differ: truth:%s samples:%s", truthWindow.length, stateSamples.get(0).length);
             assert stateSamples.size() == thresholdSamples.size();
             //SimpleWrapperC.writeResults(stateSamples, truthWindow);
-            SimpleWrapperC.writeResults(stateSamples, truthData);
+            SimpleWrapper.writeResults(stateSamples, truthData);
 
             // Now estimate current state (mean of final states).
 
@@ -229,7 +229,7 @@ public class SimpleWrapperC {
         } // for update window
 
 
-        SimpleWrapperC.closeResultsFiles();
+        SimpleWrapper.closeResultsFiles();
 
 
     } // main()
