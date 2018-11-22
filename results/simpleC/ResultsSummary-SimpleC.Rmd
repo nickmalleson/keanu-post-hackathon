@@ -11,7 +11,7 @@ output:
 fontsize: 10pt
 ---
 
-# ResultsSummary - **B**
+# ResultsSummary - **C**
 
 Analyses the results of the keanu tests when experimenting with parameter estimation (probabilistic model needs to guess a single threshold value ). Relevant files that generate the results: `simpleModel`, `simpleWrapperB`
 

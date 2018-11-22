@@ -22,7 +22,7 @@ public class SimpleModel {
         SimpleModel.modelCount++;
         this.threshold = threshold;
         this.random = random;
-        //System.out.println("SimpleModel contstuctor: "+SimpleModel.modelCount++ + ". Threshold: "+threshold
+        //System.out.println("SimpleModel constructor: "+SimpleModel.modelCount++ + ". Threshold: "+threshold
         //    +". Random numbers: "+this.randomNumbers.toString());
     }
 

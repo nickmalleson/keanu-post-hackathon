@@ -1,7 +1,6 @@
 package SimpleModel.c;
 
 import org.apache.commons.math3.random.RandomGenerator;
-import sun.jvm.hotspot.utilities.AssertionFailure;
 
 public class SimpleModel {
 
