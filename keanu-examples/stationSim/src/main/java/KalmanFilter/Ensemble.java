@@ -5,7 +5,12 @@ import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
 import org.apache.commons.math3.optim.nonlinear.scalar.MultivariateOptimizer;
 import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.BOBYQAOptimizer;
 
+import static org.apache.commons.math3.optim.nonlinear.scalar.GoalType.MINIMIZE;
+
 public class Ensemble {
+
+    // Parameters
+    static int nSamples = 6;
 
     // Variables
     double[][] particles;
@@ -22,8 +27,8 @@ public class Ensemble {
 
         // loop through range:nSamples to populate arrays
         for (int i=0 ; i<nSamples; ++i) {
-            weights[i] = 1.0/nSamples; // weights are (uniform?) (equivalent?)
-            particles[i] = g.sample(); // populate particles[] with positions (taken as sample from multivar norm dist
+            weights[i] = 1.0/nSamples; // weights are uniform
+            particles[i] = g.sample(); // populate particles[] with positions(x,y) (taken as sample from multivar norm dist)
         }
     }
 
@@ -37,10 +42,8 @@ public class Ensemble {
     }
 
     // analysis method
-    // @params: observation: measured observation? previous observation?
+    // @params: observation: measured observation
     public void analysis(double observation, double noise) {
-
-        // Would observation need to be an array of observations? or is observation a constant?
         
         for (int i=0; i<particles.length; ++i) {
             double newObs = SimpleEnsembleModel.observe(particles[i]); // Take observation
@@ -65,20 +68,21 @@ public class Ensemble {
     public double KLDivergence(MultivariateNormalDistribution norm) {
 
         double counter = 0.0;
+        // This loop finds sum of Kullback-Leibler Divergence
         for (int i=0; i<particles.length; ++i) {
             double prob = -weights[i] * Math.log(norm.density(particles[i])/weights[i]);
             counter += prob;
         }
         return counter;
-    } // ideally differentiate counter wrt norm but we were lazy(?)
+    } // ideally differentiate counter wrt norm
 
-    // function to minimise KLDivergence (optimisation?)
+    // function to minimise KLDivergence (optimisation)
     public void minimiseKLDivergence(MultivariateNormalDistribution startState) {
 
         // function uses this BOBYQAOptimizer, don't know how it works
-        // BOBY.. function optimises parameters, but doesn't know what params it has to optimise
-        // accepts list of params, we're organising into means and covars?
-        MultivariateOptimizer opt = new BOBYQAOptimizer(15);
+        // BOBY.. function optimises parameters, accepts list
+
+        MultivariateOptimizer opt = new BOBYQAOptimizer(13);
         MultivariateFunction objective = weights -> { // lambda function
 
             // initialise means and covariances
@@ -96,5 +100,40 @@ public class Ensemble {
             // return new KLDivergence using new means and vars
             return KLDivergence(new MultivariateNormalDistribution(means, covars));
         };
+
+        // TODO: Fix following code block @ line 106
+        /*
+        double pointValuePair = opt.optimize(MaxEval(100000),
+                                                objective,
+                                                SimpleBounds(doubleArrayOf(-1000.0, -1000.0),
+                                                            doubleArrayOf(1000.0, 1000.0)),
+                                                MINIMIZE,
+                                                InitialGuess(initialGuess));
+         */
+
+    }
+
+    public static void getBestInterpolationVal() {
+
+        // numberOfInterpolationPoints arg for BOBYQAOptimizer has to lie in specific range:
+        //                    [(n+2), ((n+1)(n+2))/2]
+        double[] interpolationRange = new double[2];
+        interpolationRange[0] = nSamples + 2;
+        interpolationRange[1] = ((nSamples + 1) * (nSamples + 2)) / 2;
+        double meanInterpolationVal = (interpolationRange[1] + interpolationRange[0]) / 2;
+        System.out.println("Number of Interpolation points must lie in range " + interpolationRange[0] + " to " + interpolationRange[1]);
+        System.out.println("Median point in range is: " + meanInterpolationVal);
+        // Choices that exceed 2n+1 are not recommended
+        double softMaximum = (2*nSamples) + 1;
+        if (meanInterpolationVal > softMaximum) {
+            System.out.println("Warning: Median point (" + meanInterpolationVal + ") is larger than recommended maximum (" + softMaximum + ")");
+        }
+    }
+
+    public static void main(String[] args) {
+
+        getBestInterpolationVal();
+
+
     }
 }
