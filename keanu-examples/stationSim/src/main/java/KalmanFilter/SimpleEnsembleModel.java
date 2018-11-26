@@ -8,7 +8,7 @@ public class SimpleEnsembleModel {
     public static double[] step(double[] state) {
         double [] newState = new double[2]; // Initialise array of doubles
         newState[0] = 2*state[0] + 1; // newState[0] = x; therefore: (2x+1)
-        newState[1] = 1.5*state[1] - .5; // "[1] = y; therefore: (1.5x-0.5)
+        newState[1] = 1.5*state[1] - .5; // "[1] = y; therefore: (1.5y-0.5)
         return newState;
     }
 

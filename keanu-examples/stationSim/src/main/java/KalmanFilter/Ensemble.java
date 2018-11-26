@@ -2,15 +2,23 @@ package KalmanFilter;
 
 import org.apache.commons.math3.analysis.MultivariateFunction;
 import org.apache.commons.math3.distribution.MultivariateNormalDistribution;
+import org.apache.commons.math3.optim.*;
 import org.apache.commons.math3.optim.nonlinear.scalar.MultivariateOptimizer;
 import org.apache.commons.math3.optim.nonlinear.scalar.noderiv.BOBYQAOptimizer;
+import org.apache.commons.math3.random.MersenneTwister;
+import org.apache.commons.math3.random.RandomGenerator;
 
-import static org.apache.commons.math3.optim.nonlinear.scalar.GoalType.MINIMIZE;
+import java.util.Arrays;
+
+import static org.apache.commons.math3.optim.nonlinear.scalar.GoalType.*;
 
 public class Ensemble {
 
-    // Parameters
-    static int nSamples = 6;
+    // Parameter
+    public static int nSamples = 6;
+
+    // RandomGenerator
+    private static RandomGenerator rand = new MersenneTwister(2);
 
     // Variables
     double[][] particles;
@@ -56,7 +64,9 @@ public class Ensemble {
         for (int i=0; i<particles.length; ++i) {
             counter += weights[i];
         }
+        System.out.println("\nTotal value of weights: " + counter);
 
+        System.out.println("\nPrinting new weights after normalising:");
         for (int i=0; i<particles.length; i++) {
             weights[i] = weights[i]/counter; // normalise weights using total of weights
             System.out.println(weights[i]);
@@ -87,30 +97,31 @@ public class Ensemble {
 
             // initialise means and covariances
             double[] means = new double[2];
-            double[][] covars = new double[2][2];
+            double[][] covariances = new double[2][2];
 
             // assign means and covariances one of weights
             means[0] = weights[0];
             means[1] = weights[1];
-            covars[0][0] = weights[2];
-            covars[0][1] = weights[3];
-            covars[1][0] = weights[4];
-            covars[1][1] = weights[5];
+            covariances[0][0] = weights[2];
+            covariances[0][1] = weights[3];
+            covariances[1][0] = weights[4];
+            covariances[1][1] = weights[5];
 
             // return new KLDivergence using new means and vars
-            return KLDivergence(new MultivariateNormalDistribution(means, covars));
+            return KLDivergence(new MultivariateNormalDistribution(means, covariances));
         };
 
-        // TODO: Fix following code block @ line 106
-        /*
-        double pointValuePair = opt.optimize(MaxEval(100000),
-                                                objective,
-                                                SimpleBounds(doubleArrayOf(-1000.0, -1000.0),
-                                                            doubleArrayOf(1000.0, 1000.0)),
-                                                MINIMIZE,
-                                                InitialGuess(initialGuess));
-         */
+        //InitialGuess initialGuess = new InitialGuess(new double[] {123.456, 234.567} );
+        double[] initialGuess = new double[] {123.456, 234.567};
 
+        PointValuePair pointValuePair = opt.optimize(new MaxEval(100000),
+                                                (OptimizationData) objective,
+                                                new SimpleBounds(new double[]{-1000.0, -1000.0},
+                                                                new double[]{1000.0, 1000.0}),
+                                                MINIMIZE,
+                                                new InitialGuess(initialGuess));
+
+        System.out.println(pointValuePair.toString());
     }
 
     public static void getBestInterpolationVal() {
@@ -121,7 +132,7 @@ public class Ensemble {
         interpolationRange[0] = nSamples + 2;
         interpolationRange[1] = ((nSamples + 1) * (nSamples + 2)) / 2;
         double meanInterpolationVal = (interpolationRange[1] + interpolationRange[0]) / 2;
-        System.out.println("Number of Interpolation points must lie in range " + interpolationRange[0] + " to " + interpolationRange[1]);
+        System.out.println("\nNumber of Interpolation points must lie in range " + interpolationRange[0] + " to " + interpolationRange[1]);
         System.out.println("Median point in range is: " + meanInterpolationVal);
         // Choices that exceed 2n+1 are not recommended
         double softMaximum = (2*nSamples) + 1;
@@ -130,10 +141,53 @@ public class Ensemble {
         }
     }
 
+    public void printChecks() {
+        System.out.println("\nStarting print checks...");
+        System.out.println("\nPrinting weights:");
+        System.out.println(Arrays.toString(weights));
+        System.out.println("\nPrinting particles:");
+        System.out.println(Arrays.deepToString(particles));
+    }
+
     public static void main(String[] args) {
 
+        // Method for checking what best interpolation value is for use with optimiser
         getBestInterpolationVal();
 
+        // initialise means and covars for multivarnorm
+        double[] mns = new double[2];
+        double[][] covars = new double[2][2];
 
+        /*
+        * means = [5,3]
+         */
+        mns[0] = 5;
+        mns[1] = 3;
+        /*
+        * covariances = [[32,15],
+        *                [15,40]]
+         */
+        covars[0][0] = 32;
+        covars[0][1] = 15;
+        covars[1][0] = 15;
+        covars[1][1] = 40;
+
+        MultivariateNormalDistribution g = new MultivariateNormalDistribution(mns, covars);
+
+        // Initialise ensemble
+        System.out.println("\nInitialising Ensemble");
+        Ensemble ensemble = new Ensemble(g, nSamples);
+
+        ensemble.printChecks(); // Print checks
+
+        // forecast (step) the particles
+        ensemble.forecast();
+
+        ensemble.printChecks(); // See how forecast() changes values
+
+        // Produce initial observation
+        double observation = 10.0;
+        // run analysis
+        ensemble.analysis(observation, rand.nextGaussian());
     }
 }
