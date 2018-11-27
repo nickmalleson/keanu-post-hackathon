@@ -5,9 +5,9 @@ import org.apache.commons.math3.random.RandomGenerator;
 public class SimpleModel {
 
     /* Class Parameters */
-    private double threshold;
+    public double threshold;
 
-    private RandomGenerator random;
+    public RandomGenerator random;
 
     /** Initialise the class (only needs to be called once) */
     public SimpleModel(double threshold, RandomGenerator random) {
