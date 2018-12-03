@@ -43,10 +43,6 @@ public class SimpleModelNative {
 
     //private static final int NUM_OBSERVATIONS = 5; // TEMPORARILY
 
-    /* Class Parameters */
-    //private static Double threshold;
-    //private RandomGenerator random;
-
     /* Model parameters */
     private static final UniformVertex threshold = new UniformVertex(-1.0, 1.0);
     //private static final PoissonVertex state = new PoissonVertex(1);
@@ -82,7 +78,7 @@ public class SimpleModelNative {
     /**
      * Run the probabilistic model. This is the main function.
      **/
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
 
         System.out.println("Starting.\n" +
             "\tNumber of iterations: " + NUM_ITER+"\n"+
@@ -126,7 +122,7 @@ public class SimpleModelNative {
         //double currentThresholdEstimate = 0.0; // Save our threshold estimate
 
 
-        for (int window = 0; window < WINDOW_SIZE; window++) { // Loop for every window
+        for (int window = 0; window < 1; window++) { // Loop for every window
 
 
             System.out.println(String.format("Entering update window: %s (iterations %s -> %s)", window, iter, iter+WINDOW_SIZE));
@@ -172,9 +168,6 @@ public class SimpleModelNative {
 
             List<DoubleVertex> history = new ArrayList<>();
 
-            //Vertex<Integer>[] history = new Vertex<Integer>[WINDOW_SIZE];
-            //IntegerTensor history = new IntegerTensor();
-
             // Is the -1 still necessary here?
             //IntegerTensor hist = IntegerTensor.create(new int[WINDOW_SIZE-1]);
 
@@ -200,6 +193,26 @@ public class SimpleModelNative {
                 //history[i] = state;
                 //hist.setValue(state, i);
             }
+
+/*
+            System.out.println("Starting Loop...");
+            for (int i=0; i<history.size(); i++) {
+                DoubleVertex current = history.get(i);
+                System.out.println(current);
+                //System.out.println(current.getShape().toString());
+                //System.out.println();
+            }
+            System.out.println("Loop Finished.");
+            */
+
+            System.out.println("Starting Loop 2: ForEach...");
+            for (DoubleVertex current : history) {
+                System.out.println(current);
+                System.out.println(current.getValue(0));
+                break;
+            }
+            System.out.println("Loop 2 Finished.");
+
             // Leaving these print checks and both copies of hist(ory) for clarity
             /*
             System.out.println(Arrays.toString(history));
@@ -208,8 +221,6 @@ public class SimpleModelNative {
             */
 
             state.setAndCascade(0); // Sets state value to 0 (known at start of model)
-
-
 
             // --------------------------------------------------------------------------
 
@@ -303,20 +314,42 @@ public class SimpleModelNative {
             //Integer[] truthWindow = Arrays.copyOfRange(truthData, iter-WINDOW_SIZE,iter); // The truth data for this window
             //List<Integer[]> stateSamples = sampler.get(state).asList();
             List<DoubleTensor> stateSamples = sampler.get(state).asList();
-            List<>
+
+            /*
+            System.out.println(sampler.get(state).asList().toArray()[1].toString());
+
+            System.out.println("List<DoubleTensor>: " + stateSamples.size());
+            System.out.println("-------------------------------------");
+            System.out.println(stateSamples.toString());
+            System.out.println("-------------------------------------");
+            */
+
+            /*
+            for (int i=0; i<stateSamples.size(); i++) {
+                System.out.println("---------------------");
+                DoubleTensor current = stateSamples.get(i);
+                System.out.println(current);
+                System.out.println(current.getValue(i));
+                System.out.println("---------------------");
+            }
+            */
 
 
+            //List<DoubleVertex> stateSamples = sampler.get(state).asList();
+
+            /*
             System.out.println("PRINT CHECKS...");
             System.out.println(stateSamples.size());
             System.out.println("---------------------");
             System.out.println(stateSamples.get(0));
             System.out.println("---------------------");
+            */
 
             //assert truthWindow.length == stateSamples.get(0).length:
             //    String.format("Iteration lengths differ: truth:%s samples:%s", truthWindow.length, stateSamples.get(0).length);
             assert stateSamples.size() == thresholdSamples.size();
             //SimpleWrapperC.writeResults(stateSamples, truthWindow);
-            SimpleModelNative.writeResults(stateSamples, truthData);
+            //SimpleModelNative.writeResults(stateSamples, truthData);
 
             // Now estimate current state (mean of final states).
 
@@ -344,7 +377,7 @@ public class SimpleModelNative {
         } // for update window
 
 
-        //SimpleModelNative.closeResultsFiles();
+        SimpleModelNative.closeResultsFiles();
     }
 
 
@@ -441,6 +474,10 @@ public class SimpleModelNative {
                 for (int i = 0; i< WINDOW_SIZE; i++) {
                     //newSample[i+originalSample.length] = newStatesToBeAdded[i];
                     int len = (int) originalSample.getLength();
+
+                    double newValue = newStatesToBeAdded.getValue(i);
+
+                    newSample.setValue(newValue, i+len);
 
                     //newSample.setValue(newStatesToBeAdded.getValue(i), i+len);
                 }
