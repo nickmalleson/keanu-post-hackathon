@@ -189,7 +189,7 @@ public class SimpleModelNative {
                 */
 
                 // Temporarily imagine that we know the threshold (later try to estimate this)
-                 state = RAND_GENERATOR.nextGaussian() > truthThreshold ? state.plus(1) : state.minus(1);
+                state = RAND_GENERATOR.nextGaussian() > truthThreshold ? state.plus(1) : state.minus(1);
 
                 history.add(state);
 
@@ -303,6 +303,15 @@ public class SimpleModelNative {
             //Integer[] truthWindow = Arrays.copyOfRange(truthData, iter-WINDOW_SIZE,iter); // The truth data for this window
             //List<Integer[]> stateSamples = sampler.get(state).asList();
             List<DoubleTensor> stateSamples = sampler.get(state).asList();
+            List<>
+
+
+            System.out.println("PRINT CHECKS...");
+            System.out.println(stateSamples.size());
+            System.out.println("---------------------");
+            System.out.println(stateSamples.get(0));
+            System.out.println("---------------------");
+
             //assert truthWindow.length == stateSamples.get(0).length:
             //    String.format("Iteration lengths differ: truth:%s samples:%s", truthWindow.length, stateSamples.get(0).length);
             assert stateSamples.size() == thresholdSamples.size();
@@ -401,13 +410,22 @@ public class SimpleModelNative {
             // sample (a list of integers representing the state) need to be appended to the end of their arrays.
             assert samples.size() == samplesHistory.size(); // The number of samples hasn't changed
             //for (int sampleNumber = 0; sampleNumber< samples.size(); sampleNumber++) {
-            for (int sampleNumber = 0; sampleNumber< 1; sampleNumber++) {
+            for (int sampleNumber = 0; sampleNumber< 10; sampleNumber++) {
                 //Integer[] originalSample = samplesHistory.get(sampleNumber);
                 //Integer[] newStatesToBeAdded = samples.get(sampleNumber);
                 DoubleTensor originalSample = samplesHistory.get(sampleNumber);
                 DoubleTensor newStatesToBeAdded = samples.get(sampleNumber);
 
-                System.out.println(newStatesToBeAdded.toString());
+                /*
+                System.out.println("----------------------------");
+                System.out.println(originalSample.asFlatList());
+                //System.out.println(newStatesToBeAdded);
+                System.out.println("----------------------------");
+                //System.out.println(newStatesToBeAdded.getLength());
+                //System.out.println("----------------------------");
+                System.out.println(originalSample.getShape());
+                System.out.println("----------------------------");
+                */
 
                 // Add these new states (the state history) to the existing sample
                 // This is painful because the sample history is an array not an ArrayList

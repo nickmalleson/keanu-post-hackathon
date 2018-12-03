@@ -238,7 +238,7 @@ public class Wrapper{
         Integer[] truth = Wrapper.run(truthRandom);
         System.out.println("Truth data length: " + truth.length);
 
-        //Run kenanu
+        //Run keanu
         ArrayList<Integer> obIntervals = new ArrayList<>(Arrays.asList(0,1));
         obIntervals.parallelStream().forEach(i -> keanu(truth, i, timestamp, justCreateGraphs));
 
