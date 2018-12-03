@@ -19,3 +19,8 @@ results/simple/*_cache
 results/simple/*_files
 results/simple/figure/
 results/simple/ResultsSummary-Simple.md
+results/*
+results/simple/
+results/simpleB/
+results/simpleC/
+results/simpleD/
