@@ -100,6 +100,8 @@ public class SimpleModelNative {
 
         // Generate truth data
 
+        // TODO: Replace step logic here
+
         SimpleModel truthModel = new SimpleModel(truthThreshold , RAND_GENERATOR);
         Integer[] truthData = new Integer[NUM_ITER];
         int currentTruthState = 0; // initial state
@@ -121,7 +123,7 @@ public class SimpleModelNative {
          */
         int iter = 0; // Record the total number of iterations we have been through
         int currentStateEstimate = 0; // Save our estimate of the state at the end of the window. Initially 0
-        double currentThresholdhEstimate = -1; //  Interesting to see what the threshold estimate is (not used in assimilation)
+        double currentThresholdEstimate = -1; //  Interesting to see what the threshold estimate is (not used in assimilation)
         double priorMu = 0;
         //double currentThresholdEstimate = 0.0; // Save our threshold estimate
 
@@ -131,7 +133,7 @@ public class SimpleModelNative {
 
             System.out.println(String.format("Entering update window: %s (iterations %s -> %s)", window, iter, iter+WINDOW_SIZE));
             System.out.println(String.format("\tCurrent state (at iter %s) estimate / actual: %s, %s: ", iter, currentStateEstimate, truthData[iter]));
-            System.out.println(String.format("\tCurrent threshold estimate (for info): %.2f", currentThresholdhEstimate));
+            System.out.println(String.format("\tCurrent threshold estimate (for info): %.2f", currentThresholdEstimate));
 
             // Increment the counter of how many iterations the model has been run for.
             // In the first window increment by WINDOW_SIZE-1 otherwise we run off the end of the truth array on the very last iteration
@@ -164,8 +166,10 @@ public class SimpleModelNative {
             //ConstantIntegerVertex initialState = new ConstantIntegerVertex(currentStateEstimate);
             //IntegerVertex initialState = new ProbabilisticInteger(currentStateEstimate);
             //DoubleVertex initialState = new CastDoubleVertex(currentStateEstimate);
-            DoubleVertex state = new GaussianVertex(priorMu, 1);
 
+            // TODO: Look at how this DoubleVertex is stored further on (possibly change)
+
+            DoubleVertex state = new GaussianVertex(priorMu, 1.0);
 
             //int state = initialState.getValue(0);
             //Integer[] history = new Integer[WINDOW_SIZE];
@@ -189,7 +193,7 @@ public class SimpleModelNative {
                 */
 
                 // Temporarily imagine that we know the threshold (later try to estimate this)
-                 state = RAND_GENERATOR.nextGaussian() > truthThreshold ? state.plus(1) : state.minus(1);
+                state = RAND_GENERATOR.nextGaussian() > truthThreshold ? state.plus(1) : state.minus(1);
 
                 history.add(state);
 
@@ -293,7 +297,7 @@ public class SimpleModelNative {
                 stream().map( (d) -> d.getValue(0)).collect(Collectors.toList());
 
             // Find the mean threshold estimate (for info, not used)
-            currentThresholdhEstimate =  thresholdSamples.stream().reduce(0d,(a,b) -> a+b) / thresholdSamples.size();
+            currentThresholdEstimate =  thresholdSamples.stream().reduce(0d,(a,b) -> a+b) / thresholdSamples.size();
             // System.out.println("\tHave kept " + thresholdSamples.size()+" samples.");
 
             // Write the threshold distribution
@@ -414,12 +418,15 @@ public class SimpleModelNative {
                 // Make a new array that is large enough to hold the new history for this sample
 
                 //Integer[] newSample = Arrays.copyOf(originalSample, originalSample.length+WINDOW_SIZE);
-                
+
                 DoubleTensor newSample = (DoubleTensor) originalSample.duplicate();
                 // Copy the new states to the end of the sample
                 assert newSample.getLength() == originalSample.getLength() + WINDOW_SIZE :
                     String.format("New: %s, Original: %s (window size: %s)",newSample.getLength(), originalSample.getLength(), WINDOW_SIZE);
                 //System.out.println(String.format("New: %s, Original: %s (window size: %s)",newSample.getLength(), originalSample.getLength(), WINDOW_SIZE));
+
+                // TODO: Fix issue here with adding samples to DoubleTensor OR replace entirely with new Tensor function
+
                 for (int i = 0; i< WINDOW_SIZE; i++) {
                     //newSample[i+originalSample.length] = newStatesToBeAdded[i];
                     int len = (int) originalSample.getLength();
