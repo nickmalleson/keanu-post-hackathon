@@ -49,6 +49,33 @@ public class NativeModel {
     private static Writer thresholdWriter; // Writer for the threshold estimates
     private static Writer stateWriter; // Writer for the state estimates (i.e. results)
 
+
+    /**
+     * - Why do we get 0 for the currentStateEstimate? (e.g. it prints
+     *      "Current state (at iter 379) estimate / actual: 0, -135.82235695345645:  “
+     *
+     *  A - currentStateEstimate was not reassigned at end of loop, forgot to transfer that code to NativeModel
+     *  FIX -  getValue() from state variable at end of main loop and assign to currentStateEstimate
+     *
+     *
+     *  - Do the graphs that it outputs make sense? (I know they’re difficult to understand,
+     *      but do the number of nodes correspond with the number of nodes we’d expect to have
+     *      once we’ve built up the Bayes net, and if you do something like change the number
+     *      of observations does the graph change as you’d expect?).
+     *
+     *  - Is the state estimation actually working? You can’t write out the results file yet,
+     *      but you could do something hacky like take the mean of the sample estimates of
+     *      the state (e..g. the mean of the ‘stateSamplesDouble’ list we made) and see how
+     *      this changes in each window, compared to the truth value and to the ‘posterior’
+     *      that we calculate (right at the end of the window loop).
+     *
+     *  - In the Lorenz model they don’t sample because the model has been specified entirely
+     *      probabilistically. Could you try to get the posterior without sampling, and compare
+     *      this to the state estimate that we get with sampling?
+     */
+
+
+
     /** Run the probabilistic model. This is the main function.
      *
      **/
@@ -121,7 +148,7 @@ public class NativeModel {
             state has now changed type from int to DoubleVertex
             This changes how state is stored later on in Tensors
              */
-            DoubleVertex state = new GaussianVertex(priorMu, 1);
+            DoubleVertex state = new GaussianVertex(priorMu, 1.0);
 
             /*
             history changed type from Integer[] to List<DoubleVertex> (due to state change)
@@ -224,14 +251,14 @@ public class NativeModel {
             // TODO: Fix this so that the contents of the List and DoubleTensors can be accessed easily later on
             // ****** The model states (out of the box) ******
             List<DoubleTensor> stateSamples = sampler.get(state).asList();
-            System.out.println(stateSamples);
+            //System.out.println(stateSamples);
 
 
             //List<DoubleVertex> stateSamples = sampler.get(history).asList();
             //List<DoubleVertex> stateSamples = sampler.get(history)
             List<Double> stateSamplesDouble = sampler.get(state).asList().
                 stream().map( (d) -> d.getValue(0)).collect(Collectors.toList());
-            System.out.println(stateSamplesDouble.toString());
+            //System.out.println(stateSamplesDouble.toString());
             //List<DoubleTensor> stateSamples = sampler.getDoubleTensorSamples(state).asList();
 
             /*
@@ -271,6 +298,11 @@ public class NativeModel {
             // Get posterior distribution, extract and assign Mu
             DoubleTensor posterior = state.getValue();
             priorMu = posterior.scalar();
+
+            // Get last value from each iteration and assign to state estimate
+            double finalState = state.getValue(0);
+            currentStateEstimate = (int) Math.round(finalState);
+
 
             firstRun = false; // To say the first window has finished (horrible hack to do with writing files)
 
