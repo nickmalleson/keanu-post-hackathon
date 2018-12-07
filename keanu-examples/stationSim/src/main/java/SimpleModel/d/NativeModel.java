@@ -3,6 +3,8 @@ package SimpleModel.d;
 import io.improbable.keanu.algorithms.NetworkSamples;
 import io.improbable.keanu.algorithms.VertexSamples;
 import io.improbable.keanu.algorithms.mcmc.MetropolisHastings;
+import io.improbable.keanu.algorithms.variational.GradientOptimizer;
+import io.improbable.keanu.algorithms.variational.NonGradientOptimizer;
 import io.improbable.keanu.network.BayesianNetwork;
 import io.improbable.keanu.research.randomfactory.VertexBackedRandomGenerator;
 import io.improbable.keanu.research.visualisation.GraphvizKt;
@@ -29,7 +31,7 @@ public class NativeModel {
     private static final int NUM_ITER = 2000; // Total No. of iterations
 
     /* Hyperparameters */
-    private static final int WINDOW_SIZE = 20; // Number of iterations per update window
+    private static final int WINDOW_SIZE = 200; // Number of iterations per update window
     private static final int NUM_WINDOWS = NUM_ITER / WINDOW_SIZE; // Number of update windows
     private static final double SIGMA_NOISE = 1.0; // Noise added to observations
     private static final int NUM_SAMPLES = 2000; // Number of samples to MCMC
@@ -54,24 +56,37 @@ public class NativeModel {
      * - Why do we get 0 for the currentStateEstimate? (e.g. it prints
      *      "Current state (at iter 379) estimate / actual: 0, -135.82235695345645:  “
      *
-     *  A - currentStateEstimate was not reassigned at end of loop, forgot to transfer that code to NativeModel
-     *  FIX -  getValue() from state variable at end of main loop and assign to currentStateEstimate
+     * A - currentStateEstimate was not reassigned at end of loop, forgot to transfer that code to NativeModel
+     *      FIX -  getValue() from state variable at end of main loop and assign to currentStateEstimate
      *
      *
-     *  - Do the graphs that it outputs make sense? (I know they’re difficult to understand,
+     * - Do the graphs that it outputs make sense? (I know they’re difficult to understand,
      *      but do the number of nodes correspond with the number of nodes we’d expect to have
      *      once we’ve built up the Bayes net, and if you do something like change the number
      *      of observations does the graph change as you’d expect?).
      *
-     *  - Is the state estimation actually working? You can’t write out the results file yet,
+     * A - Graphs seem to make sense. WINDOW_SIZE dictates how many GaussianVertices are included (as well as
+     *      AdditionV, DifferenceV, and ConstantDoubleVert).
+     *
+     *
+     * - Is the state estimation actually working? You can’t write out the results file yet,
      *      but you could do something hacky like take the mean of the sample estimates of
      *      the state (e..g. the mean of the ‘stateSamplesDouble’ list we made) and see how
      *      this changes in each window, compared to the truth value and to the ‘posterior’
      *      that we calculate (right at the end of the window loop).
      *
-     *  - In the Lorenz model they don’t sample because the model has been specified entirely
+     * A - stateSamplesMean is now printed out at the end of every update window. Seems to be reliably within
+     *      5-10% of truthValue at end (often more accurate than this).
+     *
+     *
+     * - In the Lorenz model they don’t sample because the model has been specified entirely
      *      probabilistically. Could you try to get the posterior without sampling, and compare
      *      this to the state estimate that we get with sampling?
+     *
+     * A - Need to talk about this point as I'm not sure I understand fully. If our posterior is taken directly
+     *      from state.getValue(), and our samples are stored in stateSamplesDouble, how do the samples affect
+     *      the posterior when the two do not interact? Are we not already getting the posterior without sampling,
+     *      and the sampling is just used for us to calculate a state estimate?
      */
 
 
@@ -121,12 +136,13 @@ public class NativeModel {
          ************ START THE MAIN LOOP ************
          */
         int iter = 0; // Record the total number of iterations we have been through
-        int currentStateEstimate = 0; // Save our estimate of the state at the end of the window. Initially 0
-        double currentThresholdEstimate = -1; //  Interesting to see what the threshold estimate is (not used in assimilation)
-        double priorMu = 0;
+        double currentStateEstimate = 0.0; // Save our estimate of the state at the end of the window. Initially 0
+        double currentThresholdEstimate = -1.0; //  Interesting to see what the threshold estimate is (not used in assimilation)
+        double priorMu = 0.0;
 
 
-        for (int window=0; window < WINDOW_SIZE; window++) {
+        // TODO: Replace this loop with a while loop (Need to calculate error w/ each iteration and stop loop when error is low enough)
+        for (int window=0; window < NUM_WINDOWS; window++) {
 
             System.out.println(String.format("Entering update window: %s (iterations %s -> %s)", window, iter, iter+WINDOW_SIZE));
             System.out.println(String.format("\tCurrent state (at iter %s) estimate / actual: %s, %s: ",
@@ -180,7 +196,7 @@ public class NativeModel {
 
                 // This is model iteration number:
                 int t = window==0 ?
-                    window * (WINDOW_SIZE - 1) + i : // on first iteration reduce the iwndow size by 1
+                    window * (WINDOW_SIZE - 1) + i : // on first iteration reduce the window size by 1
                     window * (WINDOW_SIZE ) + i;
 
                 //if (firstRun) { t -= 1; }
@@ -207,9 +223,22 @@ public class NativeModel {
             // write Bayes net
             writeBayesNetToFile(net);
 
+            /*
+             ************ OPTIMISE ************
+             */
+
+            System.out.println("\t\tOptimising with Max A Posteriori");
+            System.out.println("\t\tPrevious state value: " + state.getValue(0));
+
+            System.out.println("\t\tRunning Max A Posteriori...");
+
+            GradientOptimizer netOptimiser = new GradientOptimizer(net);
+            netOptimiser.maxAPosteriori();
+
+            System.out.println("\t\tNew state value: " + state.getValue(0));
 
             /*
-             ************ SAMPLE FROM THE POSTERIOR************
+             ************ SAMPLE FROM THE POSTERIOR ************
              */
 
             // Sample from the posterior
@@ -221,11 +250,18 @@ public class NativeModel {
 
             parameters.add(state);
 
-            // Sample from the box and the random numbers
+            // Sample from the net and the random numbers
             NetworkSamples sampler = MetropolisHastings.getPosteriorSamples(
                 net,                // The bayes net with latent variables
                 parameters,         // The vertices to include in the returned samples
                 NUM_SAMPLES);       // The number of samples
+
+            /*
+            NetworkSamples sampler2 = MetropolisHastings.getPosteriorSamples(
+                net,
+                net.getLatentVertices(),
+                NUM_SAMPLES);
+            */
 
             // Downsample etc
             sampler = sampler.drop(DROP_SAMPLES).downSample(DOWN_SAMPLE);
@@ -254,54 +290,44 @@ public class NativeModel {
             //System.out.println(stateSamples);
 
 
+            // Previous attempts:
             //List<DoubleVertex> stateSamples = sampler.get(history).asList();
             //List<DoubleVertex> stateSamples = sampler.get(history)
-            List<Double> stateSamplesDouble = sampler.get(state).asList().
-                stream().map( (d) -> d.getValue(0)).collect(Collectors.toList());
             //System.out.println(stateSamplesDouble.toString());
             //List<DoubleTensor> stateSamples = sampler.getDoubleTensorSamples(state).asList();
 
-            /*
-            System.out.println("Starting Loop...");
-            for (int i=0; i<20; i++) {
-                System.out.println(stateSamples.get(i).getValue(0));
-                System.out.println(Arrays.toString(stateSamples.get(i).getShape()));
-                //System.out.println(stateSamples.get(i).getValue(0));
-            }
-            System.out.println("Loop Finished.");
-            */
+            List<Double> stateSamplesDouble = sampler.get(state).asList().
+                stream().map( (d) -> d.getValue(0)).collect(Collectors.toList());
 
 
-            /*
-            int counter = 0;
-            for (DoubleTensor stateSamp : stateSamples) {
-                System.out.println(stateSamp.getValue());
-                counter++;
-                if (counter>5) {
-                    break;
-                }
-            }
-            */
+            // Get mean of stateSamples to compare to truthValue and posterior
+            double stateSum = stateSamplesDouble.stream().mapToDouble(Double::doubleValue).sum();
+            double stateSamplesMean = stateSum / stateSamplesDouble.size();
 
-
-            /*
-            System.out.println("Starting Loop...");
-            for (Double samp : stateSamples) {
-                System.out.println(samp);
-            }
-            System.out.println("Loop Finished.");
-            */
 
             assert stateSamples.size() == thresholdSamples.size();
+
             //NativeModel.writeResults(stateSamples, truthData);
 
             // Get posterior distribution, extract and assign Mu
             DoubleTensor posterior = state.getValue();
             priorMu = posterior.scalar();
 
+
+
             // Get last value from each iteration and assign to state estimate
-            double finalState = state.getValue(0);
-            currentStateEstimate = (int) Math.round(finalState);
+            //double finalState = state.getValue(0);
+            //currentStateEstimate = (int) Math.round(finalState);
+
+            currentStateEstimate = state.getValue(0);
+
+
+            // Print out interesting values
+            System.out.println("\tstateSamplesMean: " + stateSamplesMean);
+            //System.out.println("\tPosterior: " + posterior.getValue(0));
+            System.out.println("\tposterior == priorMu == currentStateEstimate == " + priorMu);
+            System.out.println("\tCurrent truth state: " + truthData.get(iter).getValue(0));
+            //System.out.println("\tcurrentStateEstimate: " + currentStateEstimate);
 
 
             firstRun = false; // To say the first window has finished (horrible hack to do with writing files)
