@@ -205,6 +205,11 @@ public class SimpleWrapper {
             // ****** The model states (out of the box) ******
             //Integer[] truthWindow = Arrays.copyOfRange(truthData, iter-WINDOW_SIZE,iter); // The truth data for this window
             List<Integer[]> stateSamples = sampler.get(box).asList();
+
+            for (Integer[] stateSample : stateSamples) {
+                System.out.println(Arrays.asList(stateSample));
+            }
+
             //assert truthWindow.length == stateSamples.get(0).length:
             //    String.format("Iteration lengths differ: truth:%s samples:%s", truthWindow.length, stateSamples.get(0).length);
             assert stateSamples.size() == thresholdSamples.size();

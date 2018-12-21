@@ -435,7 +435,7 @@ public class NativeModel {
         thresholdWriter.write("Window, Iteration, Threshold,\n");
 
         thresholdWriter = new BufferedWriter(new OutputStreamWriter(
-            new FileOutputStream(dirName + "Params_" + theTime + ".csv"), "utf-8"));
+            new FileOutputStream(dirName + "Results_" + theTime + ".csv"), "utf-8"));
     }
 
 

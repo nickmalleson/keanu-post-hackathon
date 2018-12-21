@@ -19,6 +19,11 @@ repositories {
 dependencies {
     compile project(":keanu-project")
     compile group: 'fr.irit.smac.thirdparty.edu.gmu.cs', name: 'mason', version: '18'
+    compile 'org.nd4j:nd4j-native-platform:0.9.1'
+    compile 'org.datavec:datavec-spark_2.11:0.9.1_spark_2'
+    compile 'org.deeplearning4j:dl4j-spark_2.11:0.9.1_spark_2'
+    // https://mvnrepository.com/artifact/gov.nist.math/jama
+    compile group: 'gov.nist.math', name: 'jama', version: '1.0.2'
 
     //testing
     testCompile 'junit:junit:4.12'
